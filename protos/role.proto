@@ -1,0 +1,31 @@
+syntax = 'proto3';
+
+package cloud_foundry.perm.protos;
+
+option go_package = "protos";
+
+import "context.proto";
+
+service RoleService {
+  rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
+  rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
+}
+
+message AssignRoleRequest {
+  string actor = 1;
+  string role = 2;
+  Context context = 3;
+}
+
+message AssignRoleResponse {
+}
+
+message HasRoleRequest {
+  string actor = 1;
+  string role = 2;
+  Context context = 3;
+}
+
+message HasRoleResponse {
+  bool hasRole = 1;
+}

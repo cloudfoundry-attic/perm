@@ -1,0 +1,9 @@
+syntax = 'proto3';
+
+package cloud_foundry.perm.protos;
+
+option go_package = "protos";
+
+message Context {
+  map<string, string> context = 1;
+}
