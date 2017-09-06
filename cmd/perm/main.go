@@ -6,6 +6,8 @@ import (
 
 	"context"
 
+	"errors"
+
 	"code.cloudfoundry.org/perm/protos"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
@@ -70,6 +72,31 @@ func (s *roleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 
 	return &protos.CreateRoleResponse{
 		Role: role,
+	}, nil
+}
+
+func (s *roleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
+	roleBindings, ok := s.roleBindings[req.GetActor()]
+	if !ok {
+		return &protos.ListActorRolesResponse{
+			Roles: []*protos.Role{},
+		}, nil
+	}
+
+	var roles []*protos.Role
+
+	for _, id := range roleBindings {
+		role, found := s.roles[id]
+		if !found {
+			return &protos.ListActorRolesResponse{
+				Roles: []*protos.Role{},
+			}, errors.New("could not find assigned role")
+		}
+
+		roles = append(roles, role)
+	}
+	return &protos.ListActorRolesResponse{
+		Roles: roles,
 	}, nil
 }
 

@@ -13,6 +13,12 @@ service RoleService {
   rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
+  rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
+}
+
+message Role {
+  string id = 1 [(gogoproto.customname) = "ID"];
+  string name = 2;
 }
 
 message CreateRoleRequest {
@@ -40,7 +46,10 @@ message HasRoleResponse {
   bool has_role = 1;
 }
 
-message Role {
-  string id = 1 [(gogoproto.customname) = "ID"];
-  string name = 2;
+message ListActorRolesRequest {
+  string actor = 1;
+}
+
+message ListActorRolesResponse {
+  repeated Role roles = 1;
 }
