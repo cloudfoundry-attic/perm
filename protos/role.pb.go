@@ -2,6 +2,21 @@
 // source: role.proto
 // DO NOT EDIT!
 
+/*
+	Package protos is a generated protocol buffer package.
+
+	It is generated from these files:
+		role.proto
+
+	It has these top-level messages:
+		CreateRoleRequest
+		CreateRoleResponse
+		AssignRoleRequest
+		AssignRoleResponse
+		HasRoleRequest
+		HasRoleResponse
+		Role
+*/
 package protos
 
 import proto "github.com/golang/protobuf/proto"
@@ -21,16 +36,53 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
+type CreateRoleRequest struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *CreateRoleRequest) Reset()                    { *m = CreateRoleRequest{} }
+func (m *CreateRoleRequest) String() string            { return proto.CompactTextString(m) }
+func (*CreateRoleRequest) ProtoMessage()               {}
+func (*CreateRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{0} }
+
+func (m *CreateRoleRequest) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type CreateRoleResponse struct {
+	Role *Role `protobuf:"bytes,1,opt,name=role" json:"role,omitempty"`
+}
+
+func (m *CreateRoleResponse) Reset()                    { *m = CreateRoleResponse{} }
+func (m *CreateRoleResponse) String() string            { return proto.CompactTextString(m) }
+func (*CreateRoleResponse) ProtoMessage()               {}
+func (*CreateRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{1} }
+
+func (m *CreateRoleResponse) GetRole() *Role {
+	if m != nil {
+		return m.Role
+	}
+	return nil
+}
+
 type AssignRoleRequest struct {
-	Actor   string   `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
-	Role    string   `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
-	Context *Context `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
+	Actor  string `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
+	RoleID string `protobuf:"bytes,2,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
 }
 
 func (m *AssignRoleRequest) Reset()                    { *m = AssignRoleRequest{} }
 func (m *AssignRoleRequest) String() string            { return proto.CompactTextString(m) }
 func (*AssignRoleRequest) ProtoMessage()               {}
-func (*AssignRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{0} }
+func (*AssignRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{2} }
 
 func (m *AssignRoleRequest) GetActor() string {
 	if m != nil {
@@ -39,18 +91,11 @@ func (m *AssignRoleRequest) GetActor() string {
 	return ""
 }
 
-func (m *AssignRoleRequest) GetRole() string {
+func (m *AssignRoleRequest) GetRoleID() string {
 	if m != nil {
-		return m.Role
+		return m.RoleID
 	}
 	return ""
-}
-
-func (m *AssignRoleRequest) GetContext() *Context {
-	if m != nil {
-		return m.Context
-	}
-	return nil
 }
 
 type AssignRoleResponse struct {
@@ -59,18 +104,17 @@ type AssignRoleResponse struct {
 func (m *AssignRoleResponse) Reset()                    { *m = AssignRoleResponse{} }
 func (m *AssignRoleResponse) String() string            { return proto.CompactTextString(m) }
 func (*AssignRoleResponse) ProtoMessage()               {}
-func (*AssignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{1} }
+func (*AssignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{3} }
 
 type HasRoleRequest struct {
-	Actor   string   `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
-	Role    string   `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
-	Context *Context `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
+	Actor  string `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
+	RoleID string `protobuf:"bytes,2,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
 }
 
 func (m *HasRoleRequest) Reset()                    { *m = HasRoleRequest{} }
 func (m *HasRoleRequest) String() string            { return proto.CompactTextString(m) }
 func (*HasRoleRequest) ProtoMessage()               {}
-func (*HasRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{2} }
+func (*HasRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{4} }
 
 func (m *HasRoleRequest) GetActor() string {
 	if m != nil {
@@ -79,28 +123,21 @@ func (m *HasRoleRequest) GetActor() string {
 	return ""
 }
 
-func (m *HasRoleRequest) GetRole() string {
+func (m *HasRoleRequest) GetRoleID() string {
 	if m != nil {
-		return m.Role
+		return m.RoleID
 	}
 	return ""
 }
 
-func (m *HasRoleRequest) GetContext() *Context {
-	if m != nil {
-		return m.Context
-	}
-	return nil
-}
-
 type HasRoleResponse struct {
-	HasRole bool `protobuf:"varint,1,opt,name=hasRole,proto3" json:"hasRole,omitempty"`
+	HasRole bool `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
 }
 
 func (m *HasRoleResponse) Reset()                    { *m = HasRoleResponse{} }
 func (m *HasRoleResponse) String() string            { return proto.CompactTextString(m) }
 func (*HasRoleResponse) ProtoMessage()               {}
-func (*HasRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{3} }
+func (*HasRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{5} }
 
 func (m *HasRoleResponse) GetHasRole() bool {
 	if m != nil {
@@ -109,11 +146,38 @@ func (m *HasRoleResponse) GetHasRole() bool {
 	return false
 }
 
+type Role struct {
+	ID   string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *Role) Reset()                    { *m = Role{} }
+func (m *Role) String() string            { return proto.CompactTextString(m) }
+func (*Role) ProtoMessage()               {}
+func (*Role) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{6} }
+
+func (m *Role) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
+func (m *Role) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
 func init() {
+	proto.RegisterType((*CreateRoleRequest)(nil), "cloud_foundry.perm.protos.CreateRoleRequest")
+	proto.RegisterType((*CreateRoleResponse)(nil), "cloud_foundry.perm.protos.CreateRoleResponse")
 	proto.RegisterType((*AssignRoleRequest)(nil), "cloud_foundry.perm.protos.AssignRoleRequest")
 	proto.RegisterType((*AssignRoleResponse)(nil), "cloud_foundry.perm.protos.AssignRoleResponse")
 	proto.RegisterType((*HasRoleRequest)(nil), "cloud_foundry.perm.protos.HasRoleRequest")
 	proto.RegisterType((*HasRoleResponse)(nil), "cloud_foundry.perm.protos.HasRoleResponse")
+	proto.RegisterType((*Role)(nil), "cloud_foundry.perm.protos.Role")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -127,6 +191,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for RoleService service
 
 type RoleServiceClient interface {
+	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*CreateRoleResponse, error)
 	AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*AssignRoleResponse, error)
 	HasRole(ctx context.Context, in *HasRoleRequest, opts ...grpc.CallOption) (*HasRoleResponse, error)
 }
@@ -137,6 +202,15 @@ type roleServiceClient struct {
 
 func NewRoleServiceClient(cc *grpc.ClientConn) RoleServiceClient {
 	return &roleServiceClient{cc}
+}
+
+func (c *roleServiceClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*CreateRoleResponse, error) {
+	out := new(CreateRoleResponse)
+	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/CreateRole", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *roleServiceClient) AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*AssignRoleResponse, error) {
@@ -160,12 +234,31 @@ func (c *roleServiceClient) HasRole(ctx context.Context, in *HasRoleRequest, opt
 // Server API for RoleService service
 
 type RoleServiceServer interface {
+	CreateRole(context.Context, *CreateRoleRequest) (*CreateRoleResponse, error)
 	AssignRole(context.Context, *AssignRoleRequest) (*AssignRoleResponse, error)
 	HasRole(context.Context, *HasRoleRequest) (*HasRoleResponse, error)
 }
 
 func RegisterRoleServiceServer(s *grpc.Server, srv RoleServiceServer) {
 	s.RegisterService(&_RoleService_serviceDesc, srv)
+}
+
+func _RoleService_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoleServiceServer).CreateRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cloud_foundry.perm.protos.RoleService/CreateRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoleServiceServer).CreateRole(ctx, req.(*CreateRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RoleService_AssignRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -209,6 +302,10 @@ var _RoleService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*RoleServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CreateRole",
+			Handler:    _RoleService_CreateRole_Handler,
+		},
+		{
 			MethodName: "AssignRole",
 			Handler:    _RoleService_AssignRole_Handler,
 		},
@@ -219,6 +316,58 @@ var _RoleService_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "role.proto",
+}
+
+func (m *CreateRoleRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateRoleRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	return i, nil
+}
+
+func (m *CreateRoleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateRoleResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Role != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(m.Role.Size()))
+		n1, err := m.Role.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
 }
 
 func (m *AssignRoleRequest) Marshal() (dAtA []byte, err error) {
@@ -242,21 +391,11 @@ func (m *AssignRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRole(dAtA, i, uint64(len(m.Actor)))
 		i += copy(dAtA[i:], m.Actor)
 	}
-	if len(m.Role) > 0 {
+	if len(m.RoleID) > 0 {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintRole(dAtA, i, uint64(len(m.Role)))
-		i += copy(dAtA[i:], m.Role)
-	}
-	if m.Context != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintRole(dAtA, i, uint64(m.Context.Size()))
-		n1, err := m.Context.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
+		i = encodeVarintRole(dAtA, i, uint64(len(m.RoleID)))
+		i += copy(dAtA[i:], m.RoleID)
 	}
 	return i, nil
 }
@@ -300,21 +439,11 @@ func (m *HasRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRole(dAtA, i, uint64(len(m.Actor)))
 		i += copy(dAtA[i:], m.Actor)
 	}
-	if len(m.Role) > 0 {
+	if len(m.RoleID) > 0 {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintRole(dAtA, i, uint64(len(m.Role)))
-		i += copy(dAtA[i:], m.Role)
-	}
-	if m.Context != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintRole(dAtA, i, uint64(m.Context.Size()))
-		n2, err := m.Context.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
+		i = encodeVarintRole(dAtA, i, uint64(len(m.RoleID)))
+		i += copy(dAtA[i:], m.RoleID)
 	}
 	return i, nil
 }
@@ -347,6 +476,36 @@ func (m *HasRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Role) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Role) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ID) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(len(m.ID)))
+		i += copy(dAtA[i:], m.ID)
+	}
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	return i, nil
+}
+
 func encodeFixed64Role(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -374,6 +533,26 @@ func encodeVarintRole(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *CreateRoleRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovRole(uint64(l))
+	}
+	return n
+}
+
+func (m *CreateRoleResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Role != nil {
+		l = m.Role.Size()
+		n += 1 + l + sovRole(uint64(l))
+	}
+	return n
+}
+
 func (m *AssignRoleRequest) Size() (n int) {
 	var l int
 	_ = l
@@ -381,12 +560,8 @@ func (m *AssignRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRole(uint64(l))
 	}
-	l = len(m.Role)
+	l = len(m.RoleID)
 	if l > 0 {
-		n += 1 + l + sovRole(uint64(l))
-	}
-	if m.Context != nil {
-		l = m.Context.Size()
 		n += 1 + l + sovRole(uint64(l))
 	}
 	return n
@@ -405,12 +580,8 @@ func (m *HasRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRole(uint64(l))
 	}
-	l = len(m.Role)
+	l = len(m.RoleID)
 	if l > 0 {
-		n += 1 + l + sovRole(uint64(l))
-	}
-	if m.Context != nil {
-		l = m.Context.Size()
 		n += 1 + l + sovRole(uint64(l))
 	}
 	return n
@@ -421,6 +592,20 @@ func (m *HasRoleResponse) Size() (n int) {
 	_ = l
 	if m.HasRole {
 		n += 2
+	}
+	return n
+}
+
+func (m *Role) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ID)
+	if l > 0 {
+		n += 1 + l + sovRole(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovRole(uint64(l))
 	}
 	return n
 }
@@ -437,6 +622,168 @@ func sovRole(x uint64) (n int) {
 }
 func sozRole(x uint64) (n int) {
 	return sovRole(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *CreateRoleRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRole
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateRoleRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateRoleRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRole(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRole
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateRoleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRole
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateRoleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateRoleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Role == nil {
+				m.Role = &Role{}
+			}
+			if err := m.Role.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRole(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRole
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *AssignRoleRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -498,7 +845,7 @@ func (m *AssignRoleRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RoleID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -523,40 +870,7 @@ func (m *AssignRoleRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Role = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Context", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRole
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRole
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Context == nil {
-				m.Context = &Context{}
-			}
-			if err := m.Context.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RoleID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -689,7 +1003,7 @@ func (m *HasRoleRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RoleID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -714,40 +1028,7 @@ func (m *HasRoleRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Role = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Context", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRole
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRole
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Context == nil {
-				m.Context = &Context{}
-			}
-			if err := m.Context.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RoleID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -819,6 +1100,114 @@ func (m *HasRoleResponse) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.HasRole = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRole(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRole
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Role) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRole
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Role: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Role: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRole(dAtA[iNdEx:])
@@ -948,24 +1337,29 @@ var (
 func init() { proto.RegisterFile("role.proto", fileDescriptorRole) }
 
 var fileDescriptorRole = []byte{
-	// 296 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0xca, 0xcf, 0x49,
-	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4c, 0xce, 0xc9, 0x2f, 0x4d, 0x89, 0x4f, 0xcb,
-	0x2f, 0xcd, 0x4b, 0x29, 0xaa, 0xd4, 0x2b, 0x48, 0x2d, 0xca, 0x85, 0xc8, 0x14, 0x4b, 0xe9, 0xa6,
-	0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0xa7, 0xe7, 0xa7, 0xe7, 0xeb, 0x83,
-	0xc5, 0x93, 0x4a, 0xd3, 0xc0, 0x3c, 0x30, 0x07, 0xcc, 0x82, 0xa8, 0x97, 0xe2, 0x4d, 0xce, 0xcf,
-	0x2b, 0x49, 0xad, 0x28, 0x81, 0x70, 0x95, 0xaa, 0xb9, 0x04, 0x1d, 0x8b, 0x8b, 0x33, 0xd3, 0xf3,
-	0x82, 0xf2, 0x73, 0x52, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x44, 0xb8, 0x58, 0x13,
-	0x93, 0x4b, 0xf2, 0x8b, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x20, 0x1c, 0x21, 0x21, 0x2e,
-	0x16, 0x90, 0x8b, 0x24, 0x98, 0xc0, 0x82, 0x60, 0xb6, 0x90, 0x0d, 0x17, 0x3b, 0xd4, 0x3c, 0x09,
-	0x66, 0x05, 0x46, 0x0d, 0x6e, 0x23, 0x25, 0x3d, 0x9c, 0x2e, 0xd5, 0x73, 0x86, 0xa8, 0x0c, 0x82,
-	0x69, 0x51, 0x12, 0xe1, 0x12, 0x42, 0xb6, 0xbc, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0xa9, 0x82,
-	0x8b, 0xcf, 0x23, 0xb1, 0x78, 0x20, 0xdc, 0xa3, 0xcd, 0xc5, 0x0f, 0xb7, 0x19, 0xe2, 0x18, 0x21,
-	0x09, 0x2e, 0xf6, 0x0c, 0x88, 0x10, 0xd8, 0x72, 0x8e, 0x20, 0x18, 0xd7, 0xe8, 0x16, 0x23, 0x17,
-	0x37, 0x88, 0x11, 0x9c, 0x5a, 0x54, 0x96, 0x99, 0x9c, 0x2a, 0x94, 0xc9, 0xc5, 0x85, 0xf0, 0x8c,
-	0x90, 0x0e, 0x1e, 0x7b, 0x31, 0x02, 0x5c, 0x4a, 0x97, 0x48, 0xd5, 0x50, 0x47, 0x25, 0x70, 0xb1,
-	0x43, 0xdd, 0x29, 0xa4, 0x89, 0x47, 0x27, 0x6a, 0x28, 0x4a, 0x69, 0x11, 0xa3, 0x14, 0x62, 0x83,
-	0x93, 0xc4, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe3,
-	0xb1, 0x1c, 0x43, 0x14, 0x1b, 0x44, 0x65, 0x12, 0x84, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff,
-	0x45, 0x0f, 0xb1, 0x90, 0x9e, 0x02, 0x00, 0x00,
+	// 372 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x51, 0xcd, 0x4e, 0xf2, 0x40,
+	0x14, 0xfd, 0xda, 0xf0, 0x15, 0xbc, 0x24, 0x1a, 0x26, 0xc4, 0x00, 0x8b, 0x62, 0xea, 0xc2, 0x9f,
+	0x40, 0x49, 0xe0, 0x09, 0x44, 0x16, 0x36, 0x26, 0x2e, 0xea, 0xce, 0x0d, 0x96, 0xce, 0x50, 0x26,
+	0x81, 0x0e, 0xce, 0xb4, 0x26, 0xbe, 0x89, 0x2f, 0x64, 0xe2, 0xd2, 0x27, 0x20, 0xa6, 0xbe, 0x88,
+	0x99, 0x99, 0x06, 0x30, 0xc4, 0x86, 0x85, 0xab, 0x99, 0x3b, 0x73, 0xce, 0x3d, 0xf7, 0x9e, 0x03,
+	0xc0, 0xd9, 0x9c, 0xb8, 0x4b, 0xce, 0x12, 0x86, 0x9a, 0xe1, 0x9c, 0xa5, 0x78, 0x3c, 0x65, 0x69,
+	0x8c, 0xf9, 0x8b, 0xbb, 0x24, 0x7c, 0xa1, 0x7f, 0x44, 0xab, 0x1b, 0xd1, 0x64, 0x96, 0x4e, 0xdc,
+	0x90, 0x2d, 0x7a, 0x11, 0x8b, 0x58, 0x4f, 0xbd, 0x4f, 0xd2, 0xa9, 0xaa, 0x54, 0xa1, 0x6e, 0x1a,
+	0xef, 0x9c, 0x41, 0xed, 0x9a, 0x93, 0x20, 0x21, 0x3e, 0x9b, 0x13, 0x9f, 0x3c, 0xa5, 0x44, 0x24,
+	0x08, 0x41, 0x29, 0x0e, 0x16, 0xa4, 0x61, 0x9c, 0x18, 0xe7, 0x07, 0xbe, 0xba, 0x3b, 0x1e, 0xa0,
+	0x6d, 0xa0, 0x58, 0xb2, 0x58, 0x10, 0x34, 0x80, 0x92, 0x1c, 0x4b, 0x21, 0xab, 0xfd, 0xb6, 0xfb,
+	0xeb, 0x5c, 0xae, 0xa2, 0x29, 0xb0, 0x73, 0x07, 0xb5, 0x2b, 0x21, 0x68, 0x14, 0x6f, 0x6b, 0xd6,
+	0xe1, 0x7f, 0x10, 0x26, 0x8c, 0xe7, 0xa2, 0xba, 0x40, 0xa7, 0x50, 0x96, 0x94, 0x31, 0xc5, 0x0d,
+	0x53, 0xbe, 0x0f, 0x21, 0x5b, 0xb5, 0x2d, 0xc9, 0xf3, 0x46, 0xbe, 0x25, 0xbf, 0x3c, 0xec, 0xd4,
+	0x01, 0x6d, 0xf7, 0xd3, 0xa3, 0x39, 0xb7, 0x70, 0x78, 0x13, 0x88, 0x3f, 0x92, 0xe8, 0xc0, 0xd1,
+	0xba, 0x59, 0xbe, 0x7a, 0x13, 0x2a, 0xb3, 0x40, 0x8c, 0xd7, 0xeb, 0x57, 0xfc, 0xf2, 0x4c, 0x43,
+	0x9c, 0x3e, 0x94, 0xe4, 0x89, 0x8e, 0xc1, 0xa4, 0x58, 0xab, 0x0d, 0xad, 0x6c, 0xd5, 0x36, 0xbd,
+	0x91, 0x6f, 0x52, 0xbc, 0xf6, 0xd7, 0xdc, 0xf8, 0xdb, 0x7f, 0x33, 0xa1, 0x2a, 0x49, 0xf7, 0x84,
+	0x3f, 0xd3, 0x90, 0x20, 0x0a, 0xb0, 0xf1, 0x1b, 0x75, 0x0a, 0x9c, 0xdd, 0xc9, 0xaf, 0xd5, 0xdd,
+	0x13, 0x9d, 0x6f, 0x42, 0x01, 0x36, 0xfe, 0x15, 0x4a, 0xed, 0xc4, 0x56, 0x28, 0xb5, 0x1b, 0x0a,
+	0x7a, 0x84, 0x72, 0xee, 0x23, 0xba, 0x28, 0x60, 0xfe, 0x0c, 0xae, 0x75, 0xb9, 0x0f, 0x54, 0x2b,
+	0x0c, 0x1b, 0xef, 0x99, 0x6d, 0x7c, 0x64, 0xb6, 0xf1, 0x99, 0xd9, 0xc6, 0xeb, 0x97, 0xfd, 0xef,
+	0xc1, 0xd2, 0xc8, 0x89, 0x3e, 0x07, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xf9, 0xa2, 0xf5, 0x42,
+	0x49, 0x03, 0x00, 0x00,
 }

@@ -6,60 +6,77 @@ import (
 
 	"context"
 
-	"reflect"
-
 	"code.cloudfoundry.org/perm/protos"
+	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 )
 
 type roleServiceServer struct {
-	roleBindings map[string]map[string][]map[string]string
+	roles        map[uuid.UUID]*protos.Role
+	roleBindings map[string][]uuid.UUID
 }
 
 func (s *roleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
 	actor := req.GetActor()
-	role := req.GetRole()
+	roleID := req.GetRoleID()
 
-	roleBinding, ok := s.roleBindings[actor]
+	roleBindings, ok := s.roleBindings[actor]
 	if !ok {
-		roleBinding = make(map[string][]map[string]string)
-		s.roleBindings[actor] = roleBinding
+		roleBindings = nil
 	}
 
-	roleBinding[role] = append(roleBinding[role], req.GetContext().GetContext())
+	u, err := uuid.FromString(roleID)
+	if err != nil {
+		return &protos.AssignRoleResponse{}, err
+	}
+
+	roleBindings = append(roleBindings, u)
+
+	s.roleBindings[actor] = roleBindings
 
 	return &protos.AssignRoleResponse{}, nil
 }
 
 func (s *roleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {
 	actor := req.GetActor()
-	role := req.GetRole()
-	roleContext := req.GetContext().GetContext()
-
-	roleBinding, ok := s.roleBindings[actor]
-	if !ok {
-		return &protos.HasRoleResponse{HasRole: false}, nil
+	roleID, err := uuid.FromString(req.GetRoleID())
+	if err != nil {
+		return &protos.HasRoleResponse{}, err
 	}
 
-	contexts, ok := roleBinding[role]
+	roleBindings, ok := s.roleBindings[actor]
 	if !ok {
 		return &protos.HasRoleResponse{HasRole: false}, nil
 	}
 
 	var found bool
-	for _, c := range contexts {
-		if reflect.DeepEqual(c, roleContext) {
+
+	for _, id := range roleBindings {
+		if uuid.Equal(id, roleID) {
 			found = true
-			break
 		}
 	}
 
 	return &protos.HasRoleResponse{HasRole: found}, nil
 }
 
+func (s *roleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRoleRequest) (*protos.CreateRoleResponse, error) {
+	id := uuid.NewV4()
+	role := &protos.Role{
+		Name: req.GetName(),
+		ID:   id.String(),
+	}
+	s.roles[id] = role
+
+	return &protos.CreateRoleResponse{
+		Role: role,
+	}, nil
+}
+
 func newServer() *roleServiceServer {
 	s := &roleServiceServer{
-		roleBindings: make(map[string]map[string][]map[string]string),
+		roles:        make(map[uuid.UUID]*protos.Role),
+		roleBindings: make(map[string][]uuid.UUID),
 	}
 	return s
 }
