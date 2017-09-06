@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/gogo/protobuf"
+  packages = ["gogoproto","proto","protoc-gen-gogo/descriptor"]
+  revision = "100ba4e885062801d56799d78530b73b178a78f3"
+  version = "v0.4"
+
+[[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
@@ -58,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "31e2f38fbd0d594cd03225659bef3338bbb08d353e11fc61530d25a29c892ca1"
+  inputs-digest = "e6967267e30f203c3f6d02a9fc26f3d7500df2304703ee56c5b585f7c27f96ab"
   solver-name = "gps-cdcl"
   solver-version = 1
