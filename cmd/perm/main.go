@@ -1,14 +1,17 @@
 package main
 
 import (
-	"log"
 	"net"
 
 	"context"
 
 	"errors"
 
+	"fmt"
+	"os"
+
 	"code.cloudfoundry.org/perm/protos"
+	"github.com/jessevdk/go-flags"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 )
@@ -108,15 +111,31 @@ func newServer() *roleServiceServer {
 	return s
 }
 
+type options struct {
+	Hostname string `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
+	Port     int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+}
+
 func main() {
-	lis, err := net.Listen("tcp", "localhost:8888")
+	parserOpts := &options{}
+	parser := flags.NewParser(parserOpts, flags.Default)
+
+	_, err := parser.Parse()
+
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
-	var opts []grpc.ServerOption
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", parserOpts.Hostname, parserOpts.Port))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "failed to listen: %v", err)
+		os.Exit(1)
+	}
 
-	grpcServer := grpc.NewServer(opts...)
+	var serverOpts []grpc.ServerOption
+
+	grpcServer := grpc.NewServer(serverOpts...)
 	protos.RegisterRoleServiceServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
 }

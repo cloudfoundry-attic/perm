@@ -14,6 +14,12 @@
   revision = "17ce1425424ab154092bbb43af630bd647f3bb0d"
 
 [[projects]]
+  name = "github.com/jessevdk/go-flags"
+  packages = ["."]
+  revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [".","config","internal/codelocation","internal/containernode","internal/failer","internal/leafnodes","internal/remote","internal/spec","internal/spec_iterator","internal/specrunner","internal/suite","internal/testingtproxy","internal/writer","reporters","reporters/stenographer","reporters/stenographer/support/go-colorable","reporters/stenographer/support/go-isatty","types"]
   revision = "9eda700730cba42af70d53180f9dcce9266bc2bc"
@@ -70,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "08a1065045d8458fcf5d16564d92e56f7483d3d9da6be91856f95774e9e50ff8"
+  inputs-digest = "25c72884b69687f1104c8d6ebe53e9dd5e038d882d594fc7837a3d4562af3fa5"
   solver-name = "gps-cdcl"
   solver-version = 1
