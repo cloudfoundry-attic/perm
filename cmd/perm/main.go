@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
 	"github.com/jessevdk/go-flags"
@@ -15,6 +16,7 @@ import (
 type options struct {
 	Hostname string `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
 	Port     int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+	Version  bool   `short:"V" long:"version" description:"Prints the current Perm version"`
 }
 
 func main() {
@@ -26,6 +28,13 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+
+	if parserOpts.Version {
+		fmt.Println(perm.Version)
+
+		os.Exit(0)
+		return
 	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", parserOpts.Hostname, parserOpts.Port))
