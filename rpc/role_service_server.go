@@ -10,21 +10,21 @@ import (
 
 type RoleServiceServer struct {
 	roles        map[uuid.UUID]*protos.Role
-	roleBindings map[string][]uuid.UUID
+	roleBindings map[protos.Actor][]uuid.UUID
 }
 
 func NewRoleServiceServer() *RoleServiceServer {
 	return &RoleServiceServer{
 		roles:        make(map[uuid.UUID]*protos.Role),
-		roleBindings: make(map[string][]uuid.UUID),
+		roleBindings: make(map[protos.Actor][]uuid.UUID),
 	}
 }
 
 func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
-	actor := req.GetActor()
 	roleID := req.GetRoleID()
+	actor := req.GetActor()
 
-	roleBindings, ok := s.roleBindings[actor]
+	roleBindings, ok := s.roleBindings[*actor]
 	if !ok {
 		roleBindings = nil
 	}
@@ -36,7 +36,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	roleBindings = append(roleBindings, u)
 
-	s.roleBindings[actor] = roleBindings
+	s.roleBindings[*actor] = roleBindings
 
 	return &protos.AssignRoleResponse{}, nil
 }
@@ -48,7 +48,7 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 		return nil, togRPCError(err)
 	}
 
-	roleBindings, ok := s.roleBindings[actor]
+	roleBindings, ok := s.roleBindings[*actor]
 	if !ok {
 		return &protos.HasRoleResponse{HasRole: false}, nil
 	}
@@ -58,6 +58,7 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 	for _, id := range roleBindings {
 		if uuid.Equal(id, roleID) {
 			found = true
+			break
 		}
 	}
 
@@ -78,7 +79,8 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 }
 
 func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
-	roleBindings, ok := s.roleBindings[req.GetActor()]
+	actor := req.GetActor()
+	roleBindings, ok := s.roleBindings[*actor]
 	if !ok {
 		return &protos.ListActorRolesResponse{
 			Roles: []*protos.Role{},

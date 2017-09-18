@@ -3,6 +3,7 @@ syntax = 'proto3';
 package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "actor.proto";
 
 option go_package = "protos";
 option (gogoproto.marshaler_all) = true;
@@ -30,7 +31,7 @@ message CreateRoleResponse {
 }
 
 message AssignRoleRequest {
-  string actor = 1;
+  Actor actor = 1;
   string role_id = 2 [(gogoproto.customname) = "RoleID"];
 }
 
@@ -38,7 +39,7 @@ message AssignRoleResponse {
 }
 
 message HasRoleRequest {
-  string actor = 1;
+  Actor actor = 1;
   string role_id = 2 [(gogoproto.customname) = "RoleID"];
 }
 
@@ -47,7 +48,7 @@ message HasRoleResponse {
 }
 
 message ListActorRolesRequest {
-  string actor = 1;
+  Actor actor = 1;
 }
 
 message ListActorRolesResponse {
