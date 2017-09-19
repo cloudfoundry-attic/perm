@@ -28,6 +28,20 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 		})
+
+		It("fails if a role with that name already exists", func() {
+			req := &protos.CreateRoleRequest{
+				Name: "test-role",
+			}
+			_, err := subject.CreateRole(nil, req)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.CreateRole(nil, req)
+
+			Expect(res).To(BeNil())
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Describe("#GetRole", func() {
@@ -111,6 +125,20 @@ var _ = Describe("RoleServiceServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
+		})
+
+		It("fails if the role does not exist", func() {
+			actor := &protos.Actor{
+				ID:     "actor",
+				Issuer: "issuer",
+			}
+			res, err := subject.AssignRole(nil, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: "does-not-exist",
+			})
+
+			Expect(res).To(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
@@ -284,6 +312,50 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 			Expect(res.GetRoles()).To(HaveLen(0))
+		})
+
+		It("does not return duplicate roles", func() {
+			roleName := "test-role"
+			actor := &protos.Actor{
+				ID:     "actor",
+				Issuer: "issuer",
+			}
+			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+				Name: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			roleRes, err := subject.GetRole(nil, &protos.GetRoleRequest{
+				Name: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(roleRes).NotTo(BeNil())
+
+			role := roleRes.GetRole()
+
+			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.ListActorRoles(nil, &protos.ListActorRolesRequest{
+				Actor: actor,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(res.GetRoles()).To(Equal([]*protos.Role{role}))
 		})
 	})
 })

@@ -24,6 +24,11 @@ func NewRoleServiceServer() *RoleServiceServer {
 
 func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRoleRequest) (*protos.CreateRoleResponse, error) {
 	name := req.GetName()
+
+	if _, exists := s.roles[name]; exists {
+		return nil, togRPCError(codes.AlreadyExists, errors.New("role already exists"))
+	}
+
 	role := &protos.Role{
 		Name: name,
 		ID:   uuid.NewV4().String(),
@@ -53,9 +58,19 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 	roleName := req.GetRoleName()
 	actor := req.GetActor()
 
+	if _, exists := s.roles[roleName]; !exists {
+		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	}
+
 	roleBindings, ok := s.roleBindings[*actor]
 	if !ok {
-		roleBindings = nil
+		roleBindings = []string{}
+	}
+
+	for _, role := range roleBindings {
+		if role == roleName {
+			return &protos.AssignRoleResponse{}, nil
+		}
 	}
 
 	roleBindings = append(roleBindings, roleName)
