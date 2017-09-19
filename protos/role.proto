@@ -15,6 +15,7 @@ service RoleService {
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
+  rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
 }
 
 message Role {
@@ -53,4 +54,12 @@ message ListActorRolesRequest {
 
 message ListActorRolesResponse {
   repeated Role roles = 1;
+}
+
+message GetRoleRequest {
+  string name = 1;
+}
+
+message GetRoleResponse {
+  Role role = 1;
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"google.golang.org/grpc/codes"
+
 	"code.cloudfoundry.org/perm/protos"
 	"github.com/satori/go.uuid"
 )
@@ -31,7 +33,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	u, err := uuid.FromString(roleID)
 	if err != nil {
-		return nil, togRPCError(err)
+		return nil, togRPCError(codes.Unknown, err)
 	}
 
 	roleBindings = append(roleBindings, u)
@@ -45,7 +47,7 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 	actor := req.GetActor()
 	roleID, err := uuid.FromString(req.GetRoleID())
 	if err != nil {
-		return nil, togRPCError(err)
+		return nil, togRPCError(codes.Unknown, err)
 	}
 
 	roleBindings, ok := s.roleBindings[*actor]
@@ -92,7 +94,7 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	for _, id := range roleBindings {
 		role, found := s.roles[id]
 		if !found {
-			return nil, togRPCError(errors.New("found a role-binding for non-existent role"))
+			return nil, togRPCError(codes.Unknown, errors.New("found a role-binding for non-existent role"))
 		}
 
 		roles = append(roles, role)
@@ -101,4 +103,18 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	return &protos.ListActorRolesResponse{
 		Roles: roles,
 	}, nil
+}
+
+func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequest) (*protos.GetRoleResponse, error) {
+	name := req.GetName()
+
+	for _, role := range s.roles {
+		if role.GetName() == name {
+			return &protos.GetRoleResponse{
+				Role: role,
+			}, nil
+		}
+	}
+
+	return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
 }
