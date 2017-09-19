@@ -12,10 +12,10 @@ option (gogoproto.unmarshaler_all) = true;
 
 service RoleService {
   rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
+  rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
-  rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
 }
 
 message Role {
@@ -33,7 +33,7 @@ message CreateRoleResponse {
 
 message AssignRoleRequest {
   Actor actor = 1;
-  string role_id = 2 [(gogoproto.customname) = "RoleID"];
+  string role_name = 2;
 }
 
 message AssignRoleResponse {
@@ -41,7 +41,7 @@ message AssignRoleResponse {
 
 message HasRoleRequest {
   Actor actor = 1;
-  string role_id = 2 [(gogoproto.customname) = "RoleID"];
+  string role_name = 2;
 }
 
 message HasRoleResponse {
