@@ -101,7 +101,7 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(res).NotTo(BeNil())
 		})
 
-		It("succeeds if the user has already been assigned the role", func() {
+		It("fails if the user has already been assigned the role", func() {
 			name := "role"
 			actor := &protos.Actor{
 				ID:     "actor-id",
@@ -123,8 +123,8 @@ var _ = Describe("RoleServiceServer", func() {
 
 			res, err := subject.AssignRole(nil, req)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).NotTo(BeNil())
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
 		})
 
 		It("fails if the role does not exist", func() {
@@ -312,50 +312,6 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 			Expect(res.GetRoles()).To(HaveLen(0))
-		})
-
-		It("does not return duplicate roles", func() {
-			roleName := "test-role"
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
-				Name: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-
-			roleRes, err := subject.GetRole(nil, &protos.GetRoleRequest{
-				Name: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(roleRes).NotTo(BeNil())
-
-			role := roleRes.GetRole()
-
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
-				Actor:    actor,
-				RoleName: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
-				Actor:    actor,
-				RoleName: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-
-			res, err := subject.ListActorRoles(nil, &protos.ListActorRolesRequest{
-				Actor: actor,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).NotTo(BeNil())
-			Expect(res.GetRoles()).To(Equal([]*protos.Role{role}))
 		})
 	})
 })

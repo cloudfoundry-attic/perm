@@ -69,7 +69,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	for _, role := range roleBindings {
 		if role == roleName {
-			return &protos.AssignRoleResponse{}, nil
+			return nil, togRPCError(codes.AlreadyExists, errors.New("role is already assigned to actor"))
 		}
 	}
 
