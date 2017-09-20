@@ -78,6 +78,39 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 	})
 
+	Describe("#DeleteRole", func() {
+		It("deletes the role if it exists", func() {
+			name := "test-role"
+			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			_, err = subject.GetRole(nil, &protos.GetRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("fails if the role does not exist", func() {
+			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+				Name: "test-role",
+			})
+
+			Expect(res).To(BeNil())
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
 	Describe("#AssignRole", func() {
 		It("succeeds if the role exists", func() {
 			name := "role"

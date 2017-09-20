@@ -14,6 +14,10 @@
 		Role
 		CreateRoleRequest
 		CreateRoleResponse
+		GetRoleRequest
+		GetRoleResponse
+		DeleteRoleRequest
+		DeleteRoleResponse
 		AssignRoleRequest
 		AssignRoleResponse
 		UnassignRoleRequest
@@ -22,8 +26,6 @@
 		HasRoleResponse
 		ListActorRolesRequest
 		ListActorRolesResponse
-		GetRoleRequest
-		GetRoleResponse
 */
 package protos
 

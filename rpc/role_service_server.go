@@ -54,6 +54,20 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
 }
 
+func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error) {
+	name := req.GetName()
+
+	_, ok := s.roles[name]
+
+	if !ok {
+		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	}
+
+	delete(s.roles, req.GetName())
+
+	return &protos.DeleteRoleResponse{}, nil
+}
+
 func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
 	roleName := req.GetRoleName()
 	actor := req.GetActor()
