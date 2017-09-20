@@ -16,6 +16,8 @@
 		CreateRoleResponse
 		AssignRoleRequest
 		AssignRoleResponse
+		UnassignRoleRequest
+		UnassignRoleResponse
 		HasRoleRequest
 		HasRoleResponse
 		ListActorRolesRequest

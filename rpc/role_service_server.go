@@ -69,7 +69,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	for _, role := range roleBindings {
 		if role == roleName {
-			return nil, togRPCError(codes.AlreadyExists, errors.New("role is already assigned to actor"))
+			return nil, togRPCError(codes.AlreadyExists, errors.New("actor is already assigned to role"))
 		}
 	}
 
@@ -78,6 +78,29 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 	s.roleBindings[*actor] = roleBindings
 
 	return &protos.AssignRoleResponse{}, nil
+}
+
+func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error) {
+	roleName := req.GetRoleName()
+	actor := req.GetActor()
+
+	if _, exists := s.roles[roleName]; !exists {
+		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	}
+
+	roleBindings, ok := s.roleBindings[*actor]
+	if !ok {
+		roleBindings = []string{}
+	}
+
+	for i, role := range roleBindings {
+		if role == roleName {
+			s.roleBindings[*actor] = append(roleBindings[:i], roleBindings[i+1:]...)
+			return &protos.UnassignRoleResponse{}, nil
+		}
+	}
+
+	return nil, togRPCError(codes.NotFound, errors.New("actor is not assigned to role"))
 }
 
 func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {

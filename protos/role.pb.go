@@ -109,6 +109,38 @@ func (m *AssignRoleResponse) String() string            { return proto.CompactTe
 func (*AssignRoleResponse) ProtoMessage()               {}
 func (*AssignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{4} }
 
+type UnassignRoleRequest struct {
+	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+}
+
+func (m *UnassignRoleRequest) Reset()                    { *m = UnassignRoleRequest{} }
+func (m *UnassignRoleRequest) String() string            { return proto.CompactTextString(m) }
+func (*UnassignRoleRequest) ProtoMessage()               {}
+func (*UnassignRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{5} }
+
+func (m *UnassignRoleRequest) GetActor() *Actor {
+	if m != nil {
+		return m.Actor
+	}
+	return nil
+}
+
+func (m *UnassignRoleRequest) GetRoleName() string {
+	if m != nil {
+		return m.RoleName
+	}
+	return ""
+}
+
+type UnassignRoleResponse struct {
+}
+
+func (m *UnassignRoleResponse) Reset()                    { *m = UnassignRoleResponse{} }
+func (m *UnassignRoleResponse) String() string            { return proto.CompactTextString(m) }
+func (*UnassignRoleResponse) ProtoMessage()               {}
+func (*UnassignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{6} }
+
 type HasRoleRequest struct {
 	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
 	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
@@ -117,7 +149,7 @@ type HasRoleRequest struct {
 func (m *HasRoleRequest) Reset()                    { *m = HasRoleRequest{} }
 func (m *HasRoleRequest) String() string            { return proto.CompactTextString(m) }
 func (*HasRoleRequest) ProtoMessage()               {}
-func (*HasRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{5} }
+func (*HasRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{7} }
 
 func (m *HasRoleRequest) GetActor() *Actor {
 	if m != nil {
@@ -140,7 +172,7 @@ type HasRoleResponse struct {
 func (m *HasRoleResponse) Reset()                    { *m = HasRoleResponse{} }
 func (m *HasRoleResponse) String() string            { return proto.CompactTextString(m) }
 func (*HasRoleResponse) ProtoMessage()               {}
-func (*HasRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{6} }
+func (*HasRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{8} }
 
 func (m *HasRoleResponse) GetHasRole() bool {
 	if m != nil {
@@ -156,7 +188,7 @@ type ListActorRolesRequest struct {
 func (m *ListActorRolesRequest) Reset()                    { *m = ListActorRolesRequest{} }
 func (m *ListActorRolesRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListActorRolesRequest) ProtoMessage()               {}
-func (*ListActorRolesRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{7} }
+func (*ListActorRolesRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{9} }
 
 func (m *ListActorRolesRequest) GetActor() *Actor {
 	if m != nil {
@@ -172,7 +204,7 @@ type ListActorRolesResponse struct {
 func (m *ListActorRolesResponse) Reset()                    { *m = ListActorRolesResponse{} }
 func (m *ListActorRolesResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListActorRolesResponse) ProtoMessage()               {}
-func (*ListActorRolesResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{8} }
+func (*ListActorRolesResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{10} }
 
 func (m *ListActorRolesResponse) GetRoles() []*Role {
 	if m != nil {
@@ -188,7 +220,7 @@ type GetRoleRequest struct {
 func (m *GetRoleRequest) Reset()                    { *m = GetRoleRequest{} }
 func (m *GetRoleRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetRoleRequest) ProtoMessage()               {}
-func (*GetRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{9} }
+func (*GetRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{11} }
 
 func (m *GetRoleRequest) GetName() string {
 	if m != nil {
@@ -204,7 +236,7 @@ type GetRoleResponse struct {
 func (m *GetRoleResponse) Reset()                    { *m = GetRoleResponse{} }
 func (m *GetRoleResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetRoleResponse) ProtoMessage()               {}
-func (*GetRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{10} }
+func (*GetRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{12} }
 
 func (m *GetRoleResponse) GetRole() *Role {
 	if m != nil {
@@ -219,6 +251,8 @@ func init() {
 	proto.RegisterType((*CreateRoleResponse)(nil), "cloud_foundry.perm.protos.CreateRoleResponse")
 	proto.RegisterType((*AssignRoleRequest)(nil), "cloud_foundry.perm.protos.AssignRoleRequest")
 	proto.RegisterType((*AssignRoleResponse)(nil), "cloud_foundry.perm.protos.AssignRoleResponse")
+	proto.RegisterType((*UnassignRoleRequest)(nil), "cloud_foundry.perm.protos.UnassignRoleRequest")
+	proto.RegisterType((*UnassignRoleResponse)(nil), "cloud_foundry.perm.protos.UnassignRoleResponse")
 	proto.RegisterType((*HasRoleRequest)(nil), "cloud_foundry.perm.protos.HasRoleRequest")
 	proto.RegisterType((*HasRoleResponse)(nil), "cloud_foundry.perm.protos.HasRoleResponse")
 	proto.RegisterType((*ListActorRolesRequest)(nil), "cloud_foundry.perm.protos.ListActorRolesRequest")
@@ -241,6 +275,7 @@ type RoleServiceClient interface {
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*CreateRoleResponse, error)
 	GetRole(ctx context.Context, in *GetRoleRequest, opts ...grpc.CallOption) (*GetRoleResponse, error)
 	AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*AssignRoleResponse, error)
+	UnassignRole(ctx context.Context, in *UnassignRoleRequest, opts ...grpc.CallOption) (*UnassignRoleResponse, error)
 	HasRole(ctx context.Context, in *HasRoleRequest, opts ...grpc.CallOption) (*HasRoleResponse, error)
 	ListActorRoles(ctx context.Context, in *ListActorRolesRequest, opts ...grpc.CallOption) (*ListActorRolesResponse, error)
 }
@@ -280,6 +315,15 @@ func (c *roleServiceClient) AssignRole(ctx context.Context, in *AssignRoleReques
 	return out, nil
 }
 
+func (c *roleServiceClient) UnassignRole(ctx context.Context, in *UnassignRoleRequest, opts ...grpc.CallOption) (*UnassignRoleResponse, error) {
+	out := new(UnassignRoleResponse)
+	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/UnassignRole", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *roleServiceClient) HasRole(ctx context.Context, in *HasRoleRequest, opts ...grpc.CallOption) (*HasRoleResponse, error) {
 	out := new(HasRoleResponse)
 	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/HasRole", in, out, c.cc, opts...)
@@ -304,6 +348,7 @@ type RoleServiceServer interface {
 	CreateRole(context.Context, *CreateRoleRequest) (*CreateRoleResponse, error)
 	GetRole(context.Context, *GetRoleRequest) (*GetRoleResponse, error)
 	AssignRole(context.Context, *AssignRoleRequest) (*AssignRoleResponse, error)
+	UnassignRole(context.Context, *UnassignRoleRequest) (*UnassignRoleResponse, error)
 	HasRole(context.Context, *HasRoleRequest) (*HasRoleResponse, error)
 	ListActorRoles(context.Context, *ListActorRolesRequest) (*ListActorRolesResponse, error)
 }
@@ -366,6 +411,24 @@ func _RoleService_AssignRole_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoleService_UnassignRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnassignRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoleServiceServer).UnassignRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cloud_foundry.perm.protos.RoleService/UnassignRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoleServiceServer).UnassignRole(ctx, req.(*UnassignRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RoleService_HasRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HasRoleRequest)
 	if err := dec(in); err != nil {
@@ -417,6 +480,10 @@ var _RoleService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AssignRole",
 			Handler:    _RoleService_AssignRole_Handler,
+		},
+		{
+			MethodName: "UnassignRole",
+			Handler:    _RoleService_UnassignRole_Handler,
 		},
 		{
 			MethodName: "HasRole",
@@ -565,6 +632,58 @@ func (m *AssignRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *UnassignRoleRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UnassignRoleRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Actor != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(m.Actor.Size()))
+		n3, err := m.Actor.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if len(m.RoleName) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintRole(dAtA, i, uint64(len(m.RoleName)))
+		i += copy(dAtA[i:], m.RoleName)
+	}
+	return i, nil
+}
+
+func (m *UnassignRoleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UnassignRoleResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *HasRoleRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -584,11 +703,11 @@ func (m *HasRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintRole(dAtA, i, uint64(m.Actor.Size()))
-		n3, err := m.Actor.MarshalTo(dAtA[i:])
+		n4, err := m.Actor.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	if len(m.RoleName) > 0 {
 		dAtA[i] = 0x12
@@ -646,11 +765,11 @@ func (m *ListActorRolesRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintRole(dAtA, i, uint64(m.Actor.Size()))
-		n4, err := m.Actor.MarshalTo(dAtA[i:])
+		n5, err := m.Actor.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	return i, nil
 }
@@ -728,11 +847,11 @@ func (m *GetRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintRole(dAtA, i, uint64(m.Role.Size()))
-		n5, err := m.Role.MarshalTo(dAtA[i:])
+		n6, err := m.Role.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
 	}
 	return i, nil
 }
@@ -813,6 +932,26 @@ func (m *AssignRoleRequest) Size() (n int) {
 }
 
 func (m *AssignRoleResponse) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *UnassignRoleRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Actor != nil {
+		l = m.Actor.Size()
+		n += 1 + l + sovRole(uint64(l))
+	}
+	l = len(m.RoleName)
+	if l > 0 {
+		n += 1 + l + sovRole(uint64(l))
+	}
+	return n
+}
+
+func (m *UnassignRoleResponse) Size() (n int) {
 	var l int
 	_ = l
 	return n
@@ -1305,6 +1444,168 @@ func (m *AssignRoleResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: AssignRoleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRole(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRole
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UnassignRoleRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRole
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UnassignRoleRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UnassignRoleRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Actor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Actor == nil {
+				m.Actor = &Actor{}
+			}
+			if err := m.Actor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RoleName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRole
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRole
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RoleName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRole(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRole
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UnassignRoleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRole
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UnassignRoleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UnassignRoleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1944,34 +2245,36 @@ var (
 func init() { proto.RegisterFile("role.proto", fileDescriptorRole) }
 
 var fileDescriptorRole = []byte{
-	// 459 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x93, 0xdd, 0x8a, 0xd3, 0x40,
-	0x14, 0xc7, 0x4d, 0xcc, 0xee, 0x76, 0x4f, 0xa1, 0xcb, 0x0e, 0xba, 0x64, 0x23, 0x64, 0x4b, 0x10,
-	0xfc, 0x60, 0x9b, 0x6a, 0x8b, 0xde, 0xb7, 0x8a, 0x5a, 0x10, 0x0b, 0xf1, 0xce, 0x9b, 0x9a, 0x26,
-	0xd3, 0x64, 0x20, 0xcd, 0xd4, 0x4c, 0x22, 0xf8, 0x26, 0x5e, 0xf9, 0x3c, 0x5e, 0xfa, 0x04, 0x22,
-	0xf1, 0x45, 0x64, 0x66, 0x42, 0x9a, 0xb6, 0x3a, 0x56, 0x8a, 0x57, 0x99, 0x33, 0xf3, 0x3b, 0x1f,
-	0xff, 0xc9, 0x7f, 0x00, 0x32, 0x9a, 0x60, 0x77, 0x95, 0xd1, 0x9c, 0xa2, 0xcb, 0x20, 0xa1, 0x45,
-	0x38, 0x5b, 0xd0, 0x22, 0x0d, 0xb3, 0x4f, 0xee, 0x0a, 0x67, 0x4b, 0x79, 0xc2, 0xac, 0x5e, 0x44,
-	0xf2, 0xb8, 0x98, 0xbb, 0x01, 0x5d, 0xf6, 0x23, 0x1a, 0xd1, 0xbe, 0xd8, 0x9f, 0x17, 0x0b, 0x11,
-	0x89, 0x40, 0xac, 0x24, 0x6f, 0xb5, 0xfd, 0x20, 0xa7, 0x99, 0x0c, 0x9c, 0x01, 0x18, 0x1e, 0x4d,
-	0x30, 0xba, 0x00, 0x9d, 0x84, 0xa6, 0xd6, 0xd5, 0xee, 0x9f, 0x8e, 0x8f, 0xcb, 0xef, 0x57, 0xfa,
-	0xe4, 0xb9, 0xa7, 0x93, 0x10, 0x21, 0x30, 0x52, 0x7f, 0x89, 0x4d, 0x9d, 0x9f, 0x78, 0x62, 0xed,
-	0xdc, 0x83, 0xf3, 0x67, 0x19, 0xf6, 0x73, 0xcc, 0x33, 0x3d, 0xfc, 0xa1, 0xc0, 0x2c, 0xaf, 0x41,
-	0xad, 0x01, 0x4e, 0x00, 0x35, 0x41, 0xb6, 0xa2, 0x29, 0xc3, 0x68, 0x08, 0x06, 0xd7, 0x25, 0xc8,
-	0xf6, 0xe0, 0xca, 0xfd, 0xa3, 0x30, 0x57, 0xa4, 0x09, 0xd8, 0x89, 0xe1, 0x7c, 0xc4, 0x18, 0x89,
-	0xd2, 0x66, 0xcf, 0xa7, 0x70, 0x24, 0xb4, 0x54, 0xa5, 0xba, 0x8a, 0x52, 0x23, 0xce, 0x79, 0x12,
-	0x47, 0x77, 0xe0, 0x94, 0x17, 0x9d, 0x35, 0x94, 0xb5, 0xf8, 0xc6, 0x1b, 0x3e, 0xf4, 0x2d, 0x40,
-	0xcd, 0x4e, 0x72, 0x68, 0x07, 0x43, 0xe7, 0x95, 0xcf, 0xfe, 0x7b, 0xf3, 0x6b, 0x38, 0xab, 0xdb,
-	0x54, 0xd7, 0x75, 0x09, 0xad, 0xd8, 0x67, 0xb3, 0xfa, 0xca, 0x5a, 0xde, 0x49, 0x2c, 0x11, 0x67,
-	0x0a, 0xb7, 0x5f, 0x13, 0x96, 0xcb, 0xf2, 0x34, 0xc1, 0xec, 0xc0, 0xd9, 0x9c, 0x29, 0x5c, 0x6c,
-	0x17, 0xac, 0xa6, 0x78, 0x02, 0x47, 0x7c, 0x02, 0x66, 0x6a, 0xdd, 0x9b, 0xfb, 0xfc, 0x35, 0x49,
-	0x3b, 0x77, 0xa1, 0xf3, 0x12, 0xe7, 0x7f, 0xf3, 0xc9, 0x0b, 0x38, 0xab, 0xa9, 0x03, 0x4c, 0x32,
-	0xf8, 0x62, 0x40, 0x9b, 0x87, 0x6f, 0x71, 0xf6, 0x91, 0x04, 0x18, 0x11, 0x80, 0xb5, 0xff, 0xd0,
-	0xb5, 0xa2, 0xc8, 0x8e, 0x9f, 0xad, 0xde, 0x9e, 0x74, 0x35, 0xef, 0x7b, 0x38, 0xa9, 0x24, 0xa0,
-	0x07, 0x8a, 0xcc, 0xcd, 0xcb, 0xb0, 0x1e, 0xee, 0x83, 0x56, 0x1d, 0x08, 0xc0, 0xda, 0x97, 0x4a,
-	0x31, 0x3b, 0x0f, 0x45, 0x29, 0x66, 0xd7, 0xec, 0x5c, 0x4c, 0xe5, 0x42, 0xa5, 0x98, 0xcd, 0x07,
-	0xa1, 0x14, 0xb3, 0x6d, 0xea, 0x02, 0x3a, 0x9b, 0x46, 0x43, 0x8f, 0x14, 0xd9, 0xbf, 0x35, 0xb9,
-	0xf5, 0xf8, 0x1f, 0x32, 0x64, 0xdb, 0xb1, 0xf9, 0xb5, 0xb4, 0xb5, 0x6f, 0xa5, 0xad, 0xfd, 0x28,
-	0x6d, 0xed, 0xf3, 0x4f, 0xfb, 0xc6, 0xbb, 0x63, 0x99, 0x30, 0x97, 0xdf, 0xe1, 0xaf, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x06, 0xf9, 0x4c, 0x19, 0x73, 0x05, 0x00, 0x00,
+	// 492 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0xc6, 0x21, 0x69, 0xd3, 0x09, 0x4a, 0xd5, 0xa5, 0x44, 0xa9, 0x91, 0xdc, 0xc8, 0x42, 0xe2,
+	0x47, 0xad, 0x03, 0xa9, 0xe0, 0xde, 0x82, 0x80, 0x4a, 0x88, 0x4a, 0x46, 0x5c, 0xb8, 0x04, 0xc7,
+	0xde, 0xda, 0x8b, 0x1c, 0x6f, 0xf0, 0xda, 0x48, 0x3c, 0x05, 0x57, 0x1e, 0x89, 0x23, 0x4f, 0x80,
+	0x90, 0x79, 0x11, 0xb4, 0x3f, 0x72, 0xec, 0xa6, 0x2c, 0x46, 0x11, 0x3d, 0xd9, 0xb3, 0xfb, 0xcd,
+	0xcc, 0xf7, 0xcd, 0xce, 0x07, 0x90, 0xd2, 0x18, 0x3b, 0x8b, 0x94, 0x66, 0x14, 0xed, 0xf9, 0x31,
+	0xcd, 0x83, 0xe9, 0x39, 0xcd, 0x93, 0x20, 0xfd, 0xec, 0x2c, 0x70, 0x3a, 0x97, 0x37, 0xcc, 0x3c,
+	0x0c, 0x49, 0x16, 0xe5, 0x33, 0xc7, 0xa7, 0xf3, 0x71, 0x48, 0x43, 0x3a, 0x16, 0xe7, 0xb3, 0xfc,
+	0x5c, 0x44, 0x22, 0x10, 0x7f, 0x12, 0x6f, 0xf6, 0x3c, 0x3f, 0xa3, 0xa9, 0x0c, 0xec, 0x09, 0xb4,
+	0x5d, 0x1a, 0x63, 0x34, 0x80, 0x16, 0x09, 0x86, 0xc6, 0xc8, 0xb8, 0xb7, 0x75, 0xb2, 0x51, 0xfc,
+	0xd8, 0x6f, 0x9d, 0x3e, 0x73, 0x5b, 0x24, 0x40, 0x08, 0xda, 0x89, 0x37, 0xc7, 0xc3, 0x16, 0xbf,
+	0x71, 0xc5, 0xbf, 0x7d, 0x17, 0x76, 0x9e, 0xa6, 0xd8, 0xcb, 0x30, 0xcf, 0x74, 0xf1, 0xc7, 0x1c,
+	0xb3, 0xac, 0x04, 0x1a, 0x15, 0xe0, 0x29, 0xa0, 0x2a, 0x90, 0x2d, 0x68, 0xc2, 0x30, 0x3a, 0x82,
+	0x36, 0xd7, 0x25, 0x90, 0xbd, 0xc9, 0xbe, 0xf3, 0x47, 0x61, 0x8e, 0x48, 0x13, 0x60, 0x3b, 0x82,
+	0x9d, 0x63, 0xc6, 0x48, 0x98, 0x54, 0x7b, 0x3e, 0x81, 0x8e, 0xd0, 0xa2, 0x4a, 0x8d, 0x34, 0xa5,
+	0x8e, 0x39, 0xce, 0x95, 0x70, 0x74, 0x1b, 0xb6, 0x78, 0xd1, 0x69, 0x45, 0x59, 0x97, 0x1f, 0xbc,
+	0xe6, 0xa4, 0x77, 0x01, 0x55, 0x3b, 0x49, 0xd2, 0xf6, 0x07, 0xb8, 0xf9, 0x36, 0xf1, 0xae, 0x86,
+	0xc1, 0x00, 0x76, 0xeb, 0xbd, 0x14, 0x07, 0x0c, 0xfd, 0x97, 0x1e, 0xfb, 0xef, 0xed, 0x0f, 0x60,
+	0xbb, 0x6c, 0xa3, 0x9e, 0x6c, 0x0f, 0xba, 0x91, 0xc7, 0xa6, 0xe5, 0xb3, 0x75, 0xdd, 0xcd, 0x48,
+	0x42, 0xec, 0x33, 0xb8, 0xf5, 0x8a, 0xb0, 0x4c, 0x96, 0xa7, 0x31, 0x66, 0x6b, 0x72, 0xb3, 0xcf,
+	0x60, 0x70, 0xb1, 0xa0, 0x62, 0xf1, 0x18, 0x3a, 0x9c, 0x01, 0x1b, 0x1a, 0xa3, 0xeb, 0x4d, 0x36,
+	0x47, 0xa2, 0xed, 0x3b, 0xd0, 0x7f, 0x81, 0xb3, 0xbf, 0xed, 0xea, 0x73, 0xd8, 0x2e, 0x51, 0x6b,
+	0x2c, 0xea, 0xe4, 0x4b, 0x07, 0x7a, 0x3c, 0x7c, 0x83, 0xd3, 0x4f, 0xc4, 0xc7, 0x88, 0x00, 0x2c,
+	0x3d, 0x80, 0x0e, 0x34, 0x45, 0x56, 0x3c, 0x65, 0x1e, 0x36, 0x44, 0x2b, 0xbe, 0xef, 0x61, 0x53,
+	0x49, 0x40, 0xf7, 0x35, 0x99, 0xf5, 0x61, 0x98, 0x0f, 0x9a, 0x40, 0x55, 0x07, 0x02, 0xb0, 0xf4,
+	0x86, 0x56, 0xcc, 0x8a, 0x59, 0xb5, 0x62, 0x56, 0x0d, 0x87, 0x28, 0xdc, 0xa8, 0x9a, 0x00, 0x39,
+	0x9a, 0xf4, 0x4b, 0x9c, 0x69, 0x8e, 0x1b, 0xe3, 0x97, 0xd3, 0x53, 0x6b, 0xaf, 0x9d, 0x5e, 0xdd,
+	0x81, 0xda, 0xe9, 0x5d, 0x74, 0x51, 0x0e, 0xfd, 0xfa, 0x66, 0xa3, 0x87, 0x9a, 0xec, 0x4b, 0x5d,
+	0x65, 0x3e, 0xfa, 0x87, 0x0c, 0xd9, 0xf6, 0x64, 0xf8, 0xad, 0xb0, 0x8c, 0xef, 0x85, 0x65, 0xfc,
+	0x2c, 0x2c, 0xe3, 0xeb, 0x2f, 0xeb, 0xda, 0xbb, 0x0d, 0x99, 0x30, 0x93, 0xdf, 0xa3, 0xdf, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0x8a, 0x13, 0x21, 0x8c, 0x68, 0x06, 0x00, 0x00,
 }

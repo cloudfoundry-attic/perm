@@ -14,6 +14,7 @@ service RoleService {
   rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
   rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
+  rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
 }
@@ -37,6 +38,14 @@ message AssignRoleRequest {
 }
 
 message AssignRoleResponse {
+}
+
+message UnassignRoleRequest {
+  Actor actor = 1;
+  string role_name = 2;
+}
+
+message UnassignRoleResponse {
 }
 
 message HasRoleRequest {

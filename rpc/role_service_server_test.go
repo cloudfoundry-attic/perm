@@ -142,6 +142,75 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 	})
 
+	Describe("#UnassignRole", func() {
+		It("removes role binding if the user has that role", func() {
+			name := "role"
+			actor := &protos.Actor{
+				ID:     "actor-id",
+				Issuer: "fake-issuer",
+			}
+			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			req := &protos.UnassignRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRole(nil, req)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+		})
+
+		It("fails if the user is not assigned to the role", func() {
+			name := "role"
+			actor := &protos.Actor{
+				ID:     "actor",
+				Issuer: "issuer",
+			}
+			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			req := &protos.UnassignRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRole(nil, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
+		})
+
+		It("fails if the role does not exist", func() {
+			name := "fake-role"
+			actor := &protos.Actor{
+				ID:     "actor",
+				Issuer: "issuer",
+			}
+			req := &protos.UnassignRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRole(nil, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
+		})
+	})
+
 	Describe("#HasRole", func() {
 		It("returns true if the actor has the role", func() {
 			roleName := "role"
