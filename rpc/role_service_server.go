@@ -65,6 +65,17 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 
 	delete(s.roles, req.GetName())
 
+	// "Cascade"
+	// Remove role bindings for role
+	for actor, roles := range s.roleBindings {
+		for i, role := range roles {
+			if role == name {
+				s.roleBindings[actor] = append(roles[:i], roles[i+1:]...)
+				break
+			}
+		}
+	}
+
 	return &protos.DeleteRoleResponse{}, nil
 }
 

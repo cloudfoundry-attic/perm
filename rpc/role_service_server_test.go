@@ -109,6 +109,53 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(res).To(BeNil())
 			Expect(err).To(HaveOccurred())
 		})
+
+		It("deletes any role assignments for the role", func() {
+			name := "test-role"
+
+			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := &protos.Actor{
+				ID:     "actor-id",
+				Issuer: "issuer",
+			}
+
+			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			hasRoleRes, err := subject.HasRole(nil, &protos.HasRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(hasRoleRes).NotTo(BeNil())
+			Expect(hasRoleRes.GetHasRole()).To(BeTrue())
+
+			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			hasRoleRes, err = subject.HasRole(nil, &protos.HasRoleRequest{
+				Actor:    actor,
+				RoleName: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(hasRoleRes).NotTo(BeNil())
+			Expect(hasRoleRes.GetHasRole()).To(BeFalse())
+		})
 	})
 
 	Describe("#AssignRole", func() {
