@@ -15,4 +15,4 @@ repositories.
 
 ## Usage
 
-Not, yet.
+Not yet, please.
