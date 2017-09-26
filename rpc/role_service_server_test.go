@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm/protos"
@@ -12,10 +13,12 @@ import (
 var _ = Describe("RoleServiceServer", func() {
 	var (
 		subject *rpc.RoleServiceServer
+		logger  *lagertest.TestLogger
 	)
 
 	BeforeEach(func() {
-		subject = rpc.NewRoleServiceServer()
+		logger = lagertest.NewTestLogger("perm-test")
+		subject = rpc.NewRoleServiceServer(logger)
 	})
 
 	Describe("#CreateRole", func() {

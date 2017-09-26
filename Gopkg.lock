@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "code.cloudfoundry.org/lager"
+  packages = [".","lagerctx","lagertest"]
+  revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["gogoproto","proto","protoc-gen-gogo/descriptor"]
   revision = "100ba4e885062801d56799d78530b73b178a78f3"
@@ -27,7 +33,7 @@
 
 [[projects]]
   name = "github.com/onsi/gomega"
-  packages = [".","format","internal/assertion","internal/asyncassertion","internal/oraclematcher","internal/testingtsupport","matchers","matchers/support/goraph/bipartitegraph","matchers/support/goraph/edge","matchers/support/goraph/node","matchers/support/goraph/util","types"]
+  packages = [".","format","gbytes","internal/assertion","internal/asyncassertion","internal/oraclematcher","internal/testingtsupport","matchers","matchers/support/goraph/bipartitegraph","matchers/support/goraph/edge","matchers/support/goraph/node","matchers/support/goraph/util","types"]
   revision = "c893efa28eb45626cdaa76c9f653b62488858837"
   version = "v1.2.0"
 
@@ -76,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "25c72884b69687f1104c8d6ebe53e9dd5e038d882d594fc7837a3d4562af3fa5"
+  inputs-digest = "0ee93bc9792829908889340a84a12b0241c99f96e96453523f84f8a434f81485"
   solver-name = "gps-cdcl"
   solver-version = 1

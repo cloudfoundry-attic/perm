@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
 	"github.com/jessevdk/go-flags"
@@ -15,6 +17,7 @@ import (
 type options struct {
 	Hostname string `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
 	Port     int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+	Logger   LagerFlag
 }
 
 func main() {
@@ -22,21 +25,34 @@ func main() {
 	parser := flags.NewParser(parserOpts, flags.Default)
 
 	_, err := parser.Parse()
-
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		lager.NewLogger("perm").Error(messages.ErrFailedToParseOptions, err)
 		os.Exit(1)
 	}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", parserOpts.Hostname, parserOpts.Port))
+	logger, _ := parserOpts.Logger.Logger("perm")
+
+	hostname := parserOpts.Hostname
+	port := parserOpts.Port
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", hostname, port))
+
+	listeningLogData := lager.Data{
+		"protocol": "tcp",
+		"hostname": hostname,
+		"port":     port,
+	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to listen: %v", err)
+		logger.Error(messages.ErrFailedToListen, err, listeningLogData)
 		os.Exit(1)
 	}
 
 	var serverOpts []grpc.ServerOption
 
 	grpcServer := grpc.NewServer(serverOpts...)
-	protos.RegisterRoleServiceServer(grpcServer, rpc.NewRoleServiceServer())
+
+	logger = logger.Session("grpc-server")
+
+	protos.RegisterRoleServiceServer(grpcServer, rpc.NewRoleServiceServer(logger))
+	logger.Debug(messages.StartingServer, listeningLogData)
 	grpcServer.Serve(lis)
 }

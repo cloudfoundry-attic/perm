@@ -4,29 +4,37 @@ import (
 	"context"
 	"errors"
 
-	"google.golang.org/grpc/codes"
-
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"github.com/satori/go.uuid"
+	"google.golang.org/grpc/codes"
 )
 
 type RoleServiceServer struct {
-	roles        map[string]*protos.Role
-	roleBindings map[protos.Actor][]string
+	logger      lager.Logger
+	roles       map[string]*protos.Role
+	assignments map[protos.Actor][]string
 }
 
-func NewRoleServiceServer() *RoleServiceServer {
+func NewRoleServiceServer(logger lager.Logger) *RoleServiceServer {
 	return &RoleServiceServer{
-		roles:        make(map[string]*protos.Role),
-		roleBindings: make(map[protos.Actor][]string),
+		logger:      logger,
+		roles:       make(map[string]*protos.Role),
+		assignments: make(map[protos.Actor][]string),
 	}
 }
 
 func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRoleRequest) (*protos.CreateRoleResponse, error) {
+	logger := s.logger.Session("create-role")
 	name := req.GetName()
+	logData := lager.Data{"role.name": name}
 
-	if _, exists := s.roles[name]; exists {
-		return nil, togRPCError(codes.AlreadyExists, errors.New("role already exists"))
+	if role, exists := s.roles[name]; exists {
+		logData["role.id"] = role.GetID()
+		err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAlreadyExists))
+		logger.Error(messages.ErrRoleAlreadyExists, err, logData)
+		return nil, err
 	}
 
 	role := &protos.Role{
@@ -34,111 +42,162 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 		ID:   uuid.NewV4().String(),
 	}
 	s.roles[name] = role
+	logData["role.id"] = role.GetID()
 
+	logger.Debug(messages.Success, logData)
 	return &protos.CreateRoleResponse{
 		Role: role,
 	}, nil
 }
 
 func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequest) (*protos.GetRoleResponse, error) {
+	logger := s.logger.Session("get-role")
 	name := req.GetName()
+	logData := lager.Data{"role.name": name}
 
 	for _, role := range s.roles {
 		if role.GetName() == name {
+			logData["role.id"] = role.GetID()
+			logger.Debug(messages.Success, logData)
 			return &protos.GetRoleResponse{
 				Role: role,
 			}, nil
 		}
 	}
 
-	return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
+	logger.Error(messages.ErrRoleNotFound, err)
+	return nil, err
 }
 
 func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error) {
+	logger := s.logger.Session("delete-role")
 	name := req.GetName()
+	logData := lager.Data{"role.name": name}
 
-	_, ok := s.roles[name]
+	role, ok := s.roles[name]
 
 	if !ok {
-		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
+		s.logger.Error(messages.ErrRoleNotFound, err, logData)
+		return nil, err
 	}
 
-	delete(s.roles, req.GetName())
+	logData["role.id"] = role.GetID()
+	delete(s.roles, name)
 
 	// "Cascade"
-	// Remove role bindings for role
-	for actor, roles := range s.roleBindings {
-		for i, role := range roles {
-			if role == name {
-				s.roleBindings[actor] = append(roles[:i], roles[i+1:]...)
+	// Remove role assignments for role
+	for actor, assignments := range s.assignments {
+		for i, roleName := range assignments {
+			if roleName == name {
+				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
+				assignmentData := lager.Data{
+					"actor.id":     actor.GetID(),
+					"actor.issuer": actor.GetIssuer(),
+					"role.id":      role.GetID(),
+					"role.name":    name,
+				}
+				logger.Debug(messages.Success, assignmentData)
 				break
 			}
 		}
 	}
 
+	logger.Debug(messages.Success, logData)
+
 	return &protos.DeleteRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
+	logger := s.logger.Session("assign-role")
 	roleName := req.GetRoleName()
 	actor := req.GetActor()
+	logData := lager.Data{
+		"actor.id":     actor.GetID(),
+		"actor.issuer": actor.GetIssuer(),
+		"role.name":    roleName,
+	}
+	role, exists := s.roles[roleName]
 
-	if _, exists := s.roles[roleName]; !exists {
-		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	if !exists {
+		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
+		logger.Error(messages.ErrRoleNotFound, err)
+		return nil, err
 	}
 
-	roleBindings, ok := s.roleBindings[*actor]
+	logData["role.id"] = role.GetID()
+
+	assignments, ok := s.assignments[*actor]
 	if !ok {
-		roleBindings = []string{}
+		assignments = []string{}
 	}
 
-	for _, role := range roleBindings {
+	for _, role := range assignments {
 		if role == roleName {
-			return nil, togRPCError(codes.AlreadyExists, errors.New("actor is already assigned to role"))
+			err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAssignmentAlreadyExists))
+			logger.Error(messages.ErrRoleAssignmentAlreadyExists, err, logData)
+			return nil, err
 		}
 	}
 
-	roleBindings = append(roleBindings, roleName)
+	assignments = append(assignments, roleName)
 
-	s.roleBindings[*actor] = roleBindings
+	s.assignments[*actor] = assignments
+	logger.Debug(messages.Success, logData)
 
 	return &protos.AssignRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error) {
+	logger := s.logger.Session("unassign-role")
 	roleName := req.GetRoleName()
 	actor := req.GetActor()
+	logData := lager.Data{
+		"actor.id":     actor.GetID(),
+		"actor.issuer": actor.GetIssuer(),
+		"role.name":    roleName,
+	}
+	role, exists := s.roles[roleName]
 
-	if _, exists := s.roles[roleName]; !exists {
-		return nil, togRPCError(codes.NotFound, errors.New("could not find role"))
+	if !exists {
+		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
+		s.logger.Error(messages.ErrRoleNotFound, err)
+		return nil, togRPCError(codes.NotFound, err)
 	}
 
-	roleBindings, ok := s.roleBindings[*actor]
+	logData["role.id"] = role.GetID()
+
+	assignments, ok := s.assignments[*actor]
 	if !ok {
-		roleBindings = []string{}
+		assignments = []string{}
 	}
 
-	for i, role := range roleBindings {
-		if role == roleName {
-			s.roleBindings[*actor] = append(roleBindings[:i], roleBindings[i+1:]...)
+	for i, assignment := range assignments {
+		if assignment == roleName {
+			s.assignments[*actor] = append(assignments[:i], assignments[i+1:]...)
+			logger.Debug(messages.Success, logData)
 			return &protos.UnassignRoleResponse{}, nil
 		}
 	}
 
-	return nil, togRPCError(codes.NotFound, errors.New("actor is not assigned to role"))
+	err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleAssignmentNotFound))
+	logger.Error(messages.ErrRoleAssignmentNotFound, err, logData)
+	return nil, togRPCError(codes.NotFound, err)
 }
 
 func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {
 	actor := req.GetActor()
 	role := req.GetRoleName()
-	roleBindings, ok := s.roleBindings[*actor]
+	assignments, ok := s.assignments[*actor]
+
 	if !ok {
 		return &protos.HasRoleResponse{HasRole: false}, nil
 	}
 
 	var found bool
 
-	for _, name := range roleBindings {
+	for _, name := range assignments {
 		if name == role {
 			found = true
 			break
@@ -150,7 +209,7 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 
 func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
 	actor := req.GetActor()
-	roleBindings, ok := s.roleBindings[*actor]
+	assignments, ok := s.assignments[*actor]
 	if !ok {
 		return &protos.ListActorRolesResponse{
 			Roles: []*protos.Role{},
@@ -159,10 +218,10 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 
 	var roles []*protos.Role
 
-	for _, id := range roleBindings {
+	for _, id := range assignments {
 		role, found := s.roles[id]
 		if !found {
-			return nil, togRPCError(codes.Unknown, errors.New("found a role-binding for non-existent role"))
+			return nil, togRPCError(codes.Unknown, errors.New("found an assignment for non-existent role"))
 		}
 
 		roles = append(roles, role)
