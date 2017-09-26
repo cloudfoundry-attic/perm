@@ -10,8 +10,12 @@ import (
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/jessevdk/go-flags"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type options struct {
@@ -46,7 +50,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	var serverOpts []grpc.ServerOption
+	recoveryOpts := []grpc_recovery.Option{
+		grpc_recovery.WithRecoveryHandler(func(p interface{}) error {
+			err := status.Errorf(codes.Internal, "%s", p)
+			logger.Error(messages.ErrInternal, err)
+			return err
+		}),
+	}
+	serverOpts := []grpc.ServerOption{
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))),
+	}
 
 	grpcServer := grpc.NewServer(serverOpts...)
 

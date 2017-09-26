@@ -1,12 +1,13 @@
 package messages
 
 const (
-	ErrFailedToParseOptions        = "failed-to-parse-options"
 	ErrFailedToListen              = "failed-to-listen"
+	ErrFailedToParseOptions        = "failed-to-parse-options"
+	ErrInternal                    = "internal"
 	ErrRoleAlreadyExists           = "role-already-exists"
-	ErrRoleNotFound                = "role-not-found"
 	ErrRoleAssignmentAlreadyExists = "role-assignment-already-exists"
 	ErrRoleAssignmentNotFound      = "role-assignment-not-found"
+	ErrRoleNotFound                = "role-not-found"
 	StartingServer                 = "starting-server"
 	Success                        = "success"
 )
