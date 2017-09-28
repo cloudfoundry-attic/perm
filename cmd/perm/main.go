@@ -67,6 +67,7 @@ func main() {
 	logger = logger.Session("grpc-server")
 
 	protos.RegisterRoleServiceServer(grpcServer, rpc.NewRoleServiceServer(logger))
-	logger.Debug(messages.StartingServer, listeningLogData)
+	logger.Info(messages.StartingServer, listeningLogData)
+
 	grpcServer.Serve(lis)
 }
