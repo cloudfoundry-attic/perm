@@ -15,13 +15,16 @@ import (
 	"github.com/jessevdk/go-flags"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 )
 
 type options struct {
-	Hostname string `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
-	Port     int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
-	Logger   LagerFlag
+	Hostname       string `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
+	Port           int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+	TLSCertificate string `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
+	TLSKey         string `long:"tls-key" description:"File path of TLS private key" required:"true"`
+	Logger         LagerFlag
 }
 
 func main() {
@@ -30,7 +33,7 @@ func main() {
 
 	_, err := parser.Parse()
 	if err != nil {
-		lager.NewLogger("perm").Error(messages.ErrFailedToParseOptions, err)
+		lager.NewLogger("perm").Fatal(messages.ErrFailedToParseOptions, err)
 		os.Exit(1)
 	}
 
@@ -46,7 +49,14 @@ func main() {
 		"port":     port,
 	}
 	if err != nil {
-		logger.Error(messages.ErrFailedToListen, err, listeningLogData)
+		logger.Fatal(messages.ErrFailedToListen, err, listeningLogData)
+		os.Exit(1)
+	}
+
+	tlsCreds, err := credentials.NewServerTLSFromFile(parserOpts.TLSCertificate, parserOpts.TLSKey)
+
+	if err != nil {
+		logger.Fatal(messages.ErrInvalidTLSCredentials, err)
 		os.Exit(1)
 	}
 
@@ -58,6 +68,7 @@ func main() {
 		}),
 	}
 	serverOpts := []grpc.ServerOption{
+		grpc.Creds(tlsCreds),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))),
 	}

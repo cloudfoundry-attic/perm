@@ -22,7 +22,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
-  packages = ["."]
+  packages = [".","recovery"]
   revision = "6d3547c644afb325c16df96e3c7177ea6e2fdebd"
 
 [[projects]]
@@ -88,6 +88,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0384d34e431ae5b9aa7d7517d18e72b620985e61d8c101acbb5a0356dbb7a675"
+  inputs-digest = "bd69457f6daf6bd0521f493300dbe1fa5076d34fd8470617f014380ea740c181"
   solver-name = "gps-cdcl"
   solver-version = 1
