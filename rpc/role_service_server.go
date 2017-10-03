@@ -162,7 +162,7 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 
 	if !exists {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		s.logger.Error(messages.ErrRoleNotFound, err)
+		logger.Error(messages.ErrRoleNotFound, err)
 		return nil, togRPCError(codes.NotFound, err)
 	}
 
