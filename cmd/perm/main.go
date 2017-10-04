@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
@@ -24,7 +25,7 @@ type options struct {
 	Port           int    `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
 	TLSCertificate string `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey         string `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	Logger         LagerFlag
+	Logger         cmd.LagerFlag
 }
 
 func main() {
@@ -33,7 +34,6 @@ func main() {
 
 	_, err := parser.Parse()
 	if err != nil {
-		lager.NewLogger("perm").Fatal(messages.ErrFailedToParseOptions, err)
 		os.Exit(1)
 	}
 
