@@ -13,6 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate counterfeiter code.cloudfoundry.org/perm/protos.RoleServiceClient
+//go:generate counterfeiter github.com/cactus/go-statsd-client/statsd.Statter
+
 type AdminProbe struct {
 	RoleServiceClient protos.RoleServiceClient
 	StatsDClient      statsd.Statter
