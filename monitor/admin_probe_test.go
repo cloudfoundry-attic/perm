@@ -5,6 +5,8 @@ import (
 
 	"context"
 
+	"errors"
+
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/monitor/monitorfakes"
 	. "github.com/onsi/ginkgo"
@@ -16,22 +18,25 @@ var _ = Describe("AdminProbe", func() {
 		p *AdminProbe
 
 		fakeRoleServiceClient *monitorfakes.FakeRoleServiceClient
-		fakeStatsDClient      *monitorfakes.FakeStatter
 		fakeLogger            *lagertest.TestLogger
 		fakeContext           context.Context
+
+		someError       error
+		someStatsDError error
 	)
 
 	BeforeEach(func() {
 		fakeRoleServiceClient = new(monitorfakes.FakeRoleServiceClient)
-		fakeStatsDClient = new(monitorfakes.FakeStatter)
 
 		fakeLogger = lagertest.NewTestLogger("admin-probe")
 		fakeContext = context.Background()
 
 		p = &AdminProbe{
 			RoleServiceClient: fakeRoleServiceClient,
-			StatsDClient:      fakeStatsDClient,
 		}
+
+		someError = errors.New("some-error")
+		someStatsDError = errors.New("some-statsd-error")
 	})
 
 	Describe("Run", func() {
@@ -43,6 +48,70 @@ var _ = Describe("AdminProbe", func() {
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(1))
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
+		})
+
+		Context("when creating a role fails", func() {
+			BeforeEach(func() {
+				fakeRoleServiceClient.CreateRoleReturns(nil, someError)
+			})
+
+			It("errors and does not assign, unassign, or delete", func() {
+				err := p.Run(fakeContext, fakeLogger)
+				Expect(err).To(MatchError(someError))
+
+				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(0))
+				Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(0))
+				Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when assigning a role fails", func() {
+			BeforeEach(func() {
+				fakeRoleServiceClient.AssignRoleReturns(nil, someError)
+			})
+
+			It("errors and does not unassign or delete", func() {
+				err := p.Run(fakeContext, fakeLogger)
+				Expect(err).To(MatchError(someError))
+
+				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(0))
+				Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when unassigning a role fails", func() {
+			BeforeEach(func() {
+				fakeRoleServiceClient.UnassignRoleReturns(nil, someError)
+			})
+
+			It("errors and does not unassign or delete", func() {
+				err := p.Run(fakeContext, fakeLogger)
+				Expect(err).To(MatchError(someError))
+
+				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when deleting a role fails", func() {
+			BeforeEach(func() {
+				fakeRoleServiceClient.DeleteRoleReturns(nil, someError)
+			})
+
+			It("errors and does not unassign or delete", func() {
+				err := p.Run(fakeContext, fakeLogger)
+				Expect(err).To(MatchError(someError))
+
+				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(1))
+				Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
+			})
 		})
 	})
 })

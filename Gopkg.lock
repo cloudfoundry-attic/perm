@@ -32,18 +32,6 @@
   revision = "6d3547c644afb325c16df96e3c7177ea6e2fdebd"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/errwrap"
-  packages = ["."]
-  revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/go-multierror"
-  packages = ["."]
-  revision = "83588e72410abfbe4df460eeb6f30841ae47d4c4"
-
-[[projects]]
   name = "github.com/jessevdk/go-flags"
   packages = ["."]
   revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
@@ -106,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b61c8fe01353caa89a77c1252dee30533aeb154598f34fccfe507df80f1ee879"
+  inputs-digest = "90854d32410e6769dad0ed4a1956c7a8850f3aa72a8e392c439bd872f8007a3c"
   solver-name = "gps-cdcl"
   solver-version = 1

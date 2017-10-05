@@ -22,7 +22,6 @@ const (
 	FailedToAppendCertToPool = "failed-to-append-cert-to-pool"
 	FailedToGRPCDial         = "failed-to-grpc-dial"
 
-	FailedToCleanup      = "failed-to-cleanup"
 	FailedToCreateRole   = "failed-to-create-role"
 	FailedToAssignRole   = "failed-to-assign-role"
 	FailedToUnassignRole = "failed-to-unassign-role"

@@ -43,7 +43,14 @@ type statsDOptions struct {
 	Port     int    `long:"port" description:"Port used to connect to StatsD server" required:"true"`
 }
 
-const prefix = "localhost"
+const (
+	prefix = "localhost"
+
+	AlwaysSendMetric = 1.0
+
+	MetricAdminProbeRunsTotal  = "perm.probe.admin.runs.total"
+	MetricAdminProbeRunsFailed = "perm.probe.admin.runs.failed"
+)
 
 func main() {
 	parserOpts := &options{}
@@ -105,18 +112,25 @@ func main() {
 
 	adminProbe := &monitor.AdminProbe{
 		RoleServiceClient: p,
-		StatsDClient:      s,
 	}
 
 	ctx := context.Background()
 	adminProbeLogger := logger.Session("admin-probe")
-	err = adminProbe.Cleanup(ctx, adminProbeLogger.Session("cleanup"))
-	if err != nil {
-		panic(err)
-	}
+
+	adminProbe.Cleanup(ctx, adminProbeLogger.Session("cleanup"))
 	err = adminProbe.Run(ctx, adminProbeLogger.Session("run"))
+
+	if e := s.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
+		adminProbeLogger.Session("metrics").Error(messages.FailedToSendMetric, err, lager.Data{
+			"metric": MetricAdminProbeRunsTotal,
+		})
+	}
 	if err != nil {
-		panic(err)
+		if e := s.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
+			adminProbeLogger.Session("metrics").Error(messages.FailedToSendMetric, err, lager.Data{
+				"metric": MetricAdminProbeRunsFailed,
+			})
+		}
 	}
 
 	os.Exit(0)
