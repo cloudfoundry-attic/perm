@@ -22,6 +22,9 @@ const (
 	AlwaysSendMetric = 1.0
 
 	AdminProbeRoleName = "system.admin-probe"
+
+	MetricAdminProbeRunsTotal  = "perm.probe.admin.runs.total"
+	MetricAdminProbeRunsFailed = "perm.probe.admin.runs.failed"
 )
 
 var AdminProbeActor = &protos.Actor{
@@ -65,11 +68,11 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 	var err error
 
 	defer func() {
-		err = p.StatsDClient.Inc("perm.probe.admin.runs.total", 1, AlwaysSendMetric)
+		err = p.IncrementMetricRunsTotal()
 
 		if err != nil {
 			logger.Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": "perm.probe.admin.runs.total",
+				"metric": MetricAdminProbeRunsTotal,
 			})
 			result = multierror.Append(result, err)
 		}
@@ -86,10 +89,10 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 		})
 		result = multierror.Append(result, err)
 
-		err = p.StatsDClient.Inc("perm.probe.admin.runs.failed", 1, AlwaysSendMetric)
+		err = p.IncrementMetricRunsFailed()
 		if err != nil {
 			logger.Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": "perm.probe.admin.runs.failed",
+				"metric": MetricAdminProbeRunsFailed,
 			})
 			result = multierror.Append(result, err)
 		}
@@ -111,10 +114,10 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 		})
 		result = multierror.Append(result, err)
 
-		err = p.StatsDClient.Inc("perm.probe.admin.runs.failed", 1, AlwaysSendMetric)
+		err = p.IncrementMetricRunsFailed()
 		if err != nil {
 			logger.Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": "perm.probe.admin.runs.failed",
+				"metric": MetricAdminProbeRunsFailed,
 			})
 			result = multierror.Append(result, err)
 		}
@@ -136,10 +139,10 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 		})
 		result = multierror.Append(result, err)
 
-		err = p.StatsDClient.Inc("perm.probe.admin.runs.failed", 1, AlwaysSendMetric)
+		err = p.IncrementMetricRunsFailed()
 		if err != nil {
 			logger.Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": "perm.probe.admin.runs.failed",
+				"metric": MetricAdminProbeRunsFailed,
 			})
 			result = multierror.Append(result, err)
 		}
@@ -157,10 +160,10 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 		})
 		result = multierror.Append(result, err)
 
-		err = p.StatsDClient.Inc("perm.probe.admin.runs.failed", 1, AlwaysSendMetric)
+		err = p.IncrementMetricRunsFailed()
 		if err != nil {
 			logger.Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": "perm.probe.admin.runs.failed",
+				"metric": MetricAdminProbeRunsFailed,
 			})
 			result = multierror.Append(result, err)
 		}
@@ -168,4 +171,12 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 	}
 
 	return result
+}
+
+func (p *AdminProbe) IncrementMetricRunsTotal() error {
+	return p.StatsDClient.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric)
+}
+
+func (p *AdminProbe) IncrementMetricRunsFailed() error {
+	return p.StatsDClient.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric)
 }
