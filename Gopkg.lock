@@ -8,6 +8,12 @@
   revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
 
 [[projects]]
+  name = "github.com/cactus/go-statsd-client"
+  packages = ["statsd"]
+  revision = "91c326c3f7bd20f0226d3d1c289dd9f8ce28d33d"
+  version = "v3.1.0"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["gogoproto","proto","protoc-gen-gogo/descriptor"]
   revision = "100ba4e885062801d56799d78530b73b178a78f3"
@@ -24,6 +30,18 @@
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
   packages = [".","recovery"]
   revision = "6d3547c644afb325c16df96e3c7177ea6e2fdebd"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/errwrap"
+  packages = ["."]
+  revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-multierror"
+  packages = ["."]
+  revision = "83588e72410abfbe4df460eeb6f30841ae47d4c4"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
@@ -88,6 +106,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd69457f6daf6bd0521f493300dbe1fa5076d34fd8470617f014380ea740c181"
+  inputs-digest = "b61c8fe01353caa89a77c1252dee30533aeb154598f34fccfe507df80f1ee879"
   solver-name = "gps-cdcl"
   solver-version = 1
