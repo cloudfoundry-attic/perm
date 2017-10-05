@@ -18,6 +18,8 @@ import (
 
 	"strconv"
 
+	"time"
+
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/monitor"
@@ -44,8 +46,6 @@ type statsDOptions struct {
 }
 
 const (
-	prefix = "localhost"
-
 	AlwaysSendMetric = 1.0
 
 	MetricAdminProbeRunsTotal  = "perm.probe.admin.runs.total"
@@ -62,21 +62,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, _ := parserOpts.Logger.Logger("perm")
+	logger, _ := parserOpts.Logger.Logger("perm-monitor")
 
-	logger.Debug("starting")
-	defer logger.Debug("finishing")
+	logger.Debug(messages.Starting)
+	defer logger.Debug(messages.Finished)
 
+	//////////////////////
+	// Setup StatsD Client
 	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
-	s, err := statsd.NewClient(statsDAddr, prefix)
+	statsDClient, err := statsd.NewClient(statsDAddr, "")
 	if err != nil {
 		logger.Fatal(messages.FailedToConnectToStatsD, err, lager.Data{
 			"addr": statsDAddr,
 		})
 		os.Exit(1)
 	}
-	defer s.Close()
+	defer statsDClient.Close()
+	//////////////////////
 
+	//////////////////////
+	// Setup Perm GRPC Client
+	//
+	//// Setup TLS Credentials
 	pool := x509.NewCertPool()
 
 	for _, certPath := range parserOpts.Perm.CACertificate {
@@ -99,6 +106,7 @@ func main() {
 	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
 	creds := credentials.NewClientTLSFromCert(pool, parserOpts.Perm.Hostname)
 
+	//// Setup GRPC connection
 	g, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Fatal(messages.FailedToGRPCDial, err, lager.Data{
@@ -109,28 +117,42 @@ func main() {
 	defer g.Close()
 
 	p := protos.NewRoleServiceClient(g)
+	//////////////////////
+
+	ctx := context.Background()
+	adminProbeLogger := logger.Session("admin-probe")
+	metricsLogger := adminProbeLogger.Session("metrics")
+	cleanupLogger := adminProbeLogger.Session("cleanup")
+	runLogger := adminProbeLogger.Session("run")
 
 	adminProbe := &monitor.AdminProbe{
 		RoleServiceClient: p,
 	}
 
-	ctx := context.Background()
-	adminProbeLogger := logger.Session("admin-probe")
+	ticker := time.NewTicker(30 * time.Second)
 
-	adminProbe.Cleanup(ctx, adminProbeLogger.Session("cleanup"))
-	err = adminProbe.Run(ctx, adminProbeLogger.Session("run"))
+	for range ticker.C {
+		func() {
+			adminProbe.Cleanup(ctx, cleanupLogger)
 
-	if e := s.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
-		adminProbeLogger.Session("metrics").Error(messages.FailedToSendMetric, err, lager.Data{
-			"metric": MetricAdminProbeRunsTotal,
-		})
-	}
-	if err != nil {
-		if e := s.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
-			adminProbeLogger.Session("metrics").Error(messages.FailedToSendMetric, err, lager.Data{
-				"metric": MetricAdminProbeRunsFailed,
-			})
-		}
+			cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+			defer cancel()
+
+			err = adminProbe.Run(cctx, runLogger)
+
+			if e := statsDClient.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
+				metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
+					"metric": MetricAdminProbeRunsTotal,
+				})
+			}
+			if err != nil {
+				if e := statsDClient.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
+					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
+						"metric": MetricAdminProbeRunsFailed,
+					})
+				}
+			}
+		}()
 	}
 
 	os.Exit(0)

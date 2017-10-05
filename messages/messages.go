@@ -15,6 +15,9 @@ const (
 )
 
 const (
+	Starting = "starting"
+	Finished = "finished"
+
 	FailedToConnectToStatsD = "failed-to-connect-to-statsd"
 	FailedToSendMetric      = "failed-to-send-metric"
 
@@ -22,6 +25,7 @@ const (
 	FailedToAppendCertToPool = "failed-to-append-cert-to-pool"
 	FailedToGRPCDial         = "failed-to-grpc-dial"
 
+	FailedToGetRole      = "failed-to-get-role"
 	FailedToCreateRole   = "failed-to-create-role"
 	FailedToAssignRole   = "failed-to-assign-role"
 	FailedToUnassignRole = "failed-to-unassign-role"

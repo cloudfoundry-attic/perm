@@ -27,6 +27,9 @@ var AdminProbeActor = &protos.Actor{
 }
 
 func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger) error {
+	logger.Debug(messages.Starting)
+	defer logger.Debug(messages.Finished)
+
 	deleteRoleRequest := &protos.DeleteRoleRequest{
 		Name: AdminProbeRoleName,
 	}
@@ -58,6 +61,9 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger) error {
 }
 
 func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
+	logger.Debug(messages.Starting)
+	defer logger.Debug(messages.Finished)
+
 	var err error
 
 	// CreateRole
