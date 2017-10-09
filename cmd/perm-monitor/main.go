@@ -70,7 +70,7 @@ func main() {
 	//////////////////////
 	// Setup StatsD Client
 	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
-	statsDClient, err := statsd.NewClient(statsDAddr, "")
+	statsDClient, err := statsd.NewBufferedClient(statsDAddr, "", 0, 0)
 	if err != nil {
 		logger.Fatal(messages.FailedToConnectToStatsD, err, lager.Data{
 			"addr": statsDAddr,
