@@ -26,11 +26,26 @@ type options struct {
 	TLSCertificate string `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey         string `long:"tls-key" description:"File path of TLS private key" required:"true"`
 	Logger         cmd.LagerFlag
+	SQL            sqlOptions `group:"SQL" namespace:"sql"`
+}
+
+type sqlOptions struct {
+	DB dbOptions `group:"DB" namespace:"db"`
+}
+
+type dbOptions struct {
+	Driver   string `long:"driver" description:"Database driver to use for SQL backend (e.g. mysql, postgres)" required:"true"`
+	Host     string `long:"host" description:"Host for SQL backend" required:"true"`
+	Port     int    `long:"port" description:"Port for SQL backend" required:"true"`
+	Schema   string `long:"schema" description:"Database name to use for connecting to SQL backend" required:"true"`
+	Username string `long:"username" description:"Username to use for connecting to SQL backend" required:"true"`
+	Password string `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
 }
 
 func main() {
 	parserOpts := &options{}
 	parser := flags.NewParser(parserOpts, flags.Default)
+	parser.NamespaceDelimiter = "-"
 
 	_, err := parser.Parse()
 	if err != nil {
