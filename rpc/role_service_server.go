@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"database/sql"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
@@ -12,12 +14,14 @@ import (
 )
 
 type RoleServiceServer struct {
+	dbConn *sql.DB
+
 	logger      lager.Logger
 	roles       map[string]*protos.Role
 	assignments map[protos.Actor][]string
 }
 
-func NewRoleServiceServer(logger lager.Logger) *RoleServiceServer {
+func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:      logger,
 		roles:       make(map[string]*protos.Role),

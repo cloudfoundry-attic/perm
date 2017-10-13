@@ -8,10 +8,22 @@
   revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
 
 [[projects]]
+  name = "github.com/DATA-DOG/go-sqlmock"
+  packages = ["."]
+  revision = "d76b18b42f285b792bf985118980ce9eacea9d10"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/cactus/go-statsd-client"
   packages = ["statsd"]
   revision = "91c326c3f7bd20f0226d3d1c289dd9f8ce28d33d"
   version = "v3.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/go-sql-driver/mysql"
+  packages = ["."]
+  revision = "eb92a8dc628ca52501ddae1ed90eca7514f215bf"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -94,6 +106,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0b373bddfce1bb79d02fc49d1a2f8b6ff4ab038a4419873e0693cc9ce413887d"
+  inputs-digest = "01cf54f7f50aaf0d6d1afe93168b6d2b3d87c822d9f7977db5d8c538589c7659"
   solver-name = "gps-cdcl"
   solver-version = 1

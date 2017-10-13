@@ -3,6 +3,8 @@ package messages
 const (
 	ErrFailedToListen              = "failed-to-listen"
 	ErrFailedToParseOptions        = "failed-to-parse-options"
+	ErrFailedToOpenSQLConnection   = "failed-to-open-sql-connection"
+	ErrFailedToPingSQLConnection   = "failed-to-ping-sql-connection"
 	ErrInternal                    = "internal"
 	ErrInvalidTLSCredentials       = "invalid-tls-credentials"
 	ErrRoleAlreadyExists           = "role-already-exists"
@@ -30,4 +32,8 @@ const (
 	FailedToAssignRole   = "failed-to-assign-role"
 	FailedToUnassignRole = "failed-to-unassign-role"
 	FailedToDeleteRole   = "failed-to-delete-role"
+)
+
+const (
+	PingSQLConnection = "ping-sql-connection"
 )

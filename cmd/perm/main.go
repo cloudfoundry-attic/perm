@@ -1,16 +1,19 @@
 package main
 
 import (
-	"net"
-
+	"database/sql"
+	"errors"
 	"fmt"
+	"net"
 	"os"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
+
+	"code.cloudfoundry.org/lager"
+
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/jessevdk/go-flags"
@@ -18,6 +21,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
+
+	"strconv"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type options struct {
@@ -92,8 +99,53 @@ func main() {
 
 	logger = logger.Session("grpc-server")
 
-	protos.RegisterRoleServiceServer(grpcServer, rpc.NewRoleServiceServer(logger))
+	db, err := parserOpts.SQL.Open()
+	if err != nil {
+		logger.Fatal(messages.ErrFailedToOpenSQLConnection, err)
+		os.Exit(1)
+	}
+
+	pingLogger := logger.Session(messages.PingSQLConnection, parserOpts.SQL.LagerData())
+	pingLogger.Debug(messages.Starting)
+	err = db.Ping()
+	if err != nil {
+		logger.Fatal(messages.ErrFailedToPingSQLConnection, err)
+		os.Exit(1)
+	}
+	pingLogger.Debug(messages.Finished)
+
+	defer db.Close()
+
+	roleServiceServer := rpc.NewRoleServiceServer(logger, db)
+	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 	logger.Info(messages.StartingServer, listeningLogData)
 
 	grpcServer.Serve(lis)
+}
+
+func (o *sqlOptions) Open() (*sql.DB, error) {
+	switch o.DB.Driver {
+	case "mysql":
+		cfg := mysql.NewConfig()
+
+		cfg.User = o.DB.Username
+		cfg.Passwd = o.DB.Password
+		cfg.Net = "tcp"
+		cfg.Addr = net.JoinHostPort(o.DB.Host, strconv.Itoa(o.DB.Port))
+		cfg.DBName = o.DB.Schema
+
+		return sql.Open(o.DB.Driver, cfg.FormatDSN())
+	default:
+		return nil, errors.New("unsupported sql driver")
+	}
+}
+
+func (o *sqlOptions) LagerData() lager.Data {
+	return lager.Data{
+		"db_driver":   o.DB.Driver,
+		"db_host":     o.DB.Host,
+		"db_port":     o.DB.Port,
+		"db_schema":   o.DB.Schema,
+		"db_username": o.DB.Username,
+	}
 }
