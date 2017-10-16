@@ -33,6 +33,7 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 	logger := s.logger.Session("create-role")
 	name := req.GetName()
 	logData := lager.Data{"role.name": name}
+	logger.Debug(messages.Starting, logData)
 
 	if role, exists := s.roles[name]; exists {
 		logData["role.id"] = role.GetID()
@@ -70,7 +71,7 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	}
 
 	err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-	logger.Error(messages.ErrRoleNotFound, err)
+	logger.Error(messages.ErrRoleNotFound, err, logData)
 	return nil, err
 }
 
@@ -126,7 +127,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	if !exists {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		logger.Error(messages.ErrRoleNotFound, err)
+		logger.Error(messages.ErrRoleNotFound, err, logData)
 		return nil, err
 	}
 
@@ -166,7 +167,7 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 
 	if !exists {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		logger.Error(messages.ErrRoleNotFound, err)
+		logger.Error(messages.ErrRoleNotFound, err, logData)
 		return nil, togRPCError(codes.NotFound, err)
 	}
 
