@@ -109,7 +109,7 @@ func main() {
 	pingLogger.Debug(messages.Starting)
 	err = db.Ping()
 	if err != nil {
-		logger.Fatal(messages.ErrFailedToPingSQLConnection, err)
+		logger.Fatal(messages.ErrFailedToPingSQLConnection, err, parserOpts.SQL.LagerData())
 		os.Exit(1)
 	}
 	pingLogger.Debug(messages.Finished)
