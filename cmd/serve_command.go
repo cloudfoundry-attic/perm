@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"net"
+
+	"strconv"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
@@ -28,10 +29,11 @@ type ServeCommand struct {
 
 func (cmd ServeCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
+	logger = logger.Session("serve")
 
 	hostname := cmd.Hostname
 	port := cmd.Port
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", hostname, port))
+	lis, err := net.Listen("tcp", net.JoinHostPort(hostname, strconv.Itoa(port)))
 
 	listeningLogData := lager.Data{
 		"protocol": "tcp",
@@ -65,8 +67,6 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	logger = logger.Session("grpc-server")
-
 	db, err := cmd.SQL.Open()
 	if err != nil {
 		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
@@ -84,9 +84,10 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	defer db.Close()
 
+	logger = logger.Session("grpc-server")
 	roleServiceServer := rpc.NewRoleServiceServer(logger, db)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
-	logger.Info(messages.StartingServer, listeningLogData)
+	logger.Info(messages.Starting, listeningLogData)
 
 	return grpcServer.Serve(lis)
 }

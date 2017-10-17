@@ -7,5 +7,8 @@ type MigrateCommand struct {
 }
 
 func (cmd MigrateCommand) Execute([]string) error {
+	logger, _ := cmd.Logger.Logger("perm")
+	logger = logger.Session("migrate")
+
 	return nil
 }

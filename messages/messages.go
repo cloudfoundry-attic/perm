@@ -12,8 +12,7 @@ const (
 	ErrRoleAssignmentNotFound      = "role-assignment-not-found"
 	ErrRoleNotFound                = "role-not-found"
 
-	StartingServer = "starting-server"
-	Success        = "success"
+	Success = "success"
 )
 
 const (
