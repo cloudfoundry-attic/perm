@@ -9,7 +9,8 @@ import (
 )
 
 type options struct {
-	Serve cmd.ServeCommand `command:"serve" alias:"s" description:"Start the server"`
+	Serve   cmd.ServeCommand   `command:"serve" alias:"s" description:"Start the server"`
+	Migrate cmd.MigrateCommand `command:"migrate" alias:"m" description:"Migrate the database"`
 }
 
 func main() {
