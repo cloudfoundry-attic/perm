@@ -2,7 +2,6 @@ package messages
 
 const (
 	ErrFailedToListen              = "failed-to-listen"
-	ErrFailedToParseOptions        = "failed-to-parse-options"
 	ErrFailedToOpenSQLConnection   = "failed-to-open-sql-connection"
 	ErrFailedToPingSQLConnection   = "failed-to-ping-sql-connection"
 	ErrInternal                    = "internal"
@@ -11,13 +10,12 @@ const (
 	ErrRoleAssignmentAlreadyExists = "role-assignment-already-exists"
 	ErrRoleAssignmentNotFound      = "role-assignment-not-found"
 	ErrRoleNotFound                = "role-not-found"
-
-	Success = "success"
 )
 
 const (
 	Starting = "starting"
 	Finished = "finished"
+	Success  = "success"
 
 	FailedToConnectToStatsD = "failed-to-connect-to-statsd"
 	FailedToSendMetric      = "failed-to-send-metric"
@@ -26,7 +24,6 @@ const (
 	FailedToAppendCertToPool = "failed-to-append-cert-to-pool"
 	FailedToGRPCDial         = "failed-to-grpc-dial"
 
-	FailedToGetRole      = "failed-to-get-role"
 	FailedToCreateRole   = "failed-to-create-role"
 	FailedToAssignRole   = "failed-to-assign-role"
 	FailedToUnassignRole = "failed-to-unassign-role"

@@ -20,7 +20,9 @@ func (cmd MigrateCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("migrate")
 
-	db, err := cmd.SQL.Open()
+	ctx := context.Background()
+
+	conn, err := cmd.SQL.Open()
 	if err != nil {
 		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
 		return err
@@ -28,28 +30,45 @@ func (cmd MigrateCommand) Execute([]string) error {
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
-	err = db.Ping()
+	err = conn.PingContext(ctx)
 	if err != nil {
-		logger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
+		pingLogger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)
 
-	defer db.Close()
-
-	ctx := context.Background()
-	tx, err := db.BeginTx(ctx, nil)
-
-	if err != nil {
-		logger.Error(messages.ErrFailedToStartTransaction, err)
-	}
+	defer conn.Close()
 
 	logger = logger.Session("migrations")
 	logger.Info(messages.Starting)
 
-	for _, migration := range Migrations {
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error(messages.ErrFailedToStartTransaction, err)
+	}
+
+	createTableLogger := logger.Session("create-migrations-table").WithData(lager.Data{
+		"table_name": cmd.MigrationsTableName,
+	})
+	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+cmd.MigrationsTableName+"` (version INTEGER)")
+	if err != nil {
+		createTableLogger.Error("failed-to-create-table", err)
+		err = tx.Rollback()
+		if err != nil {
+			createTableLogger.Error("failed-to-rollback", err)
+			return err
+		}
+	} else {
+		err = tx.Commit()
+		if err != nil {
+			createTableLogger.Error("failed-to-commit", err)
+			return err
+		}
+	}
+
+	for i, migration := range Migrations {
 		migrationLogger := logger.Session("up").WithData(lager.Data{
-			"Version": migration.Version,
+			"Version": i,
 			"Name":    migration.Name,
 		})
 
@@ -84,8 +103,7 @@ func (cmd MigrateCommand) Execute([]string) error {
 var Migrations = []Migration{}
 
 type Migration struct {
-	Version int64
-	Name    string
-	Up      func(context.Context, lager.Logger, *sql.Tx) error
-	Down    func(context.Context, lager.Logger, *sql.Tx) error
+	Name string
+	Up   func(context.Context, lager.Logger, *sql.Tx) error
+	Down func(context.Context, lager.Logger, *sql.Tx) error
 }
