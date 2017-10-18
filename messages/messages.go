@@ -36,3 +36,11 @@ const (
 const (
 	PingSQLConnection = "ping-sql-connection"
 )
+
+const (
+	ErrFailedToStartTransaction = "failed-to-start-transaction"
+
+	ErrFailedToRunMigration = "failed-to-run-migration"
+
+	Committed = "committed"
+)
