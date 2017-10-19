@@ -14,6 +14,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  branch = "v1"
+  name = "github.com/Masterminds/squirrel"
+  packages = ["."]
+  revision = "a6b93000bd219143c56c16e6cb1c4b91da3f224b"
+
+[[projects]]
   name = "github.com/cactus/go-statsd-client"
   packages = ["statsd"]
   revision = "91c326c3f7bd20f0226d3d1c289dd9f8ce28d33d"
@@ -48,6 +54,18 @@
   packages = ["."]
   revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
   version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lann/builder"
+  packages = ["."]
+  revision = "f22ce00fd9394014049dad11c244859432bd6820"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lann/ps"
+  packages = ["."]
+  revision = "62de8c46ede02a7675c4c79c84883eb164cb71e3"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -106,6 +124,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4a5d323f96332af24b27bcbb68d9f6068451ad4e9c023b01ce74ba4e767aaef3"
+  inputs-digest = "9763bc2ab6df9367746f8e397c941b07685815c59e41a60f9076b62e5acb2f19"
   solver-name = "gps-cdcl"
   solver-version = 1

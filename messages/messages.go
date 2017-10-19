@@ -35,9 +35,18 @@ const (
 )
 
 const (
-	ErrFailedToStartTransaction = "failed-to-start-transaction"
+	ErrFailedToApplyMigration  = "failed-to-run-migration"
+	ErrFailedToQueryMigrations = "failed-to-query-migrations"
+	ErrFailedToCreateTable     = "failed-to-create-table"
 
-	ErrFailedToRunMigration = "failed-to-run-migration"
+	RetrievedAppliedMigrations = "retrieved-applied-migrations"
+	SkippedAppliedMigration    = "skipped-applied-migration"
+)
 
+const (
 	Committed = "committed"
+
+	FailedToStartTransaction = "failed-to-start-transaction"
+	FailedToCommit           = "failed-to-commit"
+	FailedToRollback         = "failed-to-rollback"
 )
