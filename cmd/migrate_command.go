@@ -8,14 +8,16 @@ import (
 )
 
 type MigrateCommand struct {
+	Up UpCommand `command:"up" description:"Run migrations"`
+}
+
+type UpCommand struct {
 	Logger LagerFlag
 
 	SQL SQLFlag `group:"SQL" namespace:"sql"`
 }
 
-var MigrationsTableName = "perm_migrations"
-
-func (cmd MigrateCommand) Execute([]string) error {
+func (cmd UpCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("migrate")
 
@@ -38,7 +40,7 @@ func (cmd MigrateCommand) Execute([]string) error {
 
 	defer conn.Close()
 
-	return db.ApplyMigrations(ctx, logger, conn, MigrationsTableName, Migrations)
+	return db.ApplyMigrations(ctx, logger, conn, MigrationsTableName, db.Migrations)
 }
 
-var Migrations = []db.Migration{}
+var MigrationsTableName = "perm_migrations"

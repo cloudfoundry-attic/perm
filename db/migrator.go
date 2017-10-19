@@ -88,7 +88,7 @@ func retrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *s
 	defer rows.Close()
 	var (
 		version int
-		name string
+		name    string
 	)
 
 	versions := make(map[int]string)
