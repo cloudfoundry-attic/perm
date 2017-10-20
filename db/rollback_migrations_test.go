@@ -75,6 +75,11 @@ var _ = Describe("#RollbackMigrations", func() {
 	})
 
 	Context("without 'all'", func() {
+
+		BeforeEach(func() {
+			all = false
+		})
+
 		It("rolls back the most recent migration which is in the migrations table", func() {
 			mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
 				WillReturnRows(
@@ -94,6 +99,10 @@ var _ = Describe("#RollbackMigrations", func() {
 	})
 
 	Context("with 'all'", func() {
+		var (
+			all bool
+		)
+
 		BeforeEach(func() {
 			all = true
 		})
