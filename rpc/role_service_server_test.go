@@ -10,7 +10,6 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	uuid "github.com/satori/go.uuid"
 )
 
 var _ = Describe("RoleServiceServer", func() {
@@ -80,10 +79,8 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(res).NotTo(BeNil())
 
 			role := res.Role
-			_, err = uuid.FromString(role.ID)
 
 			Expect(role.Name).To(Equal(name))
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("returns an error if no match exists", func() {
@@ -455,10 +452,6 @@ var _ = Describe("RoleServiceServer", func() {
 
 			roles := []string{}
 			for _, role := range res.GetRoles() {
-				_, err := uuid.FromString(role.GetID())
-
-				Expect(err).NotTo(HaveOccurred())
-
 				roles = append(roles, role.GetName())
 			}
 

@@ -9,7 +9,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
-	"github.com/satori/go.uuid"
 	"google.golang.org/grpc/codes"
 )
 
@@ -35,8 +34,7 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 	logData := lager.Data{"role.name": name}
 	logger.Debug(messages.Starting, logData)
 
-	if role, exists := s.roles[name]; exists {
-		logData["role.id"] = role.GetID()
+	if _, exists := s.roles[name]; exists {
 		err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAlreadyExists))
 		logger.Error(messages.ErrRoleAlreadyExists, err, logData)
 		return nil, err
@@ -44,10 +42,8 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 
 	role := &protos.Role{
 		Name: name,
-		ID:   uuid.NewV4().String(),
 	}
 	s.roles[name] = role
-	logData["role.id"] = role.GetID()
 
 	logger.Debug(messages.Success, logData)
 	return &protos.CreateRoleResponse{
@@ -62,7 +58,6 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 
 	for _, role := range s.roles {
 		if role.GetName() == name {
-			logData["role.id"] = role.GetID()
 			logger.Debug(messages.Success, logData)
 			return &protos.GetRoleResponse{
 				Role: role,
@@ -80,7 +75,7 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 	name := req.GetName()
 	logData := lager.Data{"role.name": name}
 
-	role, ok := s.roles[name]
+	_, ok := s.roles[name]
 
 	if !ok {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
@@ -88,7 +83,6 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 		return nil, err
 	}
 
-	logData["role.id"] = role.GetID()
 	delete(s.roles, name)
 
 	// "Cascade"
@@ -100,7 +94,6 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 				assignmentData := lager.Data{
 					"actor.id":     actor.GetID(),
 					"actor.issuer": actor.GetIssuer(),
-					"role.id":      role.GetID(),
 					"role.name":    name,
 				}
 				logger.Debug(messages.Success, assignmentData)
@@ -123,15 +116,13 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 		"actor.issuer": actor.GetIssuer(),
 		"role.name":    roleName,
 	}
-	role, exists := s.roles[roleName]
+	_, exists := s.roles[roleName]
 
 	if !exists {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
 		logger.Error(messages.ErrRoleNotFound, err, logData)
 		return nil, err
 	}
-
-	logData["role.id"] = role.GetID()
 
 	assignments, ok := s.assignments[*actor]
 	if !ok {
@@ -163,15 +154,13 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 		"actor.issuer": actor.GetIssuer(),
 		"role.name":    roleName,
 	}
-	role, exists := s.roles[roleName]
+	_, exists := s.roles[roleName]
 
 	if !exists {
 		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
 		logger.Error(messages.ErrRoleNotFound, err, logData)
 		return nil, togRPCError(codes.NotFound, err)
 	}
-
-	logData["role.id"] = role.GetID()
 
 	assignments, ok := s.assignments[*actor]
 	if !ok {

@@ -21,7 +21,6 @@ service RoleService {
 }
 
 message Role {
-  string id = 1 [(gogoproto.customname) = "ID"];
   string name = 2;
 }
 

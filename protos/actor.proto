@@ -10,6 +10,6 @@ option (gogoproto.sizer_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 
 message Actor {
-  string id = 1 [(gogoproto.customname) = "ID"];
-  string issuer = 2;
+  string id = 2 [(gogoproto.customname) = "ID"];
+  string issuer = 3;
 }
