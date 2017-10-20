@@ -27,8 +27,6 @@ var _ = Describe("#ApplyMigrations", func() {
 		err      error
 
 		ctx context.Context
-
-		migrations []Migration
 	)
 
 	BeforeEach(func() {
@@ -53,7 +51,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
 
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -65,7 +63,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit().WillReturnError(errors.New("commit-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("commit-failed"))
 	})
@@ -77,7 +75,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("create-table-failed"))
 	})
@@ -89,7 +87,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback().WillReturnError(errors.New("rollback-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("create-table-failed"))
 	})
@@ -103,7 +101,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			_, err := tx.ExecContext(ctx, "THIS IS A TEST")
 			return err
 		}}
-		migrations = []Migration{migration1, migration2}
+		migrations := []Migration{migration1, migration2}
 
 		mock.ExpectBegin()
 
@@ -176,7 +174,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 			return err
 		}}
-		migrations = []Migration{migration1, migration2}
+		migrations := []Migration{migration1, migration2}
 
 		mock.ExpectBegin()
 
@@ -206,7 +204,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 			return err
 		}}
-		migrations = []Migration{migration1, migration2}
+		migrations := []Migration{migration1, migration2}
 
 		mock.ExpectBegin()
 
