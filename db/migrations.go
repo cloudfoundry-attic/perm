@@ -1,8 +1,11 @@
 package db
 
-import "code.cloudfoundry.org/perm/db/migrations"
+import (
+	"code.cloudfoundry.org/perm/db/migrations"
+	"code.cloudfoundry.org/perm/db/migrator"
+)
 
-var Migrations = []Migration{
+var Migrations = []migrator.Migration{
 	{
 		Name: "create_roles_table",
 		Up:   migrations.CreateRolesTableUp,

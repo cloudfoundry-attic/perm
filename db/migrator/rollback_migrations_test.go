@@ -1,9 +1,9 @@
-package db_test
+package migrator_test
 
 import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	. "code.cloudfoundry.org/perm/db"
+	. "code.cloudfoundry.org/perm/db/migrator"
 
 	"context"
 	"database/sql"

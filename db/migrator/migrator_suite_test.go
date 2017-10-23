@@ -1,4 +1,4 @@
-package db_test
+package migrator_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDb(t *testing.T) {
+func TestMigrator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Db Suite")
+	RunSpecs(t, "Migrator Suite")
 }
