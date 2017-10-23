@@ -51,7 +51,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	defer conn.Close()
 
-	return migrator.ApplyMigrations(ctx, logger, conn, MigrationsTableName, db.Migrations)
+	return migrator.ApplyMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations)
 }
 
 func (cmd DownCommand) Execute([]string) error {
@@ -79,7 +79,5 @@ func (cmd DownCommand) Execute([]string) error {
 
 	defer conn.Close()
 
-	return migrator.RollbackMigrations(ctx, logger, conn, MigrationsTableName, db.Migrations, cmd.All)
+	return migrator.RollbackMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations, cmd.All)
 }
-
-var MigrationsTableName = "perm_migrations"

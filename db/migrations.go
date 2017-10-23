@@ -5,6 +5,8 @@ import (
 	"code.cloudfoundry.org/perm/db/migrator"
 )
 
+var MigrationsTableName = "perm_migrations"
+
 var Migrations = []migrator.Migration{
 	{
 		Name: "create_roles_table",
