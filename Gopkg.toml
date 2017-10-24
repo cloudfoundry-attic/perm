@@ -76,3 +76,7 @@
 [[constraint]]
   branch = "v1"
   name = "github.com/Masterminds/squirrel"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/olekukonko/tablewriter"

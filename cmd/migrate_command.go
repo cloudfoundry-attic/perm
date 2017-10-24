@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"os"
 
+	"strconv"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/db/migrator"
 	"code.cloudfoundry.org/perm/messages"
+	"github.com/olekukonko/tablewriter"
 )
 
 type MigrateCommand struct {
@@ -122,25 +125,31 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	f := os.Stdout
 
-	fmt.Fprint(f, "Applied Migrations\n------------------\n")
+	fmt.Fprintln(f, "Applied Migrations")
+	appliedMigrationsTable := tablewriter.NewWriter(f)
+	appliedMigrationsTable.SetHeader([]string{"Version", "Name", "Applied At"})
 	for i, migration := range db.Migrations {
 		version := i
 
 		appliedMigration, ok := appliedMigrations[version]
 		if ok {
-			fmt.Fprintf(f, "%d\t%s\t%s\n", version, migration.Name, appliedMigration.AppliedAt.Local().String())
+			appliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name, appliedMigration.AppliedAt.Local().String()})
 		}
 	}
+	appliedMigrationsTable.Render()
 
-	fmt.Fprint(f, "\nMigrations Not Yet Applied\n--------------------------\n")
+	fmt.Fprintln(f, "\nMigrations Not Yet Applied")
+	unappliedMigrationsTable := tablewriter.NewWriter(f)
+	unappliedMigrationsTable.SetHeader([]string{"Version", "Name"})
 	for i, migration := range db.Migrations {
 		version := i
 
 		_, ok := appliedMigrations[version]
 		if !ok {
-			fmt.Fprintf(f, "%d\t%s\n", version, migration.Name)
+			unappliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name})
 		}
 	}
+	unappliedMigrationsTable.Render()
 
 	return nil
 }
