@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"github.com/Masterminds/squirrel"
@@ -70,7 +72,7 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.D
 		err = commit(logger, tx, err)
 	}()
 
-	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255))")
+	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255), date_time_applied DATETIME)")
 
 	return
 }
@@ -97,8 +99,8 @@ func applyMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tabl
 	}
 
 	_, err = squirrel.Insert(tableName).
-		Columns("version", "name").
-		Values(version, migration.Name).
+		Columns("version", "name", "date_time_applied").
+		Values(version, migration.Name, time.Now()).
 		RunWith(tx).
 		ExecContext(ctx)
 
