@@ -19,7 +19,7 @@ func RollbackMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, 
 		return nil
 	}
 
-	appliedMigrations, err := retrieveAppliedMigrations(ctx, migrationsLogger, conn, tableName)
+	appliedMigrations, err := RetrieveAppliedMigrations(ctx, migrationsLogger, conn, tableName)
 	if err != nil {
 		return err
 	}

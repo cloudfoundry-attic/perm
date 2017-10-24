@@ -11,6 +11,8 @@ import (
 
 	"errors"
 
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -47,7 +49,7 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("creates the table if not exists", func() {
 		mock.ExpectBegin()
 
-		mock.ExpectExec("CREATE TABLE IF NOT EXISTS `" + migrationTableName + "` \\(version INTEGER, name VARCHAR\\(255\\), date_time_applied DATETIME\\)").
+		mock.ExpectExec("CREATE TABLE IF NOT EXISTS `" + migrationTableName + "` \\(version INTEGER, name VARCHAR\\(255\\), applied_at DATETIME\\)").
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
@@ -109,13 +111,13 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
-			WillReturnRows(sqlmock.NewRows([]string{"version", "name"}))
+		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
+			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}))
 
 		mock.ExpectBegin()
 		mock.ExpectExec("FAKE MIGRATION").
 			WillReturnResult(sqlmock.NewResult(0, 0))
-		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,date_time_applied\\)").
+		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,applied_at\\)").
 			WithArgs(0, "migration-1", sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
@@ -123,7 +125,7 @@ var _ = Describe("#ApplyMigrations", func() {
 		mock.ExpectBegin()
 		mock.ExpectExec("THIS IS A TEST").
 			WillReturnResult(sqlmock.NewResult(0, 0))
-		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,date_time_applied\\)").
+		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,applied_at\\)").
 			WithArgs(1, "migration-2", sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
@@ -149,13 +151,13 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
-			WillReturnRows(sqlmock.NewRows([]string{"version", "name"}).AddRow("0", "migration-1"))
+		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
+			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}).AddRow("0", "migration-1", time.Now()))
 
 		mock.ExpectBegin()
 		mock.ExpectExec("THIS IS A TEST").
 			WillReturnResult(sqlmock.NewResult(0, 0))
-		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,date_time_applied\\)").
+		mock.ExpectExec("INSERT INTO "+migrationTableName+" \\(version,name,applied_at\\)").
 			WithArgs(1, "migration-2", sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
@@ -182,8 +184,8 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
-			WillReturnRows(sqlmock.NewRows([]string{"version", "name"}))
+		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
+			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}))
 
 		mock.ExpectBegin()
 		mock.ExpectExec("FAKE MIGRATION").
@@ -212,8 +214,8 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
-			WillReturnRows(sqlmock.NewRows([]string{"version", "name"}))
+		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
+			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}))
 
 		mock.ExpectBegin()
 		mock.ExpectExec("FAKE MIGRATION").

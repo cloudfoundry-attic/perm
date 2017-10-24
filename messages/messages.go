@@ -39,6 +39,8 @@ const (
 	ErrFailedToQueryMigrations = "failed-to-query-migrations"
 	ErrFailedToCreateTable     = "failed-to-create-table"
 
+	ErrFailedToParseAppliedMigration = "failed-to-parse-applied-migration"
+
 	RetrievedAppliedMigrations = "retrieved-applied-migrations"
 	SkippedAppliedMigration    = "skipped-applied-migration"
 )

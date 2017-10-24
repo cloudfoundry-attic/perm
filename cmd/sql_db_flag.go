@@ -33,6 +33,7 @@ func (o *SQLFlag) Open() (*sql.DB, error) {
 		cfg.Net = "tcp"
 		cfg.Addr = net.JoinHostPort(o.DB.Host, strconv.Itoa(o.DB.Port))
 		cfg.DBName = o.DB.Schema
+		cfg.ParseTime = true
 
 		return sql.Open(o.DB.Driver, cfg.FormatDSN())
 	default:

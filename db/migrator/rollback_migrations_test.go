@@ -1,6 +1,8 @@
 package migrator_test
 
 import (
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "code.cloudfoundry.org/perm/db/migrator"
@@ -30,6 +32,8 @@ var _ = Describe("#RollbackMigrations", func() {
 		migrations []Migration
 
 		all bool
+
+		appliedAt time.Time
 	)
 
 	BeforeEach(func() {
@@ -39,6 +43,8 @@ var _ = Describe("#RollbackMigrations", func() {
 
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
+
+		appliedAt = time.Now()
 
 		ctx = context.Background()
 
@@ -81,11 +87,11 @@ var _ = Describe("#RollbackMigrations", func() {
 		})
 
 		It("rolls back the most recent migration which is in the migrations table", func() {
-			mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
+			mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"version", "name"}).
-						AddRow("0", "migration_1").
-						AddRow("1", "migration_2"),
+					sqlmock.NewRows([]string{"version", "name", "applied_at"}).
+						AddRow("0", "migration_1", appliedAt).
+						AddRow("1", "migration_2", appliedAt),
 				)
 
 			mock.ExpectBegin()
@@ -108,11 +114,11 @@ var _ = Describe("#RollbackMigrations", func() {
 		})
 
 		It("rolls back all migrations found in the database", func() {
-			mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
+			mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"version", "name"}).
-						AddRow("0", "migration_1").
-						AddRow("1", "migration_2"),
+					sqlmock.NewRows([]string{"version", "name", "applied_at"}).
+						AddRow("0", "migration_1", appliedAt).
+						AddRow("1", "migration_2", appliedAt),
 				)
 
 			mock.ExpectBegin()
@@ -129,11 +135,11 @@ var _ = Describe("#RollbackMigrations", func() {
 		})
 
 		It("does not run earlier migrations when a migration fails", func() {
-			mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
+			mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"version", "name"}).
-						AddRow("0", "migration_1").
-						AddRow("1", "migration_2"),
+					sqlmock.NewRows([]string{"version", "name", "applied_at"}).
+						AddRow("0", "migration_1", appliedAt).
+						AddRow("1", "migration_2", appliedAt),
 				)
 
 			mock.ExpectBegin()
@@ -145,11 +151,11 @@ var _ = Describe("#RollbackMigrations", func() {
 		})
 
 		It("does not run earlier migrations when a commit fails", func() {
-			mock.ExpectQuery("SELECT version, name FROM " + migrationTableName).
+			mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 				WillReturnRows(
-					sqlmock.NewRows([]string{"version", "name"}).
-						AddRow("0", "migration_1").
-						AddRow("1", "migration_2"),
+					sqlmock.NewRows([]string{"version", "name", "applied_at"}).
+						AddRow("0", "migration_1", appliedAt).
+						AddRow("1", "migration_2", appliedAt),
 				)
 
 			mock.ExpectBegin()

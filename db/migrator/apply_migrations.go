@@ -27,7 +27,7 @@ func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tab
 		return nil
 	}
 
-	appliedMigrations, err := retrieveAppliedMigrations(ctx, migrationsLogger, conn, tableName)
+	appliedMigrations, err := RetrieveAppliedMigrations(ctx, migrationsLogger, conn, tableName)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.D
 		err = commit(logger, tx, err)
 	}()
 
-	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255), date_time_applied DATETIME)")
+	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255), applied_at DATETIME)")
 
 	return
 }
@@ -99,7 +99,7 @@ func applyMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tabl
 	}
 
 	_, err = squirrel.Insert(tableName).
-		Columns("version", "name", "date_time_applied").
+		Columns("version", "name", "applied_at").
 		Values(version, migration.Name, time.Now()).
 		RunWith(tx).
 		ExecContext(ctx)
