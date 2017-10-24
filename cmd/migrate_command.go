@@ -125,30 +125,27 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	f := os.Stdout
 
-	fmt.Fprintln(f, "Applied Migrations")
 	appliedMigrationsTable := tablewriter.NewWriter(f)
 	appliedMigrationsTable.SetHeader([]string{"Version", "Name", "Applied At"})
+
+	unappliedMigrationsTable := tablewriter.NewWriter(f)
+	unappliedMigrationsTable.SetHeader([]string{"Version", "Name"})
 	for i, migration := range db.Migrations {
 		version := i
 
 		appliedMigration, ok := appliedMigrations[version]
 		if ok {
 			appliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name, appliedMigration.AppliedAt.Local().String()})
-		}
-	}
-	appliedMigrationsTable.Render()
-
-	fmt.Fprintln(f, "\nMigrations Not Yet Applied")
-	unappliedMigrationsTable := tablewriter.NewWriter(f)
-	unappliedMigrationsTable.SetHeader([]string{"Version", "Name"})
-	for i, migration := range db.Migrations {
-		version := i
-
-		_, ok := appliedMigrations[version]
-		if !ok {
+		} else {
 			unappliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name})
 		}
 	}
+
+	fmt.Fprintln(f, "Applied Migrations")
+	appliedMigrationsTable.Render()
+
+	fmt.Println("")
+	fmt.Fprintln(f, "Migrations Not Yet Applied")
 	unappliedMigrationsTable.Render()
 
 	return nil
