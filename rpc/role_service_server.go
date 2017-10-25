@@ -8,6 +8,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
+	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/protos"
 	"google.golang.org/grpc/codes"
 )
@@ -16,14 +17,15 @@ type RoleServiceServer struct {
 	dbConn *sql.DB
 
 	logger      lager.Logger
-	roles       map[string]*protos.Role
+	roles       map[string]*models.Role
 	assignments map[protos.Actor][]string
 }
 
 func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:      logger,
-		roles:       make(map[string]*protos.Role),
+		dbConn:      dbConn,
+		roles:       make(map[string]*models.Role),
 		assignments: make(map[protos.Actor][]string),
 	}
 }
@@ -40,14 +42,14 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 		return nil, err
 	}
 
-	role := &protos.Role{
+	role := &models.Role{
 		Name: name,
 	}
 	s.roles[name] = role
 
 	logger.Debug(messages.Success, logData)
 	return &protos.CreateRoleResponse{
-		Role: role,
+		Role: role.ToProto(),
 	}, nil
 }
 
@@ -57,10 +59,10 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	logData := lager.Data{"role.name": name}
 
 	for _, role := range s.roles {
-		if role.GetName() == name {
+		if role.Name == name {
 			logger.Debug(messages.Success, logData)
 			return &protos.GetRoleResponse{
-				Role: role,
+				Role: role.ToProto(),
 			}, nil
 		}
 	}
@@ -210,7 +212,7 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 		}, nil
 	}
 
-	var roles []*protos.Role
+	var roles []*models.Role
 
 	for _, id := range assignments {
 		role, found := s.roles[id]
@@ -221,7 +223,13 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 		roles = append(roles, role)
 	}
 
+	var pRoles []*protos.Role
+
+	for _, r := range roles {
+		pRoles = append(pRoles, r.ToProto())
+	}
+
 	return &protos.ListActorRolesResponse{
-		Roles: roles,
+		Roles: pRoles,
 	}, nil
 }
