@@ -3,9 +3,6 @@ package integration_test
 import (
 	. "code.cloudfoundry.org/perm/db"
 
-	"database/sql"
-
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"
@@ -17,25 +14,25 @@ import (
 
 	"strconv"
 
+	"database/sql"
+
 	"code.cloudfoundry.org/perm/cmd"
 	. "code.cloudfoundry.org/perm/integration"
+	"code.cloudfoundry.org/perm/models"
+	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
 )
 
 var _ = Describe("DataService", func() {
 	var (
-		conn *sql.DB
-
+		flag        cmd.SQLFlag
 		mySQLRunner *MySQLRunner
 
 		store *DataService
+
+		conn *sql.DB
 	)
 
-	BeforeEach(func() {
-		var err error
-		conn, _, err = sqlmock.New()
-
-		Expect(err).NotTo(HaveOccurred())
-
+	BeforeSuite(func() {
 		driver := "mysql"
 		hostname := "localhost"
 
@@ -54,8 +51,7 @@ var _ = Describe("DataService", func() {
 			p = "3306"
 		}
 
-		var port int
-		port, err = strconv.Atoi(p)
+		port, err := strconv.Atoi(p)
 		Expect(err).NotTo(HaveOccurred())
 
 		schema := os.Getenv("PERM_TEST_MYSQL_SCHEMA_NAME")
@@ -64,7 +60,7 @@ var _ = Describe("DataService", func() {
 			schema = fmt.Sprintf("perm_test_%s", strings.Replace(uuid.String(), "-", "_", -1))
 		}
 
-		flag := cmd.SQLFlag{
+		flag = cmd.SQLFlag{
 			DB: cmd.DBFlag{
 				Driver:   driver,
 				Host:     hostname,
@@ -77,10 +73,14 @@ var _ = Describe("DataService", func() {
 
 		mySQLRunner = NewRunner(flag)
 
+		mySQLRunner.CreateTestDB()
+
+	})
+
+	BeforeEach(func() {
+		var err error
 		conn, err = flag.Open()
 		Expect(err).NotTo(HaveOccurred())
-
-		mySQLRunner.CreateTestDB()
 
 		Expect(conn.Ping()).To(Succeed())
 
@@ -88,6 +88,13 @@ var _ = Describe("DataService", func() {
 	})
 
 	AfterEach(func() {
+		conn.Close()
+		mySQLRunner.Truncate()
+	})
+
+	AfterSuite(func() {
 		mySQLRunner.DropTestDB()
 	})
+
+	BehavesLikeARoleService(func() models.RoleService { return store })
 })

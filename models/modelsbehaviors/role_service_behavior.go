@@ -10,9 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-type CreateRoleService func() models.RoleService
-
-func BehavesLikeARoleService(subjectCreator CreateRoleService) {
+func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 	var (
 		subject models.RoleService
 
@@ -51,9 +49,8 @@ func BehavesLikeARoleService(subjectCreator CreateRoleService) {
 			_, err := subject.CreateRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
 
-			role, err := subject.CreateRole(ctx, logger, name)
+			_, err = subject.CreateRole(ctx, logger, name)
 
-			Expect(role).To(BeNil())
 			Expect(err).To(Equal(models.ErrRoleAlreadyExists))
 		})
 	})

@@ -6,8 +6,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/Masterminds/squirrel"
+	"github.com/go-sql-driver/mysql"
 	"github.com/satori/go.uuid"
 )
 
@@ -21,35 +21,75 @@ func NewDataService(conn *sql.DB) *DataService {
 	}
 }
 
-func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string) (role *models.Role, err error) {
-	var tx *sql.Tx
-	tx, err = s.conn.Begin()
-	if err != nil {
-		return nil, err
-	}
+func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string) (*models.Role, error) {
 	u := uuid.NewV4().Bytes()
-	role = &models.Role{
+	role := &models.Role{
 		Name: name,
 	}
 
-	defer func() {
-		if err != nil {
-			logger.Error("failed-to-insert-role", err)
-		}
-		err = sqlx.Commit(logger, tx, err)
-	}()
-
-	_, err = squirrel.Insert("role").
+	_, err := squirrel.Insert("role").
 		Columns("uuid", "name").
 		Values(u, name).
-		RunWith(tx).
+		RunWith(s.conn).
 		ExecContext(ctx)
 
-	return
+	switch e := err.(type) {
+	case nil:
+		return role, nil
+	case *mysql.MySQLError:
+		if e.Number == MySQLErrorCodeDuplicateKey {
+			return nil, models.ErrRoleAlreadyExists
+		}
+		return nil, err
+	default:
+		return nil, err
+	}
 }
-func (s *DataService) FindRole(context.Context, lager.Logger, models.RoleQuery) (*models.Role, error) {
-	return nil, nil
+
+func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {
+	var name string
+
+	err := squirrel.Select("name").
+		From("role").
+		Where(squirrel.Eq{
+			"name": query.Name,
+		}).
+		RunWith(s.conn).
+		ScanContext(ctx, &name)
+
+	switch err {
+	case nil:
+		return &models.Role{Name: name}, nil
+	case sql.ErrNoRows:
+		return nil, models.ErrRoleNotFound
+	default:
+		return nil, err
+	}
 }
-func (s *DataService) DeleteRole(context.Context, lager.Logger, models.RoleQuery) error {
-	return nil
+
+func (s *DataService) DeleteRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) error {
+	result, err := squirrel.Delete("role").
+		Where(squirrel.Eq{
+			"name": query.Name,
+		}).
+		RunWith(s.conn).
+		ExecContext(ctx)
+
+	switch err {
+	case nil:
+		n, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if n == 0 {
+			return models.ErrRoleNotFound
+		}
+
+		return nil
+	case sql.ErrNoRows:
+		return models.ErrRoleNotFound
+	default:
+		return err
+	}
 }

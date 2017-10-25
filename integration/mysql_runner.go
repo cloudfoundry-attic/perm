@@ -14,9 +14,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var truncateStmt = `
-TRUNCATE role_assignment
-`
+// role and actor deletion cascade to assignments
+var truncateStmts = []string{
+	"DELETE FROM role",
+	"DELETE FROM actor",
+}
 
 type MySQLRunner struct {
 	SQLFlag cmd.SQLFlag
@@ -68,6 +70,8 @@ func (r *MySQLRunner) Truncate() {
 	dbConn, err := r.SQLFlag.Open()
 	Expect(err).NotTo(HaveOccurred())
 
-	_, err = dbConn.Exec(truncateStmt)
-	Expect(err).NotTo(HaveOccurred())
+	for _, s := range truncateStmts {
+		_, err = dbConn.Exec(s)
+		Expect(err).NotTo(HaveOccurred())
+	}
 }
