@@ -17,7 +17,7 @@ type RoleServiceServer struct {
 	dbConn *sql.DB
 
 	logger      lager.Logger
-	assignments map[protos.Actor][]string
+	assignments map[models.Actor][]string
 
 	deps Deps
 }
@@ -30,7 +30,7 @@ func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB, deps Deps) *RoleS
 	return &RoleServiceServer{
 		logger:      logger,
 		dbConn:      dbConn,
-		assignments: make(map[protos.Actor][]string),
+		assignments: make(map[models.Actor][]string),
 		deps:        deps,
 	}
 }
@@ -89,8 +89,8 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 			if roleName == name {
 				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
 				assignmentData := lager.Data{
-					"actor.id":     actor.GetID(),
-					"actor.issuer": actor.GetIssuer(),
+					"actor.id":     actor.DomainID,
+					"actor.issuer": actor.Issuer,
 					"role.name":    name,
 				}
 				logger.Debug(messages.Success, assignmentData)
@@ -107,10 +107,16 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
 	logger := s.logger.Session("assign-role")
 	roleName := req.GetRoleName()
-	actor := req.GetActor()
+	pActor := req.GetActor()
+
+	actor := models.Actor{
+		DomainID: pActor.GetID(),
+		Issuer:   pActor.GetIssuer(),
+	}
+
 	logData := lager.Data{
-		"actor.id":     actor.GetID(),
-		"actor.issuer": actor.GetIssuer(),
+		"actor.id":     actor.DomainID,
+		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
 	}
 
@@ -119,7 +125,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 		return nil, togRPCErrorNew(err)
 	}
 
-	assignments, ok := s.assignments[*actor]
+	assignments, ok := s.assignments[actor]
 	if !ok {
 		assignments = []string{}
 	}
@@ -134,7 +140,7 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 
 	assignments = append(assignments, roleName)
 
-	s.assignments[*actor] = assignments
+	s.assignments[actor] = assignments
 	logger.Debug(messages.Success, logData)
 
 	return &protos.AssignRoleResponse{}, nil
@@ -143,10 +149,14 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error) {
 	logger := s.logger.Session("unassign-role")
 	roleName := req.GetRoleName()
-	actor := req.GetActor()
+	pActor := req.GetActor()
+	actor := models.Actor{
+		DomainID: pActor.GetID(),
+		Issuer:   pActor.GetIssuer(),
+	}
 	logData := lager.Data{
-		"actor.id":     actor.GetID(),
-		"actor.issuer": actor.GetIssuer(),
+		"actor.id":     actor.DomainID,
+		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
 	}
 
@@ -155,14 +165,14 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 		return nil, togRPCErrorNew(err)
 	}
 
-	assignments, ok := s.assignments[*actor]
+	assignments, ok := s.assignments[actor]
 	if !ok {
 		assignments = []string{}
 	}
 
 	for i, assignment := range assignments {
 		if assignment == roleName {
-			s.assignments[*actor] = append(assignments[:i], assignments[i+1:]...)
+			s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
 			logger.Debug(messages.Success, logData)
 			return &protos.UnassignRoleResponse{}, nil
 		}
@@ -175,9 +185,13 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 }
 
 func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {
-	actor := req.GetActor()
 	role := req.GetRoleName()
-	assignments, ok := s.assignments[*actor]
+	pActor := req.GetActor()
+	actor := models.Actor{
+		DomainID: pActor.GetID(),
+		Issuer:   pActor.GetIssuer(),
+	}
+	assignments, ok := s.assignments[actor]
 
 	if !ok {
 		return &protos.HasRoleResponse{HasRole: false}, nil
@@ -196,8 +210,12 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 }
 
 func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
-	actor := req.GetActor()
-	assignments, ok := s.assignments[*actor]
+	pActor := req.GetActor()
+	actor := models.Actor{
+		DomainID: pActor.GetID(),
+		Issuer:   pActor.GetIssuer(),
+	}
+	assignments, ok := s.assignments[actor]
 	if !ok {
 		return &protos.ListActorRolesResponse{
 			Roles: []*protos.Role{},

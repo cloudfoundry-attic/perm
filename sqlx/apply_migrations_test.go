@@ -34,7 +34,7 @@ var _ = Describe("#ApplyMigrations", func() {
 	BeforeEach(func() {
 		migrationTableName = "db_migrations"
 
-		fakeLogger = lagertest.NewTestLogger("perm-migrator")
+		fakeLogger = lagertest.NewTestLogger("perm-sqlx")
 
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
