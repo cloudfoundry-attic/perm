@@ -4,10 +4,18 @@ import (
 	. "code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/models/modelsbehaviors"
+	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
 	. "github.com/onsi/ginkgo"
 )
 
 var _ = Describe("InMemoryStore", func() {
-	modelsbehaviors.BehavesLikeARoleService(func() models.RoleService { return NewInMemoryStore() })
+	var (
+		store *InMemoryStore
+	)
+	BeforeEach(func() {
+		store = NewInMemoryStore()
+	})
+
+	BehavesLikeARoleService(func() models.RoleService { return store })
+	BehavesLikeARoleAssignmentService(func() models.RoleAssignmentService { return store }, func() models.RoleService { return store })
 })

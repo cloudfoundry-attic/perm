@@ -12,6 +12,8 @@ func togRPCError(code codes.Code, err error) error {
 
 func togRPCErrorNew(err error) error {
 	switch err.(type) {
+	case nil:
+		return nil
 	case errdefs.ErrNotFound:
 		return status.Errorf(codes.NotFound, err.Error())
 	case errdefs.ErrAlreadyExists:

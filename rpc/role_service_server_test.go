@@ -1,13 +1,10 @@
 package rpc_test
 
 import (
-	"database/sql"
-
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm/protos"
-	"github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -17,26 +14,14 @@ var _ = Describe("RoleServiceServer", func() {
 		subject *rpc.RoleServiceServer
 		logger  *lagertest.TestLogger
 
-		fakeDBConn *sql.DB
-		dbMock     sqlmock.Sqlmock
-
-		deps *rpc.InMemoryStore
+		inMemoryStore *rpc.InMemoryStore
 	)
 
 	BeforeEach(func() {
-		var err error
-		fakeDBConn, dbMock, err = sqlmock.New()
-
-		Expect(err).NotTo(HaveOccurred())
-
 		logger = lagertest.NewTestLogger("perm-test")
-		deps = rpc.NewInMemoryStore()
+		inMemoryStore = rpc.NewInMemoryStore()
 
-		subject = rpc.NewRoleServiceServer(logger, fakeDBConn, deps)
-	})
-
-	AfterEach(func() {
-		Expect(dbMock.ExpectationsWereMet()).To(Succeed())
+		subject = rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
 	})
 
 	Describe("#CreateRole", func() {

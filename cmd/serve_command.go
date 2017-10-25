@@ -85,7 +85,9 @@ func (cmd ServeCommand) Execute([]string) error {
 	defer db.Close()
 
 	logger = logger.Session("grpc-server")
-	roleServiceServer := rpc.NewRoleServiceServer(logger, db)
+
+	inMemoryStore := rpc.NewInMemoryStore()
+	roleServiceServer := rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 	logger.Info(messages.Starting, listeningLogData)
 

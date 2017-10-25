@@ -1,12 +1,12 @@
-package modelsbehaviors
+package modelsbehaviors_test
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
 )
 
@@ -20,77 +20,77 @@ func BehavesLikeARoleService(subjectCreator CreateRoleService) {
 		logger *lagertest.TestLogger
 	)
 
-	ginkgo.BeforeEach(func() {
+	BeforeEach(func() {
 		subject = subjectCreator()
 
 		ctx = context.Background()
 		logger = lagertest.NewTestLogger("perm-test")
 	})
 
-	ginkgo.Describe("#CreateRole", func() {
-		ginkgo.It("saves the role", func() {
+	Describe("#CreateRole", func() {
+		It("saves the role", func() {
 			name := uuid.NewV4().String()
 
 			role, err := subject.CreateRole(ctx, logger, name)
 
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
-			gomega.Expect(role).NotTo(gomega.BeNil())
-			gomega.Expect(role.Name).To(gomega.Equal(name))
+			Expect(role).NotTo(BeNil())
+			Expect(role.Name).To(Equal(name))
 
 			expectedRole := role
 			role, err = subject.FindRole(ctx, logger, models.RoleQuery{Name: name})
 
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			gomega.Expect(role).To(gomega.Equal(expectedRole))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(role).To(Equal(expectedRole))
 		})
 
-		ginkgo.It("fails if a role with the name already exists", func() {
+		It("fails if a role with the name already exists", func() {
 			name := uuid.NewV4().String()
 
 			_, err := subject.CreateRole(ctx, logger, name)
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			role, err := subject.CreateRole(ctx, logger, name)
 
-			gomega.Expect(role).To(gomega.BeNil())
-			gomega.Expect(err).To(gomega.Equal(models.ErrRoleAlreadyExists))
+			Expect(role).To(BeNil())
+			Expect(err).To(Equal(models.ErrRoleAlreadyExists))
 		})
 	})
 
-	ginkgo.Describe("#FindRole", func() {
-		ginkgo.It("fails if the role does not exist", func() {
+	Describe("#FindRole", func() {
+		It("fails if the role does not exist", func() {
 			name := uuid.NewV4().String()
 
 			role, err := subject.FindRole(ctx, logger, models.RoleQuery{Name: name})
 
-			gomega.Expect(role).To(gomega.BeNil())
-			gomega.Expect(err).To(gomega.Equal(models.ErrRoleNotFound))
+			Expect(role).To(BeNil())
+			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
 	})
 
-	ginkgo.Describe("#DeleteRole", func() {
-		ginkgo.It("deletes the role if it exists", func() {
+	Describe("#DeleteRole", func() {
+		It("deletes the role if it exists", func() {
 			name := uuid.NewV4().String()
 
 			_, err := subject.CreateRole(ctx, logger, name)
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			role, err := subject.FindRole(ctx, logger, models.RoleQuery{Name: name})
 
-			gomega.Expect(role).To(gomega.BeNil())
-			gomega.Expect(err).To(gomega.Equal(models.ErrRoleNotFound))
+			Expect(role).To(BeNil())
+			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
 
-		ginkgo.It("fails if the role does not exist", func() {
+		It("fails if the role does not exist", func() {
 			name := uuid.NewV4().String()
 
 			err := subject.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
 
-			gomega.Expect(err).To(gomega.Equal(models.ErrRoleNotFound))
+			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
 	})
 }

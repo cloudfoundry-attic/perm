@@ -2,36 +2,27 @@ package rpc
 
 import (
 	"context"
-	"errors"
-
-	"database/sql"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/protos"
-	"google.golang.org/grpc/codes"
 )
 
 type RoleServiceServer struct {
-	dbConn *sql.DB
-
 	logger      lager.Logger
 	assignments map[models.Actor][]string
 
-	deps Deps
+	roleService           models.RoleService
+	roleAssignmentService models.RoleAssignmentService
 }
 
-type Deps interface {
-	models.RoleService
-}
-
-func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB, deps Deps) *RoleServiceServer {
+func NewRoleServiceServer(logger lager.Logger, roleService models.RoleService, roleAssignmentService models.RoleAssignmentService) *RoleServiceServer {
 	return &RoleServiceServer{
-		logger:      logger,
-		dbConn:      dbConn,
-		assignments: make(map[models.Actor][]string),
-		deps:        deps,
+		logger:                logger,
+		assignments:           make(map[models.Actor][]string),
+		roleService:           roleService,
+		roleAssignmentService: roleAssignmentService,
 	}
 }
 
@@ -41,7 +32,7 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 	logData := lager.Data{"role.name": name}
 	logger.Debug(messages.Starting, logData)
 
-	role, err := s.deps.CreateRole(ctx, logger, name)
+	role, err := s.roleService.CreateRole(ctx, logger, name)
 
 	if err != nil {
 		return nil, togRPCErrorNew(err)
@@ -61,7 +52,7 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	name := req.GetName()
 	logData := lager.Data{"role.name": name}
 
-	role, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: name})
+	role, err := s.roleService.FindRole(ctx, logger, models.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCErrorNew(err)
 	}
@@ -73,136 +64,91 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 }
 
 func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error) {
-	logger := s.logger.Session("delete-role")
 	name := req.GetName()
-	logData := lager.Data{"role.name": name}
+	logger := s.logger.Session("delete-role").WithData(lager.Data{
+		"role.name": name,
+	})
 
-	err := s.deps.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
+	err := s.roleService.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCErrorNew(err)
 	}
-
-	// "Cascade"
-	// Remove role assignments for role
-	for actor, assignments := range s.assignments {
-		for i, roleName := range assignments {
-			if roleName == name {
-				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
-				assignmentData := lager.Data{
-					"actor.id":     actor.DomainID,
-					"actor.issuer": actor.Issuer,
-					"role.name":    name,
-				}
-				logger.Debug(messages.Success, assignmentData)
-				break
-			}
-		}
-	}
-
-	logger.Debug(messages.Success, logData)
 
 	return &protos.DeleteRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
-	logger := s.logger.Session("assign-role")
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
-	actor := models.Actor{
-		DomainID: pActor.GetID(),
-		Issuer:   pActor.GetIssuer(),
-	}
-
-	logData := lager.Data{
-		"actor.id":     actor.DomainID,
-		"actor.issuer": actor.Issuer,
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
+	logger := s.logger.Session("assign-role").WithData(lager.Data{
+		"actor.id":     domainID,
+		"actor.issuer": issuer,
 		"role.name":    roleName,
-	}
+	})
 
-	_, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: roleName})
+	err := s.roleAssignmentService.AssignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCErrorNew(err)
 	}
-
-	assignments, ok := s.assignments[actor]
-	if !ok {
-		assignments = []string{}
-	}
-
-	for _, role := range assignments {
-		if role == roleName {
-			err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAssignmentAlreadyExists))
-			logger.Error(messages.ErrRoleAssignmentAlreadyExists, err, logData)
-			return nil, err
-		}
-	}
-
-	assignments = append(assignments, roleName)
-
-	s.assignments[actor] = assignments
-	logger.Debug(messages.Success, logData)
 
 	return &protos.AssignRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error) {
-	logger := s.logger.Session("unassign-role")
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
+
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
 	actor := models.Actor{
-		DomainID: pActor.GetID(),
-		Issuer:   pActor.GetIssuer(),
+		DomainID: domainID,
+		Issuer:   issuer,
 	}
-	logData := lager.Data{
+	logger := s.logger.Session("unassign-role").WithData(lager.Data{
 		"actor.id":     actor.DomainID,
 		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
-	}
+	})
 
-	_, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: roleName})
+	err := s.roleAssignmentService.UnassignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCErrorNew(err)
 	}
 
-	assignments, ok := s.assignments[actor]
-	if !ok {
-		assignments = []string{}
-	}
-
-	for i, assignment := range assignments {
-		if assignment == roleName {
-			s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
-			logger.Debug(messages.Success, logData)
-			return &protos.UnassignRoleResponse{}, nil
-		}
-	}
-
-	err = togRPCError(codes.NotFound, errors.New(messages.ErrRoleAssignmentNotFound))
-	logger.Error(messages.ErrRoleAssignmentNotFound, err, logData)
-
-	return nil, togRPCError(codes.NotFound, err)
+	return &protos.UnassignRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {
-	role := req.GetRoleName()
+	roleName := req.GetRoleName()
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: pActor.GetID(),
-		Issuer:   pActor.GetIssuer(),
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
+
+	logger := s.logger.Session("has-role").WithData(lager.Data{
+		"actor.id":     domainID,
+		"actor.issuer": issuer,
+		"role.name":    roleName,
+	})
+
+	query := models.RoleAssignmentQuery{
+		ActorQuery: models.ActorQuery{
+			DomainID: domainID,
+			Issuer:   issuer,
+		},
+		RoleQuery: models.RoleQuery{
+			Name: roleName,
+		},
 	}
-	assignments, ok := s.assignments[actor]
 
-	if !ok {
-		return &protos.HasRoleResponse{HasRole: false}, nil
-	}
-
-	var found bool
-
-	for _, name := range assignments {
-		if name == role {
-			found = true
-			break
+	found, err := s.roleAssignmentService.HasRole(ctx, logger, query)
+	if err != nil {
+		if err == models.ErrRoleNotFound {
+			return &protos.HasRoleResponse{HasRole: false}, nil
+		} else {
+			return nil, togRPCErrorNew(err)
 		}
 	}
 
@@ -211,26 +157,20 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 
 func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: pActor.GetID(),
-		Issuer:   pActor.GetIssuer(),
-	}
-	assignments, ok := s.assignments[actor]
-	if !ok {
-		return &protos.ListActorRolesResponse{
-			Roles: []*protos.Role{},
-		}, nil
-	}
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
+	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
+		"actor.id":     domainID,
+		"actor.issuer": issuer,
+	})
 
-	var roles []*models.Role
-
-	for _, id := range assignments {
-		role, err := s.deps.FindRole(ctx, s.logger, models.RoleQuery{Name: id})
-		if err != nil {
+	roles, err := s.roleAssignmentService.ListActorRoles(ctx, logger, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	if err != nil {
+		if err == models.ErrActorNotFound {
+			roles = []*models.Role{}
+		} else {
 			return nil, togRPCErrorNew(err)
 		}
-
-		roles = append(roles, role)
 	}
 
 	var pRoles []*protos.Role
