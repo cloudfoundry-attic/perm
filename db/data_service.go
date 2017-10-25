@@ -22,6 +22,18 @@ func NewDataService(conn *sql.DB) *DataService {
 }
 
 func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string) (*models.Role, error) {
+	return createRole(ctx, s.conn, name)
+}
+
+func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {
+	return findRole(ctx, s.conn, query)
+}
+
+func (s *DataService) DeleteRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) error {
+	return deleteRole(ctx, s.conn, query)
+}
+
+func createRole(ctx context.Context, conn *sql.DB, name string) (*models.Role, error) {
 	u := uuid.NewV4().Bytes()
 	role := &models.Role{
 		Name: name,
@@ -30,7 +42,7 @@ func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name 
 	_, err := squirrel.Insert("role").
 		Columns("uuid", "name").
 		Values(u, name).
-		RunWith(s.conn).
+		RunWith(conn).
 		ExecContext(ctx)
 
 	switch e := err.(type) {
@@ -44,9 +56,10 @@ func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name 
 	default:
 		return nil, err
 	}
+
 }
 
-func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {
+func findRole(ctx context.Context, conn *sql.DB, query models.RoleQuery) (*models.Role, error) {
 	var name string
 
 	err := squirrel.Select("name").
@@ -54,7 +67,7 @@ func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query m
 		Where(squirrel.Eq{
 			"name": query.Name,
 		}).
-		RunWith(s.conn).
+		RunWith(conn).
 		ScanContext(ctx, &name)
 
 	switch err {
@@ -67,12 +80,12 @@ func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query m
 	}
 }
 
-func (s *DataService) DeleteRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) error {
+func deleteRole(ctx context.Context, conn *sql.DB, query models.RoleQuery) error {
 	result, err := squirrel.Delete("role").
 		Where(squirrel.Eq{
 			"name": query.Name,
 		}).
-		RunWith(s.conn).
+		RunWith(conn).
 		ExecContext(ctx)
 
 	switch err {
