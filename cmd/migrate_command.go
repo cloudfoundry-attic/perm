@@ -10,8 +10,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
-	"code.cloudfoundry.org/perm/sqlx"
 	"code.cloudfoundry.org/perm/messages"
+	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/olekukonko/tablewriter"
 )
 
