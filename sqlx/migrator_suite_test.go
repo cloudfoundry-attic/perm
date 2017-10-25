@@ -1,4 +1,4 @@
-package migrator_test
+package sqlx
 
 import (
 	. "github.com/onsi/ginkgo"

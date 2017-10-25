@@ -2,12 +2,12 @@ package db
 
 import (
 	"code.cloudfoundry.org/perm/db/migrations"
-	"code.cloudfoundry.org/perm/db/migrator"
+	"code.cloudfoundry.org/perm/sqlx"
 )
 
 var MigrationsTableName = "perm_migrations"
 
-var Migrations = []migrator.Migration{
+var Migrations = []sqlx.Migration{
 	{
 		Name: "create_roles_table",
 		Up:   migrations.CreateRolesTableUp,

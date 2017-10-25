@@ -1,4 +1,4 @@
-package migrator
+package sqlx
 
 import (
 	"context"
@@ -66,7 +66,7 @@ func rollbackMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, t
 		if err != nil {
 			logger.Error(messages.ErrFailedToApplyMigration, err)
 		}
-		err = commit(logger, tx, err)
+		err = Commit(logger, tx, err)
 	}()
 
 	err = migration.Down(ctx, logger, tx)

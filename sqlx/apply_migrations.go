@@ -1,4 +1,4 @@
-package migrator
+package sqlx
 
 import (
 	"context"
@@ -69,7 +69,7 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.D
 		if err != nil {
 			logger.Error(messages.ErrFailedToCreateTable, err)
 		}
-		err = commit(logger, tx, err)
+		err = Commit(logger, tx, err)
 	}()
 
 	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255), applied_at DATETIME)")
@@ -90,7 +90,7 @@ func applyMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tabl
 		if err != nil {
 			logger.Error(messages.ErrFailedToApplyMigration, err)
 		}
-		err = commit(logger, tx, err)
+		err = Commit(logger, tx, err)
 	}()
 
 	err = migration.Up(ctx, logger, tx)

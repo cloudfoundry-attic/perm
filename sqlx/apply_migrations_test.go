@@ -1,9 +1,9 @@
-package migrator_test
+package sqlx_test
 
 import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	. "code.cloudfoundry.org/perm/db/migrator"
+	. "code.cloudfoundry.org/perm/sqlx"
 
 	"database/sql"
 
