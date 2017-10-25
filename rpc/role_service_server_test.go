@@ -19,6 +19,8 @@ var _ = Describe("RoleServiceServer", func() {
 
 		fakeDBConn *sql.DB
 		dbMock     sqlmock.Sqlmock
+
+		deps *rpc.InMemoryStore
 	)
 
 	BeforeEach(func() {
@@ -28,7 +30,9 @@ var _ = Describe("RoleServiceServer", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		logger = lagertest.NewTestLogger("perm-test")
-		subject = rpc.NewRoleServiceServer(logger, fakeDBConn)
+		deps = rpc.NewInMemoryStore()
+
+		subject = rpc.NewRoleServiceServer(logger, fakeDBConn, deps)
 	})
 
 	AfterEach(func() {

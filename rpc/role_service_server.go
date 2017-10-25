@@ -17,16 +17,21 @@ type RoleServiceServer struct {
 	dbConn *sql.DB
 
 	logger      lager.Logger
-	roles       map[string]*models.Role
 	assignments map[protos.Actor][]string
+
+	deps Deps
 }
 
-func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB) *RoleServiceServer {
+type Deps interface {
+	models.RoleService
+}
+
+func NewRoleServiceServer(logger lager.Logger, dbConn *sql.DB, deps Deps) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:      logger,
 		dbConn:      dbConn,
-		roles:       make(map[string]*models.Role),
 		assignments: make(map[protos.Actor][]string),
+		deps:        deps,
 	}
 }
 
@@ -36,16 +41,14 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 	logData := lager.Data{"role.name": name}
 	logger.Debug(messages.Starting, logData)
 
-	if _, exists := s.roles[name]; exists {
-		err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAlreadyExists))
-		logger.Error(messages.ErrRoleAlreadyExists, err, logData)
-		return nil, err
-	}
+	role, err := s.deps.CreateRole(ctx, logger, name)
 
-	role := &models.Role{
-		Name: name,
+	if err != nil {
+		return nil, togRPCErrorNew(err)
+		//err := togRPCError(codes.AlreadyExists, errors.New(messages.ErrRoleAlreadyExists))
+		//logger.Error(messages.ErrRoleAlreadyExists, err, logData)
+		//return nil, err
 	}
-	s.roles[name] = role
 
 	logger.Debug(messages.Success, logData)
 	return &protos.CreateRoleResponse{
@@ -58,18 +61,15 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	name := req.GetName()
 	logData := lager.Data{"role.name": name}
 
-	for _, role := range s.roles {
-		if role.Name == name {
-			logger.Debug(messages.Success, logData)
-			return &protos.GetRoleResponse{
-				Role: role.ToProto(),
-			}, nil
-		}
+	role, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: name})
+	if err != nil {
+		return nil, togRPCErrorNew(err)
 	}
 
-	err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-	logger.Error(messages.ErrRoleNotFound, err, logData)
-	return nil, err
+	logger.Debug(messages.Success, logData)
+	return &protos.GetRoleResponse{
+		Role: role.ToProto(),
+	}, nil
 }
 
 func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error) {
@@ -77,15 +77,10 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 	name := req.GetName()
 	logData := lager.Data{"role.name": name}
 
-	_, ok := s.roles[name]
-
-	if !ok {
-		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		s.logger.Error(messages.ErrRoleNotFound, err, logData)
-		return nil, err
+	err := s.deps.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
+	if err != nil {
+		return nil, togRPCErrorNew(err)
 	}
-
-	delete(s.roles, name)
 
 	// "Cascade"
 	// Remove role assignments for role
@@ -118,12 +113,10 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 		"actor.issuer": actor.GetIssuer(),
 		"role.name":    roleName,
 	}
-	_, exists := s.roles[roleName]
 
-	if !exists {
-		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		logger.Error(messages.ErrRoleNotFound, err, logData)
-		return nil, err
+	_, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: roleName})
+	if err != nil {
+		return nil, togRPCErrorNew(err)
 	}
 
 	assignments, ok := s.assignments[*actor]
@@ -156,12 +149,10 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 		"actor.issuer": actor.GetIssuer(),
 		"role.name":    roleName,
 	}
-	_, exists := s.roles[roleName]
 
-	if !exists {
-		err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleNotFound))
-		logger.Error(messages.ErrRoleNotFound, err, logData)
-		return nil, togRPCError(codes.NotFound, err)
+	_, err := s.deps.FindRole(ctx, logger, models.RoleQuery{Name: roleName})
+	if err != nil {
+		return nil, togRPCErrorNew(err)
 	}
 
 	assignments, ok := s.assignments[*actor]
@@ -177,8 +168,9 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 		}
 	}
 
-	err := togRPCError(codes.NotFound, errors.New(messages.ErrRoleAssignmentNotFound))
+	err = togRPCError(codes.NotFound, errors.New(messages.ErrRoleAssignmentNotFound))
 	logger.Error(messages.ErrRoleAssignmentNotFound, err, logData)
+
 	return nil, togRPCError(codes.NotFound, err)
 }
 
@@ -215,9 +207,9 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	var roles []*models.Role
 
 	for _, id := range assignments {
-		role, found := s.roles[id]
-		if !found {
-			return nil, togRPCError(codes.Unknown, errors.New("found an assignment for non-existent role"))
+		role, err := s.deps.FindRole(ctx, s.logger, models.RoleQuery{Name: id})
+		if err != nil {
+			return nil, togRPCErrorNew(err)
 		}
 
 		roles = append(roles, role)

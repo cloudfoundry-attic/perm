@@ -92,6 +92,12 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","html","html/atom","html/charset","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
@@ -130,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3309e16cb34fe723ebea2122792070070f8a866cab468771b772ea561d555a28"
+  inputs-digest = "cdcbaa3676ccf369e33b8d8778eeb318eaed53636d1252c033e27f81913b2731"
   solver-name = "gps-cdcl"
   solver-version = 1
