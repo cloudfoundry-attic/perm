@@ -3,6 +3,8 @@ package modelsbehaviors_test
 import (
 	"context"
 
+	"time"
+
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
 	. "github.com/onsi/ginkgo"
@@ -21,7 +23,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 	BeforeEach(func() {
 		subject = subjectCreator()
 
-		ctx = context.Background()
+		ctx, _ = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
 	})
 

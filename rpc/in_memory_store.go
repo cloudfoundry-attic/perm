@@ -115,7 +115,7 @@ func (s *InMemoryStore) UnassignRole(ctx context.Context, logger lager.Logger, r
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		assignments = []string{}
+		return models.ErrActorNotFound
 	}
 
 	for i, assignment := range assignments {
@@ -147,7 +147,7 @@ func (s *InMemoryStore) HasRole(ctx context.Context, logger lager.Logger, query 
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		return false, nil
+		return false, models.ErrActorNotFound
 	}
 
 	var found bool
@@ -185,4 +185,32 @@ func (s *InMemoryStore) ListActorRoles(ctx context.Context, logger lager.Logger,
 	}
 
 	return roles, nil
+}
+
+func (s *InMemoryStore) CreateActor(ctx context.Context, logger lager.Logger, domainID, issuer string) (*models.Actor, error) {
+	actor := models.Actor{
+		DomainID: domainID,
+		Issuer:   issuer,
+	}
+
+	if _, exists := s.assignments[actor]; exists {
+		return nil, models.ErrActorAlreadyExists
+	}
+
+	s.assignments[actor] = []string{}
+
+	return &actor, nil
+}
+
+func (s *InMemoryStore) FindActor(ctx context.Context, logger lager.Logger, query models.ActorQuery) (*models.Actor, error) {
+	actor := models.Actor{
+		DomainID: query.DomainID,
+		Issuer:   query.Issuer,
+	}
+
+	if _, exists := s.assignments[actor]; !exists {
+		return nil, models.ErrActorNotFound
+	}
+
+	return &actor, nil
 }

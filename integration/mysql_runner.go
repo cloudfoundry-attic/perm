@@ -10,6 +10,8 @@ import (
 
 	"strconv"
 
+	"time"
+
 	"code.cloudfoundry.org/perm/cmd"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -41,7 +43,7 @@ func (r *MySQLRunner) CreateTestDB() {
 	session, err := gexec.Start(createDB, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
-	Eventually(session).Should(gexec.Exit(0))
+	Eventually(session, 5*time.Second).Should(gexec.Exit(0))
 
 	c := &cmd.UpCommand{
 		Logger: cmd.LagerFlag{LogLevel: "error"},
@@ -63,7 +65,7 @@ func (r *MySQLRunner) DropTestDB() {
 	session, err := gexec.Start(dropDB, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
-	Eventually(session).Should(gexec.Exit(0))
+	Eventually(session, 5*time.Second).Should(gexec.Exit(0))
 }
 
 func (r *MySQLRunner) Truncate() {

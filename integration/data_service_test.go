@@ -97,4 +97,6 @@ var _ = Describe("DataService", func() {
 	})
 
 	BehavesLikeARoleService(func() models.RoleService { return store })
+	BehavesLikeAnActorService(func() models.ActorService { return store })
+	BehavesLikeARoleAssignmentService(func() models.RoleAssignmentService { return store }, func() models.RoleService { return store }, func() models.ActorService { return store })
 })
