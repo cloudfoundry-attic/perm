@@ -67,7 +67,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	db, err := cmd.SQL.Open()
+	conn, err := cmd.SQL.Open()
 	if err != nil {
 		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
 		return err
@@ -75,18 +75,19 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
-	err = db.Ping()
+	err = conn.Ping()
 	if err != nil {
 		logger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)
 
-	defer db.Close()
+	defer conn.Close()
 
 	logger = logger.Session("grpc-server")
 
 	inMemoryStore := rpc.NewInMemoryStore()
+	//persistentStore := db.NewDataService(conn)
 	roleServiceServer := rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 	logger.Info(messages.Starting, listeningLogData)
