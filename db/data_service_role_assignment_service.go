@@ -7,7 +7,6 @@ import (
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/sqlx"
-	"github.com/Masterminds/squirrel"
 )
 
 func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) (err error) {
@@ -21,7 +20,6 @@ func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleN
 
 	defer func() {
 		if err != nil {
-			// TODO log stuff
 			return
 		}
 		err = sqlx.Commit(logger, tx, err)
@@ -43,7 +41,6 @@ func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, rol
 
 	defer func() {
 		if err != nil {
-			// TODO log stuff
 			return
 		}
 		err = sqlx.Commit(logger, tx, err)
@@ -55,42 +52,18 @@ func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, rol
 }
 
 func (s *DataService) HasRole(ctx context.Context, logger lager.Logger, query models.RoleAssignmentQuery) (bool, error) {
-	logger = logger.Session("data-service")
-
-	return hasRole(ctx, logger, s.conn, query)
+	return hasRole(ctx, logger.Session("data-service"), s.conn, query)
 }
 
 func (s *DataService) ListActorRoles(ctx context.Context, logger lager.Logger, query models.ActorQuery) ([]*models.Role, error) {
-	logger = logger.Session("data-service")
-
-	actor, err := findActor(ctx, logger, s.conn, query)
+	r, err := listActorRoles(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}
-
-	rows, err := squirrel.Select("r.name").From("role_assignment ra").Join("role r ON ra.role_id = r.id").
-		Where(squirrel.Eq{"actor_id": actor.ID}).
-		RunWith(s.conn).
-		QueryContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 
 	var roles []*models.Role
-	for rows.Next() {
-		var name string
-		err := rows.Scan(&name)
-		if err != nil {
-			return nil, err
-		}
-
-		roles = append(roles, &models.Role{Name: name})
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return nil, err
+	for _, role := range r {
+		roles = append(roles, role.Role)
 	}
 
 	return roles, nil

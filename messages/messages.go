@@ -54,6 +54,7 @@ const (
 	FailedToCreateRoleAssignment = "failed-to-create-role-assignment"
 	FailedToDeleteRoleAssignment = "failed-to-delete-role-assignment"
 	FailedToFindRoleAssignment   = "failed-to-find-role-assignment"
+	FailedToFindRoleAssignments  = "failed-to-find-role-assignments"
 )
 
 // Migration messages
@@ -78,4 +79,6 @@ const (
 
 	FailedToRetrieveID        = "failed-to-retrieve-id"
 	FailedToCountRowsAffected = "failed-to-count-rows-affected"
+	FailedToScanRow           = "failed-to-scan-row"
+	FailedToIterateOverRows   = "failed-to-iterate-over-rows"
 )

@@ -325,7 +325,7 @@ func hasRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner,
 
 func findRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) (bool, error) {
 	logger = logger.Session("find-role-assignment").WithData(lager.Data{
-		"role.id": roleID,
+		"role.id":  roleID,
 		"actor.id": actorID,
 	})
 
@@ -344,4 +344,54 @@ func findRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.
 		logger.Error(messages.FailedToFindRoleAssignment, err)
 		return false, err
 	}
+}
+
+func listActorRoles(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.ActorQuery) ([]*role, error) {
+	logger = logger.Session("list-actor-roles")
+
+	actor, err := findActor(ctx, logger, conn, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return findActorRoleAssignments(ctx, logger, conn, actor.ID)
+}
+
+func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, actorID int64) ([]*role, error) {
+	logger = logger.Session("find-actor-role-assignments").WithData(lager.Data{
+		"actor.id": actorID,
+	})
+
+	rows, err := squirrel.Select("r.id", "r.name").From("role_assignment ra").Join("role r ON ra.role_id = r.id").
+		Where(squirrel.Eq{"actor_id": actorID}).
+		RunWith(conn).
+		QueryContext(ctx)
+	if err != nil {
+		logger.Error(messages.FailedToFindRoleAssignments, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []*role
+	for rows.Next() {
+		var (
+			id   int64
+			name string
+		)
+		err := rows.Scan(&id, &name)
+		if err != nil {
+			logger.Error(messages.FailedToScanRow, err)
+			return nil, err
+		}
+
+		roles = append(roles, &role{ID: id, Role: &models.Role{Name: name}})
+	}
+
+	err = rows.Err()
+	if err != nil {
+		logger.Error(messages.FailedToIterateOverRows, err)
+		return nil, err
+	}
+
+	return roles, nil
 }
