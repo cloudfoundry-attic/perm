@@ -8,7 +8,7 @@ import (
 )
 
 func (s *DataService) CreateActor(ctx context.Context, logger lager.Logger, domainID, issuer string) (*models.Actor, error) {
-	actor, err := createActor(ctx, s.conn, domainID, issuer)
+	actor, err := createActor(ctx, logger.Session("data-service"), s.conn, domainID, issuer)
 	if err != nil {
 		return nil, err
 	}
@@ -17,7 +17,7 @@ func (s *DataService) CreateActor(ctx context.Context, logger lager.Logger, doma
 }
 
 func (s *DataService) FindActor(ctx context.Context, logger lager.Logger, query models.ActorQuery) (*models.Actor, error) {
-	actor, err := findActor(ctx, s.conn, query)
+	actor, err := findActor(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,8 @@ import (
 )
 
 func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) (err error) {
+	logger = logger.Session("data-service")
+
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Error(messages.FailedToStartTransaction, err)
@@ -25,12 +27,14 @@ func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleN
 		err = sqlx.Commit(logger, tx, err)
 	}()
 
-	err = assignRole(ctx, tx, roleName, domainID, issuer)
+	err = assignRole(ctx, logger, tx, roleName, domainID, issuer)
 
 	return
 }
 
 func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) (err error) {
+	logger = logger.Session("data-service")
+
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Error(messages.FailedToStartTransaction, err)
@@ -45,17 +49,21 @@ func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, rol
 		err = sqlx.Commit(logger, tx, err)
 	}()
 
-	err = unassignRole(ctx, tx, roleName, domainID, issuer)
+	err = unassignRole(ctx, logger, tx, roleName, domainID, issuer)
 
 	return
 }
 
 func (s *DataService) HasRole(ctx context.Context, logger lager.Logger, query models.RoleAssignmentQuery) (bool, error) {
-	return hasRole(ctx, s.conn, query)
+	logger = logger.Session("data-service")
+
+	return hasRole(ctx, logger, s.conn, query)
 }
 
 func (s *DataService) ListActorRoles(ctx context.Context, logger lager.Logger, query models.ActorQuery) ([]*models.Role, error) {
-	actor, err := findActor(ctx, s.conn, query)
+	logger = logger.Session("data-service")
+
+	actor, err := findActor(ctx, logger, s.conn, query)
 	if err != nil {
 		return nil, err
 	}

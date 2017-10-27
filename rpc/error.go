@@ -6,11 +6,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func togRPCError(code codes.Code, err error) error {
-	return status.Errorf(code, err.Error())
-}
-
-func togRPCErrorNew(err error) error {
+func togRPCError(err error) error {
 	switch err.(type) {
 	case nil:
 		return nil

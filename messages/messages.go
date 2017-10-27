@@ -1,15 +1,11 @@
 package messages
 
 const (
-	ErrFailedToListen              = "failed-to-listen"
-	ErrFailedToOpenSQLConnection   = "failed-to-open-sql-connection"
-	ErrFailedToPingSQLConnection   = "failed-to-ping-sql-connection"
-	ErrInternal                    = "internal"
-	ErrInvalidTLSCredentials       = "invalid-tls-credentials"
-	ErrRoleAlreadyExists           = "role-already-exists"
-	ErrRoleAssignmentAlreadyExists = "role-assignment-already-exists"
-	ErrRoleAssignmentNotFound      = "role-assignment-not-found"
-	ErrRoleNotFound                = "role-not-found"
+	ErrFailedToListen            = "failed-to-listen"
+	ErrFailedToOpenSQLConnection = "failed-to-open-sql-connection"
+	ErrFailedToPingSQLConnection = "failed-to-ping-sql-connection"
+	ErrInternal                  = "internal"
+	ErrInvalidTLSCredentials     = "invalid-tls-credentials"
 )
 
 const (
@@ -24,10 +20,27 @@ const (
 	FailedToAppendCertToPool = "failed-to-append-cert-to-pool"
 	FailedToGRPCDial         = "failed-to-grpc-dial"
 
+	ErrRoleAlreadyExists = "role-already-exists"
+	ErrRoleNotFound      = "role-not-found"
+
 	FailedToCreateRole   = "failed-to-create-role"
 	FailedToAssignRole   = "failed-to-assign-role"
 	FailedToUnassignRole = "failed-to-unassign-role"
 	FailedToDeleteRole   = "failed-to-delete-role"
+	FailedToFindRole     = "failed-to-find-role"
+
+	ErrActorAlreadyExists = "actor-already-exists"
+	ErrActorNotFound      = "actor-not-found"
+
+	FailedToCreateActor = "failed-to-create-actor"
+	FailedToFindActor   = "failed-to-find-actor"
+
+	ErrRoleAssignmentAlreadyExists = "role-assignment-already-exists"
+	ErrRoleAssignmentNotFound      = "role-assignment-not-found"
+
+	FailedToCreateRoleAssignment = "failed-to-create-role-assignment"
+	FailedToDeleteRoleAssignment = "failed-to-delete-role-assignment"
+	FailedToFindRoleAssignment   = "failed-to-find-role-assignment"
 )
 
 const (
@@ -51,4 +64,7 @@ const (
 	FailedToStartTransaction = "failed-to-start-transaction"
 	FailedToCommit           = "failed-to-commit"
 	FailedToRollback         = "failed-to-rollback"
+
+	FailedToRetrieveID        = "failed-to-retrieve-id"
+	FailedToCountRowsAffected = "failed-to-count-rows-affected"
 )

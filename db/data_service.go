@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
@@ -20,7 +22,8 @@ func NewDataService(conn *sql.DB) *DataService {
 	}
 }
 
-func createRole(ctx context.Context, conn squirrel.BaseRunner, name string) (*role, error) {
+func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*role, error) {
+	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("role").
@@ -33,6 +36,7 @@ func createRole(ctx context.Context, conn squirrel.BaseRunner, name string) (*ro
 	case nil:
 		id, err := result.LastInsertId()
 		if err != nil {
+			logger.Error(messages.FailedToRetrieveID, err)
 			return nil, err
 		}
 
@@ -45,15 +49,21 @@ func createRole(ctx context.Context, conn squirrel.BaseRunner, name string) (*ro
 		return role, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(messages.ErrRoleAlreadyExists)
 			return nil, models.ErrRoleAlreadyExists
 		}
+
+		logger.Error(messages.FailedToCreateRole, err)
 		return nil, err
 	default:
+		logger.Error(messages.FailedToCreateRole, err)
 		return nil, err
 	}
 }
 
-func findRole(ctx context.Context, conn squirrel.BaseRunner, query models.RoleQuery) (*role, error) {
+func findRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) (*role, error) {
+	logger = logger.Session("find-role")
+
 	var (
 		id   int64
 		name string
@@ -77,13 +87,16 @@ func findRole(ctx context.Context, conn squirrel.BaseRunner, query models.RoleQu
 			},
 		}, nil
 	case sql.ErrNoRows:
+		logger.Debug(messages.ErrRoleNotFound)
 		return nil, models.ErrRoleNotFound
 	default:
+		logger.Error(messages.FailedToFindRole, err)
 		return nil, err
 	}
 }
 
-func deleteRole(ctx context.Context, conn squirrel.BaseRunner, query models.RoleQuery) error {
+func deleteRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) error {
+	logger = logger.Session("delete-role")
 	result, err := squirrel.Delete("role").
 		Where(squirrel.Eq{
 			"name": query.Name,
@@ -95,10 +108,12 @@ func deleteRole(ctx context.Context, conn squirrel.BaseRunner, query models.Role
 	case nil:
 		n, err := result.RowsAffected()
 		if err != nil {
+			logger.Error(messages.FailedToCountRowsAffected, err)
 			return err
 		}
 
 		if n == 0 {
+			logger.Debug(messages.ErrRoleNotFound)
 			return models.ErrRoleNotFound
 		}
 
@@ -110,7 +125,9 @@ func deleteRole(ctx context.Context, conn squirrel.BaseRunner, query models.Role
 	}
 }
 
-func createActor(ctx context.Context, conn squirrel.BaseRunner, domainID, issuer string) (*actor, error) {
+func createActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, domainID, issuer string) (*actor, error) {
+	logger = logger.Session("create-actor")
+
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("actor").
@@ -123,6 +140,7 @@ func createActor(ctx context.Context, conn squirrel.BaseRunner, domainID, issuer
 	case nil:
 		id, err := result.LastInsertId()
 		if err != nil {
+			logger.Error(messages.FailedToRetrieveID, err)
 			return nil, err
 		}
 		actor := &actor{
@@ -135,15 +153,20 @@ func createActor(ctx context.Context, conn squirrel.BaseRunner, domainID, issuer
 		return actor, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(messages.ErrActorAlreadyExists)
 			return nil, models.ErrActorAlreadyExists
 		}
+		logger.Error(messages.FailedToCreateActor, err)
 		return nil, err
 	default:
+		logger.Error(messages.FailedToCreateActor, err)
 		return nil, err
 	}
 }
 
-func findActor(ctx context.Context, conn squirrel.BaseRunner, query models.ActorQuery) (*actor, error) {
+func findActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.ActorQuery) (*actor, error) {
+	logger = logger.Session("find-actor")
+
 	sQuery := squirrel.Eq{}
 	if query.DomainID != "" {
 		sQuery["domain_id"] = query.DomainID
@@ -173,56 +196,90 @@ func findActor(ctx context.Context, conn squirrel.BaseRunner, query models.Actor
 			},
 		}, nil
 	case sql.ErrNoRows:
+		logger.Debug(messages.ErrActorNotFound)
 		return nil, models.ErrActorNotFound
 	default:
+		logger.Error(messages.FailedToFindActor, err)
 		return nil, err
 	}
 }
 
-func assignRole(ctx context.Context, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
-	role, err := findRole(ctx, conn, models.RoleQuery{Name: roleName})
+func assignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
+	logger = logger.Session("assign-role")
+
+	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
 	if err != nil {
 		return err
 	}
 
-	_, err = createActor(ctx, conn, domainID, issuer)
+	_, err = createActor(ctx, logger, conn, domainID, issuer)
 	if err != nil && err != models.ErrActorAlreadyExists {
 		return err
 	}
 
-	actor, err := findActor(ctx, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actor, err := findActor(ctx, logger, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err != nil {
 		return err
 	}
 
-	_, err = squirrel.Insert("role_assignment").
+	return createRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+}
+
+func createRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) error {
+	logger = logger.Session("create-role-assignment").WithData(lager.Data{
+		"role.id":  roleID,
+		"actor.id": actorID,
+	})
+
+	_, err := squirrel.Insert("role_assignment").
 		Columns("role_id", "actor_id").
-		Values(role.ID, actor.ID).
+		Values(roleID, actorID).
 		RunWith(conn).
 		ExecContext(ctx)
 
-	if e, ok := err.(*mysql.MySQLError); ok && e.Number == MySQLErrorCodeDuplicateKey {
-		return models.ErrRoleAssignmentAlreadyExists
-	}
+	switch e := err.(type) {
+	case nil:
+		return nil
+	case *mysql.MySQLError:
+		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(messages.ErrRoleAssignmentAlreadyExists)
+			return models.ErrRoleAssignmentAlreadyExists
+		}
 
-	return nil
+		logger.Error(messages.FailedToCreateRoleAssignment, err)
+		return err
+	default:
+		logger.Error(messages.FailedToCreateRoleAssignment, err)
+		return err
+	}
 }
 
-func unassignRole(ctx context.Context, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
-	role, err := findRole(ctx, conn, models.RoleQuery{Name: roleName})
+func unassignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
+	logger = logger.Session("unassign-role")
+
+	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
 	if err != nil {
 		return err
 	}
 
-	actor, err := findActor(ctx, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actor, err := findActor(ctx, logger, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err != nil {
 		return err
 	}
+
+	return deleteRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+}
+
+func deleteRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) error {
+	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
+		"role.id":  roleID,
+		"actor.id": actorID,
+	})
 
 	result, err := squirrel.Delete("role_assignment").
 		Where(squirrel.Eq{
-			"role_id":  role.ID,
-			"actor_id": actor.ID,
+			"role_id":  roleID,
+			"actor_id": actorID,
 		}).
 		RunWith(conn).
 		ExecContext(ctx)
@@ -231,36 +288,50 @@ func unassignRole(ctx context.Context, conn squirrel.BaseRunner, roleName, domai
 	case nil:
 		n, err := result.RowsAffected()
 		if err != nil {
+			logger.Error(messages.FailedToDeleteRoleAssignment, err)
 			return err
 		}
 
 		if n == 0 {
+			logger.Debug(messages.ErrRoleAssignmentNotFound)
 			return models.ErrRoleAssignmentNotFound
 		}
 
 		return nil
 	case sql.ErrNoRows:
+		logger.Debug(messages.ErrRoleAssignmentNotFound)
 		return models.ErrRoleAssignmentNotFound
 	default:
+		logger.Error(messages.FailedToDeleteRoleAssignment, err)
 		return err
 	}
 }
 
-func hasRole(ctx context.Context, conn squirrel.BaseRunner, query models.RoleAssignmentQuery) (bool, error) {
-	actor, err := findActor(ctx, conn, query.ActorQuery)
+func hasRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleAssignmentQuery) (bool, error) {
+	logger = logger.Session("has-role")
+
+	actor, err := findActor(ctx, logger, conn, query.ActorQuery)
 	if err != nil {
-		return false, models.ErrActorNotFound
+		return false, err
 	}
 
-	role, err := findRole(ctx, conn, query.RoleQuery)
+	role, err := findRole(ctx, logger, conn, query.RoleQuery)
 	if err != nil {
-		return false, models.ErrRoleNotFound
+		return false, err
 	}
 
-	var actorID int64
-	err = squirrel.Select("actor_id").
+	return findRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+}
+
+func findRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) (bool, error) {
+	logger = logger.Session("find-role-assignment").WithData(lager.Data{
+		"role.id": roleID,
+		"actor.id": actorID,
+	})
+
+	err := squirrel.Select("actor_id").
 		From("role_assignment").
-		Where(squirrel.Eq{"actor_id": actor.ID, "role_id": role.ID}).
+		Where(squirrel.Eq{"actor_id": actorID, "role_id": roleID}).
 		RunWith(conn).
 		ScanContext(ctx, &actorID)
 
@@ -270,6 +341,7 @@ func hasRole(ctx context.Context, conn squirrel.BaseRunner, query models.RoleAss
 	case sql.ErrNoRows:
 		return false, nil
 	default:
+		logger.Error(messages.FailedToFindRoleAssignment, err)
 		return false, err
 	}
 }
