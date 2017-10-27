@@ -49,7 +49,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	conn, err := cmd.SQL.Open()
 	if err != nil {
-		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
+		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 
@@ -57,7 +57,7 @@ func (cmd UpCommand) Execute([]string) error {
 	pingLogger.Debug(messages.Starting)
 	err = conn.PingContext(ctx)
 	if err != nil {
-		pingLogger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
+		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)
@@ -77,7 +77,7 @@ func (cmd DownCommand) Execute([]string) error {
 
 	conn, err := cmd.SQL.Open()
 	if err != nil {
-		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
+		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 
@@ -85,7 +85,7 @@ func (cmd DownCommand) Execute([]string) error {
 	pingLogger.Debug(messages.Starting)
 	err = conn.PingContext(ctx)
 	if err != nil {
-		pingLogger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
+		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)
@@ -103,7 +103,7 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	conn, err := cmd.SQL.Open()
 	if err != nil {
-		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
+		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 
@@ -111,7 +111,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	pingLogger.Debug(messages.Starting)
 	err = conn.PingContext(ctx)
 	if err != nil {
-		pingLogger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
+		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)

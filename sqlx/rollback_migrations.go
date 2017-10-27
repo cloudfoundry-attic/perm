@@ -64,7 +64,7 @@ func rollbackMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, t
 
 	defer func() {
 		if err != nil {
-			logger.Error(messages.ErrFailedToApplyMigration, err)
+			logger.Error(messages.FailedToApplyMigration, err)
 		}
 		err = Commit(logger, tx, err)
 	}()

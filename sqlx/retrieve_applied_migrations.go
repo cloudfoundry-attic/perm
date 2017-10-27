@@ -31,7 +31,7 @@ func RetrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *s
 	for rows.Next() {
 		err = rows.Scan(&version, &name, &appliedAt)
 		if err != nil {
-			logger.Error(messages.ErrFailedToParseAppliedMigration, err)
+			logger.Error(messages.FailedToParseAppliedMigration, err)
 
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func RetrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *s
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error(messages.ErrFailedToQueryMigrations, err)
+		logger.Error(messages.FailedToQueryMigrations, err)
 		return nil, err
 	}
 

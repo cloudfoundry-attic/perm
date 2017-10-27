@@ -67,7 +67,7 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.D
 
 	defer func() {
 		if err != nil {
-			logger.Error(messages.ErrFailedToCreateTable, err)
+			logger.Error(messages.FailedToCreateTable, err)
 		}
 		err = Commit(logger, tx, err)
 	}()
@@ -88,7 +88,7 @@ func applyMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tabl
 
 	defer func() {
 		if err != nil {
-			logger.Error(messages.ErrFailedToApplyMigration, err)
+			logger.Error(messages.FailedToApplyMigration, err)
 		}
 		err = Commit(logger, tx, err)
 	}()

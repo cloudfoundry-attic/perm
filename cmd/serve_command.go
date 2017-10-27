@@ -41,14 +41,13 @@ func (cmd ServeCommand) Execute([]string) error {
 		"port":     port,
 	}
 	if err != nil {
-		logger.Error(messages.ErrFailedToListen, err, listeningLogData)
+		logger.Error(messages.FailedToListen, err, listeningLogData)
 		return err
 	}
 
 	tlsCreds, err := credentials.NewServerTLSFromFile(cmd.TLSCertificate, cmd.TLSKey)
-
 	if err != nil {
-		logger.Error(messages.ErrInvalidTLSCredentials, err)
+		logger.Error(messages.FailedToParseTLSCredentials, err)
 		return err
 	}
 
@@ -69,7 +68,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	conn, err := cmd.SQL.Open()
 	if err != nil {
-		logger.Error(messages.ErrFailedToOpenSQLConnection, err)
+		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 
@@ -77,7 +76,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	pingLogger.Debug(messages.Starting)
 	err = conn.Ping()
 	if err != nil {
-		logger.Error(messages.ErrFailedToPingSQLConnection, err, cmd.SQL.LagerData())
+		logger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
 	pingLogger.Debug(messages.Finished)
