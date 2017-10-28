@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
@@ -85,9 +86,8 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	logger = logger.Session("grpc-server")
 
-	inMemoryStore := rpc.NewInMemoryStore()
-	//persistentStore := db.NewDataService(conn)
-	roleServiceServer := rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
+	store := db.NewDataService(conn)
+	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 	logger.Info(messages.Starting, listeningLogData)
 
