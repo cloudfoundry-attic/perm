@@ -47,7 +47,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open()
+	conn, err := cmd.SQL.Open(OS, IOReader)
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
@@ -75,7 +75,7 @@ func (cmd DownCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open()
+	conn, err := cmd.SQL.Open(OS, IOReader)
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
@@ -101,7 +101,7 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open()
+	conn, err := cmd.SQL.Open(OS, IOReader)
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err

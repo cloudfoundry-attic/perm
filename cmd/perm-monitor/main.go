@@ -12,7 +12,6 @@ import (
 	"code.cloudfoundry.org/lager"
 
 	"crypto/x509"
-	"io/ioutil"
 
 	"context"
 
@@ -35,9 +34,9 @@ type options struct {
 }
 
 type permOptions struct {
-	Hostname      string         `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
-	Port          int            `long:"port" description:"Port used to connect to Perm" required:"true"`
-	CACertificate []cmd.FileFlag `long:"ca-certificate" description:"File path of Perm's CA certificate"`
+	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
+	Port          int                    `long:"port" description:"Port used to connect to Perm" required:"true"`
+	CACertificate []cmd.FileOrStringFlag `long:"ca-certificate" description:"File path of Perm's CA certificate"`
 }
 
 type statsDOptions struct {
@@ -87,7 +86,7 @@ func main() {
 	pool := x509.NewCertPool()
 
 	for _, certPath := range parserOpts.Perm.CACertificate {
-		caPem, err := ioutil.ReadFile(certPath.Path())
+		caPem, err := certPath.Bytes(cmd.InjectableOS{}, cmd.InjectableIOReader{})
 		if err != nil {
 			logger.Fatal(messages.FailedToReadCertificate, err, lager.Data{
 				"location": certPath,

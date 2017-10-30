@@ -6,12 +6,16 @@ import (
 	"net"
 	"strconv"
 
+	"crypto/tls"
+	"crypto/x509"
+
 	"code.cloudfoundry.org/lager"
 	"github.com/go-sql-driver/mysql"
 )
 
 type SQLFlag struct {
-	DB DBFlag `group:"DB" namespace:"db"`
+	DB  DBFlag     `group:"DB" namespace:"db"`
+	TLS SQLTLSFlag `group:"TLS" namespace:"tls"`
 }
 
 type DBFlag struct {
@@ -23,7 +27,12 @@ type DBFlag struct {
 	Password string `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
 }
 
-func (o *SQLFlag) Open() (*sql.DB, error) {
+type SQLTLSFlag struct {
+	Required bool               `long:"required" description:"Require TLS connections to the SQL backend"`
+	RootCAs  []FileOrStringFlag `long:"root-ca" description:"CA certificate(s) for TLS connection to the SQL backend"`
+}
+
+func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sql.DB, error) {
 	switch o.DB.Driver {
 	case "mysql":
 		cfg := mysql.NewConfig()
@@ -34,6 +43,25 @@ func (o *SQLFlag) Open() (*sql.DB, error) {
 		cfg.Addr = net.JoinHostPort(o.DB.Host, strconv.Itoa(o.DB.Port))
 		cfg.DBName = o.DB.Schema
 		cfg.ParseTime = true
+
+		if o.TLS.Required {
+			rootCertPool := x509.NewCertPool()
+			for _, rootCA := range o.TLS.RootCAs {
+				pem, err := rootCA.Bytes(statter, reader)
+				if err != nil {
+					return nil, err
+				}
+				if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+					return nil, FailedToAppendCertsFromPem
+				}
+			}
+
+			tlsConfigName := "perm"
+			mysql.RegisterTLSConfig(tlsConfigName, &tls.Config{
+				RootCAs: rootCertPool,
+			})
+			cfg.TLSConfig = tlsConfigName
+		}
 
 		return sql.Open(o.DB.Driver, cfg.FormatDSN())
 	default:

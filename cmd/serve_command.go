@@ -70,7 +70,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	conn, err := cmd.SQL.Open()
+	conn, err := cmd.SQL.Open(OS, IOReader)
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
