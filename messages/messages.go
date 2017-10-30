@@ -67,6 +67,10 @@ const (
 
 	RetrievedAppliedMigrations = "retrieved-applied-migrations"
 	SkippedAppliedMigration    = "skipped-applied-migration"
+
+	MigrationCountMismatch = "migration-count-mismatch"
+	MigrationNotFound      = "migration-not-found"
+	MigrationMismatch      = "migration-mismatch"
 )
 
 // Database messages

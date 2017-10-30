@@ -5,11 +5,14 @@ import (
 
 	"strconv"
 
+	"context"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
+	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
@@ -84,10 +87,19 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	defer conn.Close()
 
-	logger = logger.Session("grpc-server")
+	migrationLogger := logger.Session("verify-migrations")
+	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(context.Background(), migrationLogger, conn, db.MigrationsTableName, db.Migrations)
+	if err != nil {
+		return err
+	}
+	if !appliedCorrectly {
+		return ErrMigrationsOutOfSync
+	}
 
+	logger = logger.Session("grpc-server")
 	store := db.NewDataService(conn)
 	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
+
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 	logger.Info(messages.Starting, listeningLogData)
 
