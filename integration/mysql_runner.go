@@ -2,6 +2,8 @@ package integration
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
@@ -20,6 +22,18 @@ import (
 var truncateStmts = []string{
 	"DELETE FROM role",
 	"DELETE FROM actor",
+}
+
+type ioReader struct{}
+
+func (ioReader) ReadFile(filename string) ([]byte, error) {
+	return ioutil.ReadFile(filename)
+}
+
+type statter struct{}
+
+func (statter) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
 }
 
 type MySQLRunner struct {
@@ -69,7 +83,7 @@ func (r *MySQLRunner) DropTestDB() {
 }
 
 func (r *MySQLRunner) Truncate() {
-	dbConn, err := r.SQLFlag.Open()
+	dbConn, err := r.SQLFlag.Open(statter{}, ioReader{})
 	Expect(err).NotTo(HaveOccurred())
 
 	for _, s := range truncateStmts {

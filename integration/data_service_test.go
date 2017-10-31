@@ -79,7 +79,7 @@ var _ = Describe("DataService", func() {
 
 	BeforeEach(func() {
 		var err error
-		conn, err = flag.Open()
+		conn, err = flag.Open(cmd.OS, cmd.IOReader)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(conn.Ping()).To(Succeed())
