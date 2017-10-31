@@ -17,6 +17,7 @@ func RetrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *s
 		QueryContext(ctx)
 
 	if err != nil {
+		logger.Error(messages.FailedToQueryMigrations, err)
 		return nil, err
 	}
 

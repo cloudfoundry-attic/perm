@@ -101,7 +101,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
 
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
-	logger.Info(messages.Starting, listeningLogData)
+	logger.Debug(messages.Starting, listeningLogData)
 
 	return grpcServer.Serve(lis)
 }
