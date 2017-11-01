@@ -76,6 +76,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	grpcServer := grpc.NewServer(serverOpts...)
 
 	conn, err := cmd.SQL.Open(OS, IOReader)
+	defer conn.Close()
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
@@ -86,7 +87,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	var attempt int
 	for {
-		attempt += 1
+		attempt++
 
 		if attempt > 10 {
 			return errors.New("failed to talk to database within 10 attempts")
@@ -97,13 +98,13 @@ func (cmd ServeCommand) Execute([]string) error {
 			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
 				"attempt": attempt,
 			})
-		}
 
-		time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Second)
+		} else {
+			break
+		}
 	}
 	pingLogger.Debug(messages.Finished)
-
-	defer conn.Close()
 
 	migrationLogger := logger.Session("verify-migrations")
 	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(context.Background(), migrationLogger, conn, db.MigrationsTableName, db.Migrations)

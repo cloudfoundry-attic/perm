@@ -56,13 +56,14 @@ func (cmd UpCommand) Execute([]string) error {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
+	defer conn.Close()
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
 
 	var attempt int
 	for {
-		attempt += 1
+		attempt++
 
 		if attempt > 10 {
 			return errors.New("failed to talk to database within 10 attempts")
@@ -73,13 +74,13 @@ func (cmd UpCommand) Execute([]string) error {
 			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
 				"attempt": attempt,
 			})
-		}
 
-		time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Second)
+		} else {
+			break
+		}
 	}
 	pingLogger.Debug(messages.Finished)
-
-	defer conn.Close()
 
 	return sqlx.ApplyMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations)
 }
