@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"net"
+	"time"
 
 	"strconv"
 
 	"context"
+
+	"errors"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
@@ -34,6 +37,8 @@ type ServeCommand struct {
 func (cmd ServeCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
+
+	ctx := context.Background()
 
 	hostname := cmd.Hostname
 	port := cmd.Port
@@ -78,10 +83,23 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
-	err = conn.Ping()
-	if err != nil {
-		logger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
-		return err
+
+	var attempt int
+	for {
+		attempt += 1
+
+		if attempt > 10 {
+			return errors.New("failed to talk to database within 10 attempts")
+		}
+
+		err = conn.PingContext(ctx)
+		if err != nil {
+			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
+				"attempt": attempt,
+			})
+		}
+
+		time.Sleep(1 * time.Second)
 	}
 	pingLogger.Debug(messages.Finished)
 

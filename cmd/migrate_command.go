@@ -8,6 +8,10 @@ import (
 
 	"strconv"
 
+	"errors"
+
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/messages"
@@ -55,10 +59,23 @@ func (cmd UpCommand) Execute([]string) error {
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
-	err = conn.PingContext(ctx)
-	if err != nil {
-		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
-		return err
+
+	var attempt int
+	for {
+		attempt += 1
+
+		if attempt > 10 {
+			return errors.New("failed to talk to database within 10 attempts")
+		}
+
+		err = conn.PingContext(ctx)
+		if err != nil {
+			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
+				"attempt": attempt,
+			})
+		}
+
+		time.Sleep(1 * time.Second)
 	}
 	pingLogger.Debug(messages.Finished)
 
