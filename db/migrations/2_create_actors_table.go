@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS actor
   uuid BINARY(16) NOT NULL UNIQUE,
   domain_id VARCHAR(511) NOT NULL,
   issuer VARCHAR(2047) NOT NULL,
-  domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256))
+  domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) STORED
 )
 `
 
