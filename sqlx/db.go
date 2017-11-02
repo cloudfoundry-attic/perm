@@ -3,6 +3,7 @@ package sqlx
 import (
 	"context"
 	"database/sql"
+
 	"regexp"
 
 	"github.com/Masterminds/squirrel"
@@ -61,21 +62,20 @@ func Connect(ctx context.Context, driverName DBDriverName, dataSourceName string
 		)
 
 		err := db.QueryRowContext(ctx, `SHOW VARIABLES LIKE 'version'`).Scan(&variableName, &dbVersion)
-		if err != nil {
-			return nil, err
-		}
+		// MySQL will error if the system table 'performance_schema.session_variables' doesn't exist
+		if err == nil {
+			mariadbVersionRegex := regexp.MustCompile("(.*)-MariaDB")
 
-		mariadbVersionRegex := regexp.MustCompile("(.*)-MariaDB")
+			matches := mariadbVersionRegex.FindStringSubmatch(dbVersion)
+			if matches == nil {
+				// Not MariaDB
+				version = dbVersion
+			} else {
+				v := matches[1]
 
-		matches := mariadbVersionRegex.FindStringSubmatch(dbVersion)
-		if matches == nil {
-			// Not MariaDB
-			version = dbVersion
-		} else {
-			v := matches[1]
-
-			flavor = DBFlavorMariaDBMySQL
-			version = v
+				flavor = DBFlavorMariaDBMySQL
+				version = v
+			}
 		}
 	}
 
