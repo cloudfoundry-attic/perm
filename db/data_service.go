@@ -7,16 +7,17 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
 	"github.com/satori/go.uuid"
 )
 
 type DataService struct {
-	conn *sql.DB
+	conn *sqlx.DB
 }
 
-func NewDataService(conn *sql.DB) *DataService {
+func NewDataService(conn *sqlx.DB) *DataService {
 	return &DataService{
 		conn: conn,
 	}

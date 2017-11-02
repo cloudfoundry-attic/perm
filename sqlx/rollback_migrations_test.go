@@ -27,6 +27,8 @@ var _ = Describe("#RollbackMigrations", func() {
 		mock     sqlmock.Sqlmock
 		err      error
 
+		conn *DB
+
 		ctx context.Context
 
 		migrations []Migration
@@ -44,6 +46,10 @@ var _ = Describe("#RollbackMigrations", func() {
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
+		conn = &DB{
+			DB: fakeConn,
+		}
+
 		appliedAt = time.Now()
 
 		ctx = context.Background()
@@ -51,7 +57,7 @@ var _ = Describe("#RollbackMigrations", func() {
 		migrations = []Migration{
 			{
 				Name: "migration_1",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 1")
 
 					return err
@@ -59,7 +65,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			},
 			{
 				Name: "migration_2",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 2")
 
 					return err
@@ -67,7 +73,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			},
 			{
 				Name: "migration_3",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 3")
 
 					return err
@@ -99,7 +105,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit()
 
-			err := RollbackMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations, all)
+			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -130,7 +136,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(0).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit()
 
-			err := RollbackMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations, all)
+			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -146,7 +152,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			mock.ExpectExec("SOME FAKE MIGRATION 2").WillReturnError(errors.New("some-rollback-error"))
 			mock.ExpectRollback()
 
-			err := RollbackMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations, all)
+			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
 			Expect(err).To(MatchError("some-rollback-error"))
 		})
 
@@ -163,7 +169,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit().WillReturnError(errors.New("some-commit-error"))
 
-			err := RollbackMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations, all)
+			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
 			Expect(err).To(MatchError("some-commit-error"))
 		})
 	})

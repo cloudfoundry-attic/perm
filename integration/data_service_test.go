@@ -14,12 +14,11 @@ import (
 
 	"strconv"
 
-	"database/sql"
-
 	"code.cloudfoundry.org/perm/cmd"
 	. "code.cloudfoundry.org/perm/integration"
 	"code.cloudfoundry.org/perm/models"
 	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
+	"code.cloudfoundry.org/perm/sqlx"
 )
 
 var _ = Describe("DataService", func() {
@@ -29,11 +28,11 @@ var _ = Describe("DataService", func() {
 
 		store *DataService
 
-		conn *sql.DB
+		conn *sqlx.DB
 	)
 
 	BeforeSuite(func() {
-		driver := "mysql"
+		driver := sqlx.DBDriverNameMySQL
 		hostname := "localhost"
 
 		username := os.Getenv("PERM_TEST_MYSQL_USERNAME")

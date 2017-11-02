@@ -27,6 +27,8 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		mock     sqlmock.Sqlmock
 		err      error
 
+		conn *DB
+
 		ctx context.Context
 
 		migrations []Migration
@@ -42,6 +44,10 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
+		conn = &DB{
+			DB: fakeConn,
+		}
+
 		appliedAt = time.Now()
 
 		ctx = context.Background()
@@ -49,7 +55,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		migrations = []Migration{
 			{
 				Name: "migration_1",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 1")
 
 					return err
@@ -57,7 +63,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 			},
 			{
 				Name: "migration_2",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 2")
 
 					return err
@@ -65,7 +71,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 			},
 			{
 				Name: "migration_3",
-				Down: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 3")
 
 					return err
@@ -82,7 +88,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}))
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
+		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(verify).To(BeTrue())
@@ -96,7 +102,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("2", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(verify).To(BeTrue())
@@ -109,7 +115,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("1", "migration_2", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(verify).To(BeFalse())
@@ -123,7 +129,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("3", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(verify).To(BeFalse())
@@ -137,7 +143,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("2", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(verify).To(BeFalse())
@@ -147,7 +153,7 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnError(errors.New("some sql error"))
 
-		_, err := VerifyAppliedMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		_, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).To(MatchError("some sql error"))
 	})

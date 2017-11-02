@@ -2,7 +2,6 @@ package sqlx
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -10,7 +9,7 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-func RetrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string) (map[int]AppliedMigration, error) {
+func RetrieveAppliedMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string) (map[int]AppliedMigration, error) {
 	rows, err := squirrel.Select("version", "name", "applied_at").
 		From(tableName).
 		RunWith(conn).

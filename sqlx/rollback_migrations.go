@@ -2,14 +2,13 @@ package sqlx
 
 import (
 	"context"
-	"database/sql"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"github.com/Masterminds/squirrel"
 )
 
-func RollbackMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string, migrations []Migration, all bool) error {
+func RollbackMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string, migrations []Migration, all bool) error {
 	migrationsLogger := logger.Session("rollback-migrations").WithData(lager.Data{
 		"table_name": tableName,
 	})
@@ -53,7 +52,7 @@ func RollbackMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, 
 	return nil
 }
 
-func rollbackMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string, version int, migration Migration) (err error) {
+func rollbackMigration(ctx context.Context, logger lager.Logger, conn *DB, tableName string, version int, migration Migration) (err error) {
 	logger.Debug(messages.Starting)
 
 	tx, err := conn.BeginTx(ctx, nil)

@@ -2,7 +2,6 @@ package sqlx
 
 import (
 	"context"
-	"database/sql"
 
 	"time"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string, migrations []Migration) error {
+func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string, migrations []Migration) error {
 	createTableLogger := logger.Session("create-migrations-table").WithData(lager.Data{
 		"table_name": tableName,
 	})
@@ -56,8 +55,8 @@ func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tab
 	return nil
 }
 
-func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string) (err error) {
-	var tx *sql.Tx
+func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *DB, tableName string) (err error) {
+	var tx *Tx
 	tx, err = conn.BeginTx(ctx, nil)
 
 	if err != nil {
@@ -77,7 +76,7 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *sql.D
 	return
 }
 
-func applyMigration(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string, version int, migration Migration) (err error) {
+func applyMigration(ctx context.Context, logger lager.Logger, conn *DB, tableName string, version int, migration Migration) (err error) {
 	logger.Debug(messages.Starting)
 
 	tx, err := conn.BeginTx(ctx, nil)

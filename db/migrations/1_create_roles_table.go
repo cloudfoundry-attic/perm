@@ -2,10 +2,10 @@ package migrations
 
 import (
 	"context"
-	"database/sql"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
+	"code.cloudfoundry.org/perm/sqlx"
 )
 
 var createRolesTable = `
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS role
 
 var deleteRolesTable = `DROP TABLE role`
 
-func CreateRolesTableUp(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+func CreateRolesTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-roles-table")
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
@@ -30,7 +30,7 @@ func CreateRolesTableUp(ctx context.Context, logger lager.Logger, tx *sql.Tx) er
 	return err
 }
 
-func CreateRolesTableDown(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+func CreateRolesTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-roles-table")
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)

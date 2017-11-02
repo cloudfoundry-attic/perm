@@ -2,13 +2,12 @@ package sqlx
 
 import (
 	"context"
-	"database/sql"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 )
 
-func VerifyAppliedMigrations(ctx context.Context, logger lager.Logger, conn *sql.DB, tableName string, migrations []Migration) (bool, error) {
+func VerifyAppliedMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string, migrations []Migration) (bool, error) {
 	appliedMigrations, err := RetrieveAppliedMigrations(ctx, logger.Session("retrieve-applied-migrations"), conn, tableName)
 	if err != nil {
 		return false, err

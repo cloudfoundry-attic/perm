@@ -1,13 +1,11 @@
 package sqlx
 
 import (
-	"database/sql"
-
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 )
 
-func Commit(logger lager.Logger, tx *sql.Tx, err error) error {
+func Commit(logger lager.Logger, tx *Tx, err error) error {
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {

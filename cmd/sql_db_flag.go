@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -19,12 +20,12 @@ type SQLFlag struct {
 }
 
 type DBFlag struct {
-	Driver   string `long:"driver" description:"Database driver to use for SQL backend (e.g. mysql, postgres)" required:"true"`
-	Host     string `long:"host" description:"Host for SQL backend" required:"true"`
-	Port     int    `long:"port" description:"Port for SQL backend" required:"true"`
-	Schema   string `long:"schema" description:"Database name to use for connecting to SQL backend" required:"true"`
-	Username string `long:"username" description:"Username to use for connecting to SQL backend" required:"true"`
-	Password string `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
+	Driver   sqlx.DBDriverName `long:"driver" description:"Database driver to use for SQL backend (e.g. mysql, postgres)" required:"true"`
+	Host     string            `long:"host" description:"Host for SQL backend" required:"true"`
+	Port     int               `long:"port" description:"Port for SQL backend" required:"true"`
+	Schema   string            `long:"schema" description:"Database name to use for connecting to SQL backend" required:"true"`
+	Username string            `long:"username" description:"Username to use for connecting to SQL backend" required:"true"`
+	Password string            `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
 }
 
 type SQLTLSFlag struct {
@@ -32,7 +33,7 @@ type SQLTLSFlag struct {
 	RootCAs  []FileOrStringFlag `long:"root-ca" description:"CA certificate(s) for TLS connection to the SQL backend"`
 }
 
-func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sql.DB, error) {
+func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sqlx.DB, error) {
 	switch o.DB.Driver {
 	case "mysql":
 		cfg := mysql.NewConfig()
@@ -63,7 +64,7 @@ func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sql.DB, error) {
 			cfg.TLSConfig = tlsConfigName
 		}
 
-		return sql.Open(o.DB.Driver, cfg.FormatDSN())
+		return sqlx.Connect(context.Background(), o.DB.Driver, cfg.FormatDSN())
 	default:
 		return nil, errors.New("unsupported sql driver")
 	}

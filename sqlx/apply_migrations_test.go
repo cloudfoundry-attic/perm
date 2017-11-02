@@ -28,6 +28,8 @@ var _ = Describe("#ApplyMigrations", func() {
 		mock     sqlmock.Sqlmock
 		err      error
 
+		conn *DB
+
 		ctx context.Context
 	)
 
@@ -39,6 +41,9 @@ var _ = Describe("#ApplyMigrations", func() {
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
+		conn = &DB{
+			DB: fakeConn,
+		}
 		ctx = context.Background()
 	})
 
@@ -53,7 +58,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -65,7 +70,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit().WillReturnError(errors.New("commit-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("commit-failed"))
 	})
@@ -77,7 +82,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("create-table-failed"))
 	})
@@ -89,17 +94,17 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback().WillReturnError(errors.New("rollback-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{})
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 
 		Expect(err).To(MatchError("create-table-failed"))
 	})
 
 	It("applies the migrations", func() {
-		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 			return err
 		}}
-		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "THIS IS A TEST")
 			return err
 		}}
@@ -130,17 +135,17 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("does not repeat applied migrations", func() {
-		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 			return err
 		}}
-		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "THIS IS A TEST")
 			return err
 		}}
@@ -162,17 +167,17 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, []Migration{migration1, migration2})
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{migration1, migration2})
 
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("does not apply later migrations if a migration fails", func() {
-		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 			return err
 		}}
-		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 			return err
 		}}
@@ -192,17 +197,17 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("migration-failed"))
 		mock.ExpectRollback()
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).To(MatchError("migration-failed"))
 	})
 
 	It("does not apply later migrations if a migration commit fails", func() {
-		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration1 := Migration{Name: "migration-1", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 			return err
 		}}
-		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *sql.Tx) error {
+		migration2 := Migration{Name: "migration-2", Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
 			_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 			return err
 		}}
@@ -225,7 +230,7 @@ var _ = Describe("#ApplyMigrations", func() {
 		mock.ExpectCommit().
 			WillReturnError(errors.New("commit-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, fakeConn, migrationTableName, migrations)
+		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).To(MatchError("commit-failed"))
 	})

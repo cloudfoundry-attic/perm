@@ -2,7 +2,6 @@ package sqlx
 
 import (
 	"context"
-	"database/sql"
 
 	"time"
 
@@ -21,4 +20,4 @@ type AppliedMigration struct {
 	AppliedAt time.Time
 }
 
-type MigrationFunc func(context.Context, lager.Logger, *sql.Tx) error
+type MigrationFunc func(context.Context, lager.Logger, *Tx) error
