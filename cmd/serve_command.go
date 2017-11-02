@@ -76,11 +76,11 @@ func (cmd ServeCommand) Execute([]string) error {
 	grpcServer := grpc.NewServer(serverOpts...)
 
 	conn, err := cmd.SQL.Open(OS, IOReader)
-	defer conn.Close()
 	if err != nil {
 		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
+	defer conn.Close()
 
 	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
 	pingLogger.Debug(messages.Starting)
