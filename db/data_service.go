@@ -120,8 +120,10 @@ func deleteRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 
 		return nil
 	case sql.ErrNoRows:
+		logger.Debug(messages.ErrRoleNotFound)
 		return models.ErrRoleNotFound
 	default:
+		logger.Error(messages.FailedToDeleteRole, err)
 		return err
 	}
 }
