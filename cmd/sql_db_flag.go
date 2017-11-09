@@ -53,7 +53,7 @@ func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sqlx.DB, error) {
 					return nil, err
 				}
 				if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
-					return nil, FailedToAppendCertsFromPem
+					return nil, ErrFailedToAppendCertsFromPem
 				}
 			}
 

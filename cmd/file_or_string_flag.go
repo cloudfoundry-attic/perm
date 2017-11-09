@@ -29,6 +29,7 @@ func (f FileOrStringFlag) Bytes(statter Statter, reader FileReader) ([]byte, err
 }
 
 //go:generate counterfeiter . FileReader
+
 type FileReader interface {
 	ReadFile(string) ([]byte, error)
 }
@@ -41,6 +42,7 @@ func (InjectableIOReader) ReadFile(filename string) ([]byte, error) {
 
 //go:generate counterfeiter os.FileInfo
 //go:generate counterfeiter . Statter
+
 type Statter interface {
 	Stat(string) (os.FileInfo, error)
 }

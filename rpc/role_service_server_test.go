@@ -1,6 +1,8 @@
 package rpc_test
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/rpc"
 
@@ -15,11 +17,15 @@ var _ = Describe("RoleServiceServer", func() {
 		logger  *lagertest.TestLogger
 
 		inMemoryStore *rpc.InMemoryStore
+
+		ctx context.Context
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("perm-test")
 		inMemoryStore = rpc.NewInMemoryStore()
+
+		ctx = context.Background()
 
 		subject = rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
 	})
@@ -29,7 +35,7 @@ var _ = Describe("RoleServiceServer", func() {
 			req := &protos.CreateRoleRequest{
 				Name: "test-role",
 			}
-			res, err := subject.CreateRole(nil, req)
+			res, err := subject.CreateRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
@@ -39,11 +45,11 @@ var _ = Describe("RoleServiceServer", func() {
 			req := &protos.CreateRoleRequest{
 				Name: "test-role",
 			}
-			_, err := subject.CreateRole(nil, req)
+			_, err := subject.CreateRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.CreateRole(nil, req)
+			res, err := subject.CreateRole(ctx, req)
 
 			Expect(res).To(BeNil())
 			Expect(err).To(HaveOccurred())
@@ -53,7 +59,7 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#GetRole", func() {
 		It("returns the role if a match exists", func() {
 			name := "test"
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
@@ -62,7 +68,7 @@ var _ = Describe("RoleServiceServer", func() {
 			req := &protos.GetRoleRequest{
 				Name: name,
 			}
-			res, err := subject.GetRole(nil, req)
+			res, err := subject.GetRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
@@ -73,7 +79,7 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("returns an error if no match exists", func() {
-			res, err := subject.GetRole(nil, &protos.GetRoleRequest{
+			res, err := subject.GetRole(ctx, &protos.GetRoleRequest{
 				Name: "does-not-exist",
 			})
 
@@ -85,20 +91,20 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
 			name := "test-role"
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			_, err = subject.GetRole(nil, &protos.GetRoleRequest{
+			_, err = subject.GetRole(ctx, &protos.GetRoleRequest{
 				Name: name,
 			})
 
@@ -106,7 +112,7 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("fails if the role does not exist", func() {
-			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: "test-role",
 			})
 
@@ -117,7 +123,7 @@ var _ = Describe("RoleServiceServer", func() {
 		It("deletes any role assignments for the role", func() {
 			name := "test-role"
 
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
@@ -128,14 +134,14 @@ var _ = Describe("RoleServiceServer", func() {
 				Issuer: "issuer",
 			}
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			hasRoleRes, err := subject.HasRole(nil, &protos.HasRoleRequest{
+			hasRoleRes, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
@@ -144,14 +150,14 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(hasRoleRes).NotTo(BeNil())
 			Expect(hasRoleRes.GetHasRole()).To(BeTrue())
 
-			res, err := subject.DeleteRole(nil, &protos.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			hasRoleRes, err = subject.HasRole(nil, &protos.HasRoleRequest{
+			hasRoleRes, err = subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
@@ -169,7 +175,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
@@ -179,7 +185,7 @@ var _ = Describe("RoleServiceServer", func() {
 				Actor:    actor,
 				RoleName: name,
 			}
-			res, err := subject.AssignRole(nil, req)
+			res, err := subject.AssignRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
@@ -191,7 +197,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
@@ -201,11 +207,11 @@ var _ = Describe("RoleServiceServer", func() {
 				Actor:    actor,
 				RoleName: name,
 			}
-			_, err = subject.AssignRole(nil, req)
+			_, err = subject.AssignRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.AssignRole(nil, req)
+			res, err := subject.AssignRole(ctx, req)
 
 			Expect(err).To(HaveOccurred())
 			Expect(res).To(BeNil())
@@ -216,7 +222,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.AssignRole(nil, &protos.AssignRoleRequest{
+			res, err := subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: "does-not-exist",
 			})
@@ -233,13 +239,13 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
@@ -250,7 +256,7 @@ var _ = Describe("RoleServiceServer", func() {
 				Actor:    actor,
 				RoleName: name,
 			}
-			res, err := subject.UnassignRole(nil, req)
+			res, err := subject.UnassignRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
@@ -262,7 +268,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
@@ -272,7 +278,7 @@ var _ = Describe("RoleServiceServer", func() {
 				Actor:    actor,
 				RoleName: name,
 			}
-			res, err := subject.UnassignRole(nil, req)
+			res, err := subject.UnassignRole(ctx, req)
 
 			Expect(err).To(HaveOccurred())
 			Expect(res).To(BeNil())
@@ -288,7 +294,7 @@ var _ = Describe("RoleServiceServer", func() {
 				Actor:    actor,
 				RoleName: name,
 			}
-			res, err := subject.UnassignRole(nil, req)
+			res, err := subject.UnassignRole(ctx, req)
 
 			Expect(err).To(HaveOccurred())
 			Expect(res).To(BeNil())
@@ -302,20 +308,20 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(nil, &protos.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -335,20 +341,20 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer2",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor1,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(nil, &protos.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor2,
 				RoleName: roleName,
 			})
@@ -364,13 +370,13 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(nil, &protos.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -386,7 +392,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.HasRole(nil, &protos.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -406,33 +412,33 @@ var _ = Describe("RoleServiceServer", func() {
 				Issuer: "issuer",
 			}
 
-			_, err := subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: role1,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: role1,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.CreateRole(nil, &protos.CreateRoleRequest{
+			_, err = subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: role2,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(nil, &protos.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: role2,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.ListActorRoles(nil, &protos.ListActorRolesRequest{
+			res, err := subject.ListActorRoles(ctx, &protos.ListActorRolesRequest{
 				Actor: actor,
 			})
 
@@ -454,7 +460,7 @@ var _ = Describe("RoleServiceServer", func() {
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.ListActorRoles(nil, &protos.ListActorRolesRequest{
+			res, err := subject.ListActorRoles(ctx, &protos.ListActorRolesRequest{
 				Actor: actor,
 			})
 

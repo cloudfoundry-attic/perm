@@ -23,8 +23,7 @@ var _ = Describe("AdminProbe", func() {
 		fakeLogger            *lagertest.TestLogger
 		fakeContext           context.Context
 
-		someError       error
-		someStatsDError error
+		someError error
 	)
 
 	BeforeEach(func() {
@@ -38,7 +37,6 @@ var _ = Describe("AdminProbe", func() {
 		}
 
 		someError = errors.New("some-error")
-		someStatsDError = errors.New("some-statsd-error")
 	})
 
 	Describe("Cleanup", func() {

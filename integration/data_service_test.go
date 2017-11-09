@@ -15,7 +15,6 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/perm/cmd"
-	. "code.cloudfoundry.org/perm/integration"
 	"code.cloudfoundry.org/perm/models"
 	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
 	"code.cloudfoundry.org/perm/sqlx"

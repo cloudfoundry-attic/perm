@@ -150,9 +150,9 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
 			return &protos.HasRoleResponse{HasRole: false}, nil
-		} else {
-			return nil, togRPCError(err)
 		}
+
+		return nil, togRPCError(err)
 	}
 
 	logger.Debug(messages.Success)

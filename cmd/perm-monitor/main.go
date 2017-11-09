@@ -86,16 +86,16 @@ func main() {
 	pool := x509.NewCertPool()
 
 	for _, certPath := range parserOpts.Perm.CACertificate {
-		caPem, err := certPath.Bytes(cmd.InjectableOS{}, cmd.InjectableIOReader{})
-		if err != nil {
-			logger.Fatal(messages.FailedToReadCertificate, err, lager.Data{
+		caPem, e := certPath.Bytes(cmd.InjectableOS{}, cmd.InjectableIOReader{})
+		if e != nil {
+			logger.Fatal(messages.FailedToReadCertificate, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
 		}
 
 		if ok := pool.AppendCertsFromPEM(caPem); !ok {
-			logger.Fatal(messages.FailedToAppendCertToPool, err, lager.Data{
+			logger.Fatal(messages.FailedToAppendCertToPool, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
