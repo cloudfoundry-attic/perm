@@ -22,6 +22,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
+
+		cancelFunc context.CancelFunc
 	)
 
 	BeforeEach(func() {
@@ -30,8 +32,12 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		roleService = roleServiceCreator()
 		actorService = actorServiceCreator()
 
-		ctx, _ = context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
+	})
+
+	AfterEach(func() {
+		cancelFunc()
 	})
 
 	Describe("#AssignRole", func() {

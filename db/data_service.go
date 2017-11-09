@@ -35,10 +35,10 @@ func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 
 	switch e := err.(type) {
 	case nil:
-		id, err := result.LastInsertId()
-		if err != nil {
-			logger.Error(messages.FailedToRetrieveID, err)
-			return nil, err
+		id, err2 := result.LastInsertId()
+		if err2 != nil {
+			logger.Error(messages.FailedToRetrieveID, err2)
+			return nil, err2
 		}
 
 		role := &role{
@@ -107,10 +107,10 @@ func deleteRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 
 	switch err {
 	case nil:
-		n, err := result.RowsAffected()
-		if err != nil {
-			logger.Error(messages.FailedToCountRowsAffected, err)
-			return err
+		n, err2 := result.RowsAffected()
+		if err2 != nil {
+			logger.Error(messages.FailedToCountRowsAffected, err2)
+			return err2
 		}
 
 		if n == 0 {
@@ -141,10 +141,10 @@ func createActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRun
 
 	switch e := err.(type) {
 	case nil:
-		id, err := result.LastInsertId()
-		if err != nil {
-			logger.Error(messages.FailedToRetrieveID, err)
-			return nil, err
+		id, err2 := result.LastInsertId()
+		if err2 != nil {
+			logger.Error(messages.FailedToRetrieveID, err2)
+			return nil, err2
 		}
 		actor := &actor{
 			ID: id,
@@ -289,10 +289,10 @@ func deleteRoleAssignment(ctx context.Context, logger lager.Logger, conn squirre
 
 	switch err {
 	case nil:
-		n, err := result.RowsAffected()
-		if err != nil {
-			logger.Error(messages.FailedToDeleteRoleAssignment, err)
-			return err
+		n, e := result.RowsAffected()
+		if e != nil {
+			logger.Error(messages.FailedToDeleteRoleAssignment, e)
+			return e
 		}
 
 		if n == 0 {
@@ -381,10 +381,10 @@ func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squ
 			id   int64
 			name string
 		)
-		err := rows.Scan(&id, &name)
-		if err != nil {
-			logger.Error(messages.FailedToScanRow, err)
-			return nil, err
+		e := rows.Scan(&id, &name)
+		if e != nil {
+			logger.Error(messages.FailedToScanRow, e)
+			return nil, e
 		}
 
 		roles = append(roles, &role{ID: id, Role: &models.Role{Name: name}})

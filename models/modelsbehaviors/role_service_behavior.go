@@ -18,13 +18,19 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
+
+		cancelFunc context.CancelFunc
 	)
 
 	BeforeEach(func() {
 		subject = subjectCreator()
 
-		ctx, _ = context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
+	})
+
+	AfterEach(func() {
+		cancelFunc()
 	})
 
 	Describe("#CreateRole", func() {
