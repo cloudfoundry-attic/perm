@@ -86,7 +86,7 @@ var _ = Describe("DataService", func() {
 	})
 
 	AfterEach(func() {
-		conn.Close()
+		Expect(conn.Close()).To(Succeed())
 		mySQLRunner.Truncate()
 	})
 

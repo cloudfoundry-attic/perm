@@ -132,7 +132,10 @@ func main() {
 
 	for range ticker.C {
 		func() {
-			adminProbe.Cleanup(ctx, cleanupLogger)
+			err = adminProbe.Cleanup(ctx, cleanupLogger)
+			if err != nil {
+				return
+			}
 
 			cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 			defer cancel()

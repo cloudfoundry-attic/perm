@@ -163,10 +163,7 @@ func (s *InMemoryStore) HasRole(ctx context.Context, logger lager.Logger, query 
 }
 
 func (s *InMemoryStore) ListActorRoles(ctx context.Context, logger lager.Logger, query models.ActorQuery) ([]*models.Role, error) {
-	actor := models.Actor{
-		DomainID: query.DomainID,
-		Issuer:   query.Issuer,
-	}
+	actor := models.Actor(query)
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
@@ -203,10 +200,7 @@ func (s *InMemoryStore) CreateActor(ctx context.Context, logger lager.Logger, do
 }
 
 func (s *InMemoryStore) FindActor(ctx context.Context, logger lager.Logger, query models.ActorQuery) (*models.Actor, error) {
-	actor := models.Actor{
-		DomainID: query.DomainID,
-		Issuer:   query.Issuer,
-	}
+	actor := models.Actor(query)
 
 	if _, exists := s.assignments[actor]; !exists {
 		return nil, models.ErrActorNotFound

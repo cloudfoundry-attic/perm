@@ -58,10 +58,13 @@ func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sqlx.DB, error) {
 			}
 
 			tlsConfigName := "perm"
-			mysql.RegisterTLSConfig(tlsConfigName, &tls.Config{
+			err := mysql.RegisterTLSConfig(tlsConfigName, &tls.Config{
 				MinVersion: tls.VersionTLS12,
 				RootCAs:    rootCertPool,
 			})
+			if err != nil {
+				return nil, err
+			}
 			cfg.TLSConfig = tlsConfigName
 		}
 
