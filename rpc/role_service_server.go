@@ -10,8 +10,7 @@ import (
 )
 
 type RoleServiceServer struct {
-	logger      lager.Logger
-	assignments map[models.Actor][]string
+	logger lager.Logger
 
 	roleService           models.RoleService
 	roleAssignmentService models.RoleAssignmentService
@@ -20,7 +19,6 @@ type RoleServiceServer struct {
 func NewRoleServiceServer(logger lager.Logger, roleService models.RoleService, roleAssignmentService models.RoleAssignmentService) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:                logger,
-		assignments:           make(map[models.Actor][]string),
 		roleService:           roleService,
 		roleAssignmentService: roleAssignmentService,
 	}
