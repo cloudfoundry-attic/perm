@@ -4,6 +4,7 @@ package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actor.proto";
+import "permission.proto";
 import "role.proto";
 
 option go_package = "protos";
@@ -23,6 +24,7 @@ service RoleService {
 
 message CreateRoleRequest {
   string name = 1;
+  repeated Permission permissions = 2;
 }
 
 message CreateRoleResponse {

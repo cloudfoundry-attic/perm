@@ -6,11 +6,16 @@
 
 	It is generated from these files:
 		actor.proto
+		permission.proto
+		permission_service.proto
 		role.proto
 		role_service.proto
 
 	It has these top-level messages:
 		Actor
+		Permission
+		HasPermissionRequest
+		HasPermissionResponse
 		Role
 		CreateRoleRequest
 		CreateRoleResponse
