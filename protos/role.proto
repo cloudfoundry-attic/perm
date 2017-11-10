@@ -3,79 +3,12 @@ syntax = 'proto3';
 package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "actor.proto";
 
 option go_package = "protos";
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.sizer_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 
-service RoleService {
-  rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
-  rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
-  rpc DeleteRole (DeleteRoleRequest) returns (DeleteRoleResponse);
-  rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
-  rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
-  rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
-  rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
-}
-
 message Role {
   string name = 2;
-}
-
-message CreateRoleRequest {
-  string name = 1;
-}
-
-message CreateRoleResponse {
-  Role role = 1;
-}
-
-message GetRoleRequest {
-  string name = 1;
-}
-
-message GetRoleResponse {
-  Role role = 1;
-}
-
-message DeleteRoleRequest {
-  string name = 1;
-}
-
-message DeleteRoleResponse {
-}
-
-message AssignRoleRequest {
-  Actor actor = 1;
-  string role_name = 2;
-}
-
-message AssignRoleResponse {
-}
-
-message UnassignRoleRequest {
-  Actor actor = 1;
-  string role_name = 2;
-}
-
-message UnassignRoleResponse {
-}
-
-message HasRoleRequest {
-  Actor actor = 1;
-  string role_name = 2;
-}
-
-message HasRoleResponse {
-  bool has_role = 1;
-}
-
-message ListActorRolesRequest {
-  Actor actor = 1;
-}
-
-message ListActorRolesResponse {
-  repeated Role roles = 1;
 }

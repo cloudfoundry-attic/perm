@@ -7,6 +7,7 @@
 	It is generated from these files:
 		actor.proto
 		role.proto
+		role_service.proto
 
 	It has these top-level messages:
 		Actor
