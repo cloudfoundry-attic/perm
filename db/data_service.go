@@ -383,7 +383,9 @@ func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squ
 		"actor.id": actorID,
 	})
 
-	rows, err := squirrel.Select("r.id", "r.name").From("role_assignment ra").Join("role r ON ra.role_id = r.id").
+	rows, err := squirrel.Select("r.id", "r.name").
+		From("role_assignment ra").
+		JoinClause("INNER JOIN role r ON ra.role_id = r.id").
 		Where(squirrel.Eq{"actor_id": actorID}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -433,7 +435,9 @@ func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 		"role.id": roleID,
 	})
 
-	rows, err := squirrel.Select("p.id", "p.name", "p.resource_pattern").From("permission p").Join("role r ON p.role_id = r.id").
+	rows, err := squirrel.Select("p.id", "p.name", "p.resource_pattern").
+		From("permission p").
+		JoinClause("INNER JOIN role r ON p.role_id = r.id").
 		Where(squirrel.Eq{"role_id": roleID}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -466,4 +470,39 @@ func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 	}
 
 	return permissions, nil
+}
+
+func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.HasPermissionQuery) (bool, error) {
+	logger = logger.Session("has-permission").WithData(lager.Data{
+		"actor.issuer":          query.ActorQuery.Issuer,
+		"actor.domainID":        query.ActorQuery.DomainID,
+		"permission.name":       query.PermissionQuery.Name,
+		"permission.resourceID": query.PermissionQuery.ResourceID,
+	})
+
+	var count int
+
+	err := squirrel.Select("count(ra.role_id)").
+		From("role_assignment ra").
+		JoinClause("INNER JOIN actor a ON a.id = ra.actor_id").
+		JoinClause("INNER JOIN permission p ON ra.role_id = p.role_id").
+		Where(squirrel.Eq{
+			"a.issuer":           query.ActorQuery.Issuer,
+			"a.domain_id":        query.ActorQuery.DomainID,
+			"p.name":             query.PermissionQuery.Name,
+			"p.resource_pattern": query.PermissionQuery.ResourceID,
+		}).
+		RunWith(conn).
+		ScanContext(ctx, &count)
+
+	if err != nil {
+		logger.Error("failed-to-find-actor-permissions", err)
+		return false, err
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

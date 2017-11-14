@@ -15,7 +15,7 @@ func (s *InMemoryStore) HasPermission(ctx context.Context, logger lager.Logger, 
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		return false, models.ErrActorNotFound
+		return false, nil
 	}
 
 	var permissions []*models.Permission

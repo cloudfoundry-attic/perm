@@ -114,7 +114,7 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(yes).To(BeFalse())
 		})
 
-		It("fails if the actor does not exist", func() {
+		It("return false if the actor does not exist", func() {
 			roleName := uuid.NewV4().String()
 			domainID := uuid.NewV4().String()
 			issuer := uuid.NewV4().String()
@@ -136,9 +136,10 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 				PermissionQuery: permissionQuery,
 				ActorQuery:      actorQuery,
 			}
-			_, err = subject.HasPermission(ctx, logger, query)
+			yes, err := subject.HasPermission(ctx, logger, query)
 
-			Expect(err).To(MatchError(models.ErrActorNotFound))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(yes).To(BeFalse())
 		})
 	})
 }
