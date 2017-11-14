@@ -117,9 +117,13 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	logger = logger.Session("grpc-server")
 	store := db.NewDataService(conn)
-	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
 
+	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
+
+	permissionServiceServer := rpc.NewPermissionServiceServer(logger, store)
+	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
+
 	logger.Debug(messages.Starting, listeningLogData)
 
 	return grpcServer.Serve(lis)
