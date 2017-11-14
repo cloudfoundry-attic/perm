@@ -16,7 +16,7 @@ service PermissionService {
 
 message HasPermissionRequest {
   Actor actor = 1;
-  string action = 2;
+  string permission_name = 2;
   string resource_id = 3;
 }
 
