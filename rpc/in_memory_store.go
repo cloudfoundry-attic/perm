@@ -9,7 +9,8 @@ import (
 )
 
 type InMemoryStore struct {
-	roles map[string]*models.Role
+	roles       map[string]*models.Role
+	permissions map[string][]*models.Permission
 
 	assignments map[models.Actor][]string
 }
@@ -18,10 +19,11 @@ func NewInMemoryStore() *InMemoryStore {
 	return &InMemoryStore{
 		roles:       make(map[string]*models.Role),
 		assignments: make(map[models.Actor][]string),
+		permissions: make(map[string][]*models.Permission),
 	}
 }
 
-func (s *InMemoryStore) CreateRole(ctx context.Context, logger lager.Logger, name string) (*models.Role, error) {
+func (s *InMemoryStore) CreateRole(ctx context.Context, logger lager.Logger, name string, permissions ...*models.Permission) (*models.Role, error) {
 	if _, exists := s.roles[name]; exists {
 		return nil, models.ErrRoleAlreadyExists
 	}
@@ -30,6 +32,8 @@ func (s *InMemoryStore) CreateRole(ctx context.Context, logger lager.Logger, nam
 		Name: name,
 	}
 	s.roles[name] = role
+
+	s.permissions[name] = permissions
 	return role, nil
 }
 
@@ -207,4 +211,15 @@ func (s *InMemoryStore) FindActor(ctx context.Context, logger lager.Logger, quer
 	}
 
 	return &actor, nil
+}
+
+func (s *InMemoryStore) ListRolePermissions(ctx context.Context, logger lager.Logger, query models.RoleQuery) ([]*models.Permission, error) {
+	roleName := query.Name
+
+	permissions, exists := s.permissions[roleName]
+	if !exists {
+		return nil, models.ErrRoleNotFound
+	}
+
+	return permissions, nil
 }

@@ -98,4 +98,34 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
 	})
+
+	Describe("#ListRolePermissions", func() {
+		It("returns a list of all permissions that the role has been created with", func() {
+			roleName := uuid.NewV4().String()
+
+			permission1 := &models.Permission{Name: "permission-1", ResourcePattern: "resource-pattern-1"}
+			permission2 := &models.Permission{Name: "permission-2", ResourcePattern: "resource-pattern-2"}
+			_, err := subject.CreateRole(ctx, logger, roleName, permission1, permission2)
+			Expect(err).NotTo(HaveOccurred())
+
+			query := models.RoleQuery{
+				Name: roleName,
+			}
+
+			permissions, err := subject.ListRolePermissions(ctx, logger, query)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(permissions).To(HaveLen(2))
+			Expect(permissions).To(ContainElement(permission1))
+			Expect(permissions).To(ContainElement(permission2))
+		})
+
+		It("fails if the actor does not exist", func() {
+			query := models.RoleQuery{
+				Name: "foobar",
+			}
+			_, err := subject.ListRolePermissions(ctx, logger, query)
+			Expect(err).To(MatchError(models.ErrRoleNotFound))
+		})
+	})
 }

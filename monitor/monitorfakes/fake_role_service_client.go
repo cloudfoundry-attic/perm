@@ -116,6 +116,21 @@ type FakeRoleServiceClient struct {
 		result1 *protos.ListActorRolesResponse
 		result2 error
 	}
+	ListRolePermissionsStub        func(ctx context.Context, in *protos.ListRolePermissionsRequest, opts ...grpc.CallOption) (*protos.ListRolePermissionsResponse, error)
+	listRolePermissionsMutex       sync.RWMutex
+	listRolePermissionsArgsForCall []struct {
+		ctx  context.Context
+		in   *protos.ListRolePermissionsRequest
+		opts []grpc.CallOption
+	}
+	listRolePermissionsReturns struct {
+		result1 *protos.ListRolePermissionsResponse
+		result2 error
+	}
+	listRolePermissionsReturnsOnCall map[int]struct {
+		result1 *protos.ListRolePermissionsResponse
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -491,6 +506,59 @@ func (fake *FakeRoleServiceClient) ListActorRolesReturnsOnCall(i int, result1 *p
 	}{result1, result2}
 }
 
+func (fake *FakeRoleServiceClient) ListRolePermissions(ctx context.Context, in *protos.ListRolePermissionsRequest, opts ...grpc.CallOption) (*protos.ListRolePermissionsResponse, error) {
+	fake.listRolePermissionsMutex.Lock()
+	ret, specificReturn := fake.listRolePermissionsReturnsOnCall[len(fake.listRolePermissionsArgsForCall)]
+	fake.listRolePermissionsArgsForCall = append(fake.listRolePermissionsArgsForCall, struct {
+		ctx  context.Context
+		in   *protos.ListRolePermissionsRequest
+		opts []grpc.CallOption
+	}{ctx, in, opts})
+	fake.recordInvocation("ListRolePermissions", []interface{}{ctx, in, opts})
+	fake.listRolePermissionsMutex.Unlock()
+	if fake.ListRolePermissionsStub != nil {
+		return fake.ListRolePermissionsStub(ctx, in, opts...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.listRolePermissionsReturns.result1, fake.listRolePermissionsReturns.result2
+}
+
+func (fake *FakeRoleServiceClient) ListRolePermissionsCallCount() int {
+	fake.listRolePermissionsMutex.RLock()
+	defer fake.listRolePermissionsMutex.RUnlock()
+	return len(fake.listRolePermissionsArgsForCall)
+}
+
+func (fake *FakeRoleServiceClient) ListRolePermissionsArgsForCall(i int) (context.Context, *protos.ListRolePermissionsRequest, []grpc.CallOption) {
+	fake.listRolePermissionsMutex.RLock()
+	defer fake.listRolePermissionsMutex.RUnlock()
+	return fake.listRolePermissionsArgsForCall[i].ctx, fake.listRolePermissionsArgsForCall[i].in, fake.listRolePermissionsArgsForCall[i].opts
+}
+
+func (fake *FakeRoleServiceClient) ListRolePermissionsReturns(result1 *protos.ListRolePermissionsResponse, result2 error) {
+	fake.ListRolePermissionsStub = nil
+	fake.listRolePermissionsReturns = struct {
+		result1 *protos.ListRolePermissionsResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeRoleServiceClient) ListRolePermissionsReturnsOnCall(i int, result1 *protos.ListRolePermissionsResponse, result2 error) {
+	fake.ListRolePermissionsStub = nil
+	if fake.listRolePermissionsReturnsOnCall == nil {
+		fake.listRolePermissionsReturnsOnCall = make(map[int]struct {
+			result1 *protos.ListRolePermissionsResponse
+			result2 error
+		})
+	}
+	fake.listRolePermissionsReturnsOnCall[i] = struct {
+		result1 *protos.ListRolePermissionsResponse
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeRoleServiceClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -508,6 +576,8 @@ func (fake *FakeRoleServiceClient) Invocations() map[string][][]interface{} {
 	defer fake.hasRoleMutex.RUnlock()
 	fake.listActorRolesMutex.RLock()
 	defer fake.listActorRolesMutex.RUnlock()
+	fake.listRolePermissionsMutex.RLock()
+	defer fake.listRolePermissionsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

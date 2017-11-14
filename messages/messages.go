@@ -55,6 +55,8 @@ const (
 	FailedToDeleteRoleAssignment = "failed-to-delete-role-assignment"
 	FailedToFindRoleAssignment   = "failed-to-find-role-assignment"
 	FailedToFindRoleAssignments  = "failed-to-find-role-assignments"
+
+	FailedToFindPermissions = "failed-to-find-permissions"
 )
 
 // Migration messages

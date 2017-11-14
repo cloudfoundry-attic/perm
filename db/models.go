@@ -14,6 +14,11 @@ type role struct {
 	*models.Role
 }
 
+type permission struct {
+	ID int64
+	*models.Permission
+}
+
 type roleAssignment struct {
 	Actor actor
 	Role  role

@@ -31,6 +31,8 @@
 		HasRoleResponse
 		ListActorRolesRequest
 		ListActorRolesResponse
+		ListRolePermissionsRequest
+		ListRolePermissionsResponse
 */
 package protos
 

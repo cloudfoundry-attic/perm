@@ -469,4 +469,60 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(res.GetRoles()).To(HaveLen(0))
 		})
 	})
+
+	Describe("#ListRolePermissions", func() {
+		It("returns all the permissions that the role was created with", func() {
+			roleName := "role1"
+			permission1 := &protos.Permission{
+				Name:            "permission-1",
+				ResourcePattern: "resource-pattern-1",
+			}
+			permission2 := &protos.Permission{
+				Name:            "permission-2",
+				ResourcePattern: "resource-pattern-2",
+			}
+
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: roleName,
+				Permissions: []*protos.Permission{
+					permission1,
+					permission2,
+				},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			var permissions []protos.Permission
+			for _, p := range res.GetPermissions() {
+				permissions = append(permissions, *p)
+			}
+
+			Expect(permissions).To(HaveLen(2))
+			Expect(permissions).To(ContainElement(*permission1))
+			Expect(permissions).To(ContainElement(*permission2))
+		})
+
+		It("returns an empty list if the actor has not been assigned to any roles", func() {
+			roleName := "role1"
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
+				RoleName: roleName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(res.GetPermissions()).To(HaveLen(0))
+		})
+	})
 })

@@ -26,10 +26,18 @@ func NewRoleServiceServer(logger lager.Logger, roleService models.RoleService, r
 
 func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRoleRequest) (*protos.CreateRoleResponse, error) {
 	name := req.GetName()
-	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name})
+	var permissions []*models.Permission
+	for _, p := range req.GetPermissions() {
+		permissions = append(permissions, &models.Permission{
+			Name:            p.GetName(),
+			ResourcePattern: p.GetResourcePattern(),
+		})
+	}
+
+	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
 	logger.Debug(messages.Starting)
 
-	role, err := s.roleService.CreateRole(ctx, logger, name)
+	role, err := s.roleService.CreateRole(ctx, logger, name, permissions...)
 
 	if err != nil {
 		return nil, togRPCError(err)
@@ -185,5 +193,33 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	logger.Debug(messages.Success)
 	return &protos.ListActorRolesResponse{
 		Roles: pRoles,
+	}, nil
+}
+
+func (s *RoleServiceServer) ListRolePermissions(ctx context.Context, req *protos.ListRolePermissionsRequest) (*protos.ListRolePermissionsResponse, error) {
+	roleName := req.GetRoleName()
+	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
+		"role.name": roleName,
+	})
+	logger.Debug(messages.Starting)
+
+	permissions, err := s.roleService.ListRolePermissions(ctx, logger, models.RoleQuery{Name: roleName})
+	if err != nil {
+		if err == models.ErrRoleNotFound {
+			permissions = []*models.Permission{}
+		} else {
+			return nil, togRPCError(err)
+		}
+	}
+
+	var pPermissions []*protos.Permission
+
+	for _, p := range permissions {
+		pPermissions = append(pPermissions, p.ToProto())
+	}
+
+	logger.Debug(messages.Success)
+	return &protos.ListRolePermissionsResponse{
+		Permissions: pPermissions,
 	}, nil
 }

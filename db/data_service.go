@@ -23,7 +23,7 @@ func NewDataService(conn *sqlx.DB) *DataService {
 	}
 }
 
-func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*role, error) {
+func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string, permissions ...*models.Permission) (*role, error) {
 	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
 
@@ -39,6 +39,24 @@ func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 		if err2 != nil {
 			logger.Error(messages.FailedToRetrieveID, err2)
 			return nil, err2
+		}
+
+		if len(permissions) > 0 {
+			builder := squirrel.Insert("permission").
+				Columns("role_id", "name", "resource_pattern")
+
+			for _, p := range permissions {
+				builder = builder.Values(id, p.Name, p.ResourcePattern)
+			}
+
+			_, err = builder.
+				RunWith(conn).
+				ExecContext(ctx)
+
+			if err != nil {
+				logger.Error(messages.FailedToCreateRole, err)
+				return nil, err
+			}
 		}
 
 		role := &role{
@@ -397,4 +415,55 @@ func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squ
 	}
 
 	return roles, nil
+}
+
+func listRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) ([]*permission, error) {
+	logger = logger.Session("list-role-permissions")
+
+	role, err := findRole(ctx, logger, conn, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return findRolePermissions(ctx, logger, conn, role.ID)
+}
+
+func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID int64) ([]*permission, error) {
+	logger = logger.Session("find-role-permissions").WithData(lager.Data{
+		"role.id": roleID,
+	})
+
+	rows, err := squirrel.Select("p.id", "p.name", "p.resource_pattern").From("permission p").Join("role r ON p.role_id = r.id").
+		Where(squirrel.Eq{"role_id": roleID}).
+		RunWith(conn).
+		QueryContext(ctx)
+	if err != nil {
+		logger.Error(messages.FailedToFindPermissions, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var permissions []*permission
+	for rows.Next() {
+		var (
+			id              int64
+			name            string
+			resourcePattern string
+		)
+		e := rows.Scan(&id, &name, &resourcePattern)
+		if e != nil {
+			logger.Error(messages.FailedToScanRow, e)
+			return nil, e
+		}
+
+		permissions = append(permissions, &permission{ID: id, Permission: &models.Permission{Name: name, ResourcePattern: resourcePattern}})
+	}
+
+	err = rows.Err()
+	if err != nil {
+		logger.Error(messages.FailedToIterateOverRows, err)
+		return nil, err
+	}
+
+	return permissions, nil
 }
