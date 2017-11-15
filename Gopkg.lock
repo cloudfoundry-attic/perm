@@ -27,6 +27,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/codahale/hdrhistogram"
+  packages = ["."]
+  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
+
+[[projects]]
+  branch = "master"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "eb92a8dc628ca52501ddae1ed90eca7514f215bf"
@@ -136,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b6735059ca72af4844cf281e3f1a1c0a095943d408ae9072b95d9b1543aeb9eb"
+  inputs-digest = "e3c99b053ffa26bc035d4b7b321a258aaf1f4421251c3623d04eedf2a18a6c3a"
   solver-name = "gps-cdcl"
   solver-version = 1

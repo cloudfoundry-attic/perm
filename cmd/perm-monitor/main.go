@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cactus/go-statsd-client/statsd"
+	"github.com/codahale/hdrhistogram"
 	flags "github.com/jessevdk/go-flags"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -61,6 +62,11 @@ const (
 	MetricQueryProbeRunsTotal     = "perm.probe.query.runs.total"
 	MetricQueryProbeRunsFailed    = "perm.probe.query.runs.failed"
 	MetricQueryProbeRunsIncorrect = "perm.probe.query.runs.incorrect"
+
+	MetricQueryProbeTimingMax  = "perm.probe.query.responses.timing.max"  // gauge
+	MetricQueryProbeTimingP90  = "perm.probe.query.responses.timing.p90"  // gauge
+	MetricQueryProbeTimingP99  = "perm.probe.query.responses.timing.p99"  // gauge
+	MetricQueryProbeTimingP999 = "perm.probe.query.responses.timing.p999" // gauge
 )
 
 func main() {
@@ -203,6 +209,26 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	cleanupLogger := logger.Session("cleanup")
 	runLogger := logger.Session("run")
 
+	minResponseTime := 1 * time.Nanosecond
+	maxResponseTime := 1 * time.Second
+	histogram := hdrhistogram.NewWindowed(5, int64(minResponseTime), int64(maxResponseTime), 3)
+	var rw sync.RWMutex
+
+	wg.Add(1)
+	go func() {
+		for range time.NewTicker(1 * time.Minute).C {
+			func() {
+				rw.Lock()
+				defer rw.Unlock()
+
+				histogram.Rotate()
+			}()
+
+		}
+
+		wg.Done()
+	}()
+
 	err = probe.Setup(ctx, setupLogger)
 	defer probe.Cleanup(ctx, cleanupLogger)
 
@@ -215,27 +241,52 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 
 			correct, durations, err = probe.Run(cctx, runLogger)
 
-			if e := statter.Inc(MetricQueryProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
-				metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
-					"metric": MetricQueryProbeRunsTotal,
-				})
-			}
+			incrementStat(metricsLogger, statter, MetricQueryProbeRunsTotal)
+
 			if err != nil {
-				if e := statter.Inc(MetricQueryProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
-					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
-						"metric": MetricQueryProbeRunsFailed,
-					})
+				incrementStat(metricsLogger, statter, MetricQueryProbeRunsFailed)
+			} else {
+				if !correct {
+					incrementStat(logger, statter, MetricQueryProbeRunsIncorrect)
 				}
-			}
-			if !correct {
-				if e := statter.Inc(MetricQueryProbeRunsIncorrect, 1, AlwaysSendMetric); e != nil {
-					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
-						"metric": MetricQueryProbeRunsIncorrect,
-					})
+
+				for _, d := range durations {
+					histogram.Current.RecordValue(int64(d))
 				}
+
+				rw.RLock()
+				defer rw.RUnlock()
+
+				p90 := histogram.Current.ValueAtQuantile(90)
+				p99 := histogram.Current.ValueAtQuantile(99)
+				p999 := histogram.Current.ValueAtQuantile(99.9)
+				max := histogram.Current.Max()
+
+				sendGauge(logger, statter, MetricQueryProbeTimingP90, p90)
+				sendGauge(logger, statter, MetricQueryProbeTimingP99, p99)
+				sendGauge(logger, statter, MetricQueryProbeTimingP999, p999)
+				sendGauge(logger, statter, MetricQueryProbeTimingMax, max)
 			}
 		}()
 	}
 
 	wg.Done()
+}
+
+func incrementStat(logger lager.Logger, statter statsd.Statter, name string) {
+	err := statter.Inc(name, 1, AlwaysSendMetric)
+	if err != nil {
+		logger.Error(messages.FailedToSendMetric, err, lager.Data{
+			"metric": name,
+		})
+	}
+}
+
+func sendGauge(logger lager.Logger, statter statsd.Statter, name string, value int64) {
+	err := statter.Gauge(name, value, AlwaysSendMetric)
+	if err != nil {
+		logger.Error(messages.FailedToSendMetric, err, lager.Data{
+			"metric": name,
+		})
+	}
 }
