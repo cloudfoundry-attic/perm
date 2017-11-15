@@ -19,6 +19,8 @@ import (
 
 	"time"
 
+	"sync"
+
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/monitor"
@@ -119,20 +121,32 @@ func main() {
 	//////////////////////
 
 	ctx := context.Background()
-	adminProbeLogger := logger.Session("admin-probe")
-	metricsLogger := adminProbeLogger.Session("metrics")
-	cleanupLogger := adminProbeLogger.Session("cleanup")
-	runLogger := adminProbeLogger.Session("run")
 
 	adminProbe := &monitor.AdminProbe{
 		RoleServiceClient: p,
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statsDClient)
+
+	wg.Wait()
+	os.Exit(0)
+}
+
+func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.AdminProbe, statter statsd.Statter) {
+	var err error
+
+	metricsLogger := logger.Session("metrics")
+	cleanupLogger := logger.Session("cleanup")
+	runLogger := logger.Session("run")
+
 	ticker := time.NewTicker(30 * time.Second)
 
 	for range ticker.C {
 		func() {
-			err = adminProbe.Cleanup(ctx, cleanupLogger)
+			err = probe.Cleanup(ctx, cleanupLogger)
 			if err != nil {
 				return
 			}
@@ -140,15 +154,15 @@ func main() {
 			cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 			defer cancel()
 
-			err = adminProbe.Run(cctx, runLogger)
+			err = probe.Run(cctx, runLogger)
 
-			if e := statsDClient.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
+			if e := statter.Inc(MetricAdminProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
 				metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
 					"metric": MetricAdminProbeRunsTotal,
 				})
 			}
 			if err != nil {
-				if e := statsDClient.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
+				if e := statter.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
 					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
 						"metric": MetricAdminProbeRunsFailed,
 					})
@@ -157,5 +171,5 @@ func main() {
 		}()
 	}
 
-	os.Exit(0)
+	wg.Done()
 }
