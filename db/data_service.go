@@ -496,7 +496,7 @@ func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseR
 		ScanContext(ctx, &count)
 
 	if err != nil {
-		logger.Error("failed-to-find-actor-permissions", err)
+		logger.Error(messages.FailedToFindPermissions, err)
 		return false, err
 	}
 
