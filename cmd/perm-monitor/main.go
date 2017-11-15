@@ -49,8 +49,18 @@ type statsDOptions struct {
 const (
 	AlwaysSendMetric = 1.0
 
+	AdminProbeTickDuration = 30 * time.Second
+	AdminProbeTimeout      = 3 * time.Second
+
+	QueryProbeTickDuration = 1 * time.Second
+	QueryProbeTimeout      = 1 * time.Second
+
 	MetricAdminProbeRunsTotal  = "perm.probe.admin.runs.total"
 	MetricAdminProbeRunsFailed = "perm.probe.admin.runs.failed"
+
+	MetricQueryProbeRunsTotal     = "perm.probe.query.runs.total"
+	MetricQueryProbeRunsFailed    = "perm.probe.query.runs.failed"
+	MetricQueryProbeRunsIncorrect = "perm.probe.query.runs.incorrect"
 )
 
 func main() {
@@ -117,19 +127,26 @@ func main() {
 	}
 	defer g.Close()
 
-	p := protos.NewRoleServiceClient(g)
+	roleServiceClient := protos.NewRoleServiceClient(g)
+	permissionServiceClient := protos.NewPermissionServiceClient(g)
 	//////////////////////
 
 	ctx := context.Background()
 
 	adminProbe := &monitor.AdminProbe{
-		RoleServiceClient: p,
+		RoleServiceClient: roleServiceClient,
+	}
+
+	queryProbe := &monitor.QueryProbe{
+		RoleServiceClient:       roleServiceClient,
+		PermissionServiceClient: permissionServiceClient,
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statsDClient)
+	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statsDClient)
 
 	wg.Wait()
 	os.Exit(0)
@@ -142,7 +159,7 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	cleanupLogger := logger.Session("cleanup")
 	runLogger := logger.Session("run")
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(AdminProbeTickDuration)
 
 	for range ticker.C {
 		func() {
@@ -151,7 +168,7 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 				return
 			}
 
-			cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+			cctx, cancel := context.WithTimeout(ctx, AdminProbeTimeout)
 			defer cancel()
 
 			err = probe.Run(cctx, runLogger)
@@ -165,6 +182,54 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 				if e := statter.Inc(MetricAdminProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
 					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
 						"metric": MetricAdminProbeRunsFailed,
+					})
+				}
+			}
+		}()
+	}
+
+	wg.Done()
+}
+
+func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter) {
+	var (
+		correct bool
+		err     error
+	)
+
+	metricsLogger := logger.Session("metrics")
+	setupLogger := logger.Session("setup")
+	cleanupLogger := logger.Session("cleanup")
+	runLogger := logger.Session("run")
+
+	err = probe.Setup(ctx, setupLogger)
+	defer probe.Cleanup(ctx, cleanupLogger)
+
+	ticker := time.NewTicker(QueryProbeTickDuration)
+
+	for range ticker.C {
+		func() {
+			cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
+			defer cancel()
+
+			correct, err = probe.Run(cctx, runLogger)
+
+			if e := statter.Inc(MetricQueryProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
+				metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
+					"metric": MetricQueryProbeRunsTotal,
+				})
+			}
+			if err != nil {
+				if e := statter.Inc(MetricQueryProbeRunsFailed, 1, AlwaysSendMetric); e != nil {
+					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
+						"metric": MetricQueryProbeRunsFailed,
+					})
+				}
+			}
+			if !correct {
+				if e := statter.Inc(MetricQueryProbeRunsIncorrect, 1, AlwaysSendMetric); e != nil {
+					metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
+						"metric": MetricQueryProbeRunsIncorrect,
 					})
 				}
 			}
