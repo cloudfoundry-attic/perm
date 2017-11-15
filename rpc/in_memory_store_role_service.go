@@ -58,6 +58,9 @@ func (s *InMemoryStore) DeleteRole(ctx context.Context, logger lager.Logger, que
 			}
 		}
 	}
+	// "Cascade"
+	// Remove permissions for role
+	s.permissions[name] = []*models.Permission{}
 
 	logger.Debug(messages.Success)
 
