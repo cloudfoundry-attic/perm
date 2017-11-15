@@ -3,6 +3,8 @@ package monitor
 import (
 	"context"
 
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/protos"
@@ -142,67 +144,105 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger) error {
 	return nil
 }
 
-func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger) (bool, error) {
+func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger) (bool, []time.Duration, error) {
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
-	////////////////////////////////
-	// Check for Assigned Permission
-	////////////////////////////////
-	hasAssignedPermissionLogger := logger.Session("has-assigned-permission").WithData(lager.Data{
+	var (
+		correct  bool
+		duration time.Duration
+		err      error
+
+		durations []time.Duration
+	)
+
+	correct, duration, err = p.runAssignedPermission(ctx, logger)
+	durations = append(durations, duration)
+
+	if err != nil {
+		return false, durations, err
+	}
+	if !correct {
+		return false, durations, nil
+	}
+
+	correct, duration, err = p.runUnassignedPermission(ctx, logger)
+	durations = append(durations, duration)
+
+	if err != nil {
+		return false, durations, err
+	}
+	if !correct {
+		return false, durations, nil
+	}
+
+	return true, durations, nil
+}
+
+func (p *QueryProbe) runAssignedPermission(ctx context.Context, logger lager.Logger) (bool, time.Duration, error) {
+	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
 		"actor.id":                    QueryProbeActor.GetID(),
 		"actor.issuer":                QueryProbeActor.GetIssuer(),
 		"permission.name":             QueryProbeAssignedPermission.GetName(),
 		"permission.resource_pattern": QueryProbeAssignedPermission.GetResourcePattern(),
 	})
-	hasAssignedPermissionRequest := &protos.HasPermissionRequest{
+	req := &protos.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: QueryProbeAssignedPermission.Name,
 		ResourceId:     QueryProbeAssignedPermission.ResourcePattern,
 	}
 
-	hasAssignedPermissionResponse, err := p.PermissionServiceClient.HasPermission(ctx, hasAssignedPermissionRequest)
+	start := time.Now()
+	res, err := p.PermissionServiceClient.HasPermission(ctx, req)
+	end := time.Now()
+	duration := end.Sub(start)
+
 	if err != nil {
-		hasAssignedPermissionLogger.Error(messages.FailedToFindPermissions, err)
-		return false, err
+		logger.Error(messages.FailedToFindPermissions, err)
+		return false, duration, err
 	}
 
-	if hasAssignedPermissionResponse.GetHasPermission() == false {
-		hasAssignedPermissionLogger.Debug("incorrect-response", lager.Data{
+	if res.GetHasPermission() == false {
+		logger.Debug("incorrect-response", lager.Data{
 			"expected": "true",
 			"got":      "false",
 		})
-		return false, nil
+		return false, duration, nil
 	}
 
-	//////////////////////////////////
-	// Check for Unassigned Permission
-	//////////////////////////////////
-	hasUnassignedPermissionLogger := logger.Session("has-unassigned-permission").WithData(lager.Data{
+	return true, duration, nil
+}
+
+func (p *QueryProbe) runUnassignedPermission(ctx context.Context, logger lager.Logger) (bool, time.Duration, error) {
+	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
 		"actor.id":                    QueryProbeActor.GetID(),
 		"actor.issuer":                QueryProbeActor.GetIssuer(),
 		"permission.name":             QueryProbeUnassignedPermission.GetName(),
 		"permission.resource_pattern": QueryProbeUnassignedPermission.GetResourcePattern(),
 	})
-	hadUnassignedPermissionRequest := &protos.HasPermissionRequest{
+	req := &protos.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: QueryProbeUnassignedPermission.Name,
 		ResourceId:     QueryProbeUnassignedPermission.ResourcePattern,
 	}
 
-	hasUnassignedPermissionResponse, err := p.PermissionServiceClient.HasPermission(ctx, hadUnassignedPermissionRequest)
+	start := time.Now()
+	res, err := p.PermissionServiceClient.HasPermission(ctx, req)
+	end := time.Now()
+	duration := end.Sub(start)
+
 	if err != nil {
-		hasUnassignedPermissionLogger.Error(messages.FailedToFindPermissions, err)
-		return false, err
+		logger.Error(messages.FailedToFindPermissions, err)
+		return false, duration, err
 	}
 
-	if hasUnassignedPermissionResponse.GetHasPermission() == true {
-		hasUnassignedPermissionLogger.Debug("incorrect-response", lager.Data{
+	if res.GetHasPermission() == true {
+		logger.Debug("incorrect-response", lager.Data{
 			"expected": "false",
 			"got":      "true",
 		})
-		return false, nil
+		return false, duration, nil
 	}
 
-	return true, nil
+	return true, duration, nil
 }

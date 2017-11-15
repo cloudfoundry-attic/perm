@@ -153,9 +153,10 @@ var _ = Describe("QueryProbe", func() {
 		})
 
 		It("asks if the actor has a permission it should have, and a permission it shouldn't", func() {
-			correct, err := p.Run(fakeContext, fakeLogger)
+			correct, durations, err := p.Run(fakeContext, fakeLogger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
+			Expect(durations).To(HaveLen(2))
 
 			Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(2))
 
@@ -178,8 +179,9 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("errors and does not ask for the next permission", func() {
-				_, err := p.Run(fakeContext, fakeLogger)
+				_, durations, err := p.Run(fakeContext, fakeLogger)
 				Expect(err).To(MatchError(someError))
+				Expect(durations).To(HaveLen(1))
 
 				Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(1))
 			})
@@ -191,9 +193,10 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("returns that it's incorrect and does not ask for the next permission", func() {
-				correct, err := p.Run(fakeContext, fakeLogger)
+				correct, durations, err := p.Run(fakeContext, fakeLogger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(correct).To(BeFalse())
+				Expect(durations).To(HaveLen(1))
 
 				Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(1))
 			})
@@ -205,8 +208,9 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("errors", func() {
-				_, err := p.Run(fakeContext, fakeLogger)
+				_, durations, err := p.Run(fakeContext, fakeLogger)
 				Expect(err).To(MatchError(someError))
+				Expect(durations).To(HaveLen(2))
 
 				Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(2))
 			})
@@ -218,9 +222,10 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("returns that it's incorrect", func() {
-				correct, err := p.Run(fakeContext, fakeLogger)
+				correct, durations, err := p.Run(fakeContext, fakeLogger)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(correct).To(BeFalse())
+				Expect(durations).To(HaveLen(2))
 
 				Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(2))
 			})

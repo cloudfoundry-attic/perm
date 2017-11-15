@@ -193,8 +193,9 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 
 func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter) {
 	var (
-		correct bool
-		err     error
+		correct   bool
+		err       error
+		durations []time.Duration
 	)
 
 	metricsLogger := logger.Session("metrics")
@@ -212,7 +213,7 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 			cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
 			defer cancel()
 
-			correct, err = probe.Run(cctx, runLogger)
+			correct, durations, err = probe.Run(cctx, runLogger)
 
 			if e := statter.Inc(MetricQueryProbeRunsTotal, 1, AlwaysSendMetric); e != nil {
 				metricsLogger.Error(messages.FailedToSendMetric, err, lager.Data{
