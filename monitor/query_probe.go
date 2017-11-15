@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"errors"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
@@ -29,11 +28,6 @@ var QueryProbeUnassignedPermission = &protos.Permission{
 	Name:            "system.query-probe.unassigned-permission.name",
 	ResourcePattern: "system.query-probe.unassigned-permission.resource-id",
 }
-
-var (
-	ErrQueryProbeAssignedPermissionIncorrect   = errors.New("query probe found actor did not have permission, when it should have")
-	ErrQueryProbeUnassignedPermissionIncorrect = errors.New("query probe found actor had permission, when it should not have")
-)
 
 //go:generate counterfeiter code.cloudfoundry.org/perm/protos.PermissionServiceClient
 
@@ -152,6 +146,15 @@ func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger) (bool, error)
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
+	////////////////////////////////
+	// Check for Assigned Permission
+	////////////////////////////////
+	hasAssignedPermissionLogger := logger.Session("has-assigned-permission").WithData(lager.Data{
+		"actor.id":                    QueryProbeActor.GetID(),
+		"actor.issuer":                QueryProbeActor.GetIssuer(),
+		"permission.name":             QueryProbeAssignedPermission.GetName(),
+		"permission.resource_pattern": QueryProbeAssignedPermission.GetResourcePattern(),
+	})
 	hasAssignedPermissionRequest := &protos.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: QueryProbeAssignedPermission.Name,
@@ -160,19 +163,27 @@ func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger) (bool, error)
 
 	hasAssignedPermissionResponse, err := p.PermissionServiceClient.HasPermission(ctx, hasAssignedPermissionRequest)
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err, lager.Data{
-			"actor.id":                    QueryProbeActor.GetID(),
-			"actor.issuer":                QueryProbeActor.GetIssuer(),
-			"permission.name":             QueryProbeAssignedPermission.GetName(),
-			"permission.resource_pattern": QueryProbeAssignedPermission.GetResourcePattern(),
-		})
+		hasAssignedPermissionLogger.Error(messages.FailedToFindPermissions, err)
 		return false, err
 	}
 
 	if hasAssignedPermissionResponse.GetHasPermission() == false {
+		hasAssignedPermissionLogger.Debug("incorrect-response", lager.Data{
+			"expected": "true",
+			"got":      "false",
+		})
 		return false, nil
 	}
 
+	//////////////////////////////////
+	// Check for Unassigned Permission
+	//////////////////////////////////
+	hasUnassignedPermissionLogger := logger.Session("has-unassigned-permission").WithData(lager.Data{
+		"actor.id":                    QueryProbeActor.GetID(),
+		"actor.issuer":                QueryProbeActor.GetIssuer(),
+		"permission.name":             QueryProbeUnassignedPermission.GetName(),
+		"permission.resource_pattern": QueryProbeUnassignedPermission.GetResourcePattern(),
+	})
 	hadUnassignedPermissionRequest := &protos.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: QueryProbeUnassignedPermission.Name,
@@ -181,16 +192,15 @@ func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger) (bool, error)
 
 	hasUnassignedPermissionResponse, err := p.PermissionServiceClient.HasPermission(ctx, hadUnassignedPermissionRequest)
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err, lager.Data{
-			"actor.id":                    QueryProbeActor.GetID(),
-			"actor.issuer":                QueryProbeActor.GetIssuer(),
-			"permission.name":             QueryProbeUnassignedPermission.GetName(),
-			"permission.resource_pattern": QueryProbeUnassignedPermission.GetResourcePattern(),
-		})
+		hasUnassignedPermissionLogger.Error(messages.FailedToFindPermissions, err)
 		return false, err
 	}
 
 	if hasUnassignedPermissionResponse.GetHasPermission() == true {
+		hasUnassignedPermissionLogger.Debug("incorrect-response", lager.Data{
+			"expected": "false",
+			"got":      "true",
+		})
 		return false, nil
 	}
 
