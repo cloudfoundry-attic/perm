@@ -87,7 +87,7 @@
 
 [[projects]]
   name = "github.com/onsi/gomega"
-  packages = [".","format","gbytes","internal/assertion","internal/asyncassertion","internal/oraclematcher","internal/testingtsupport","matchers","matchers/support/goraph/bipartitegraph","matchers/support/goraph/edge","matchers/support/goraph/node","matchers/support/goraph/util","types"]
+  packages = [".","format","gbytes","gexec","internal/assertion","internal/asyncassertion","internal/oraclematcher","internal/testingtsupport","matchers","matchers/support/goraph/bipartitegraph","matchers/support/goraph/edge","matchers/support/goraph/node","matchers/support/goraph/util","types"]
   revision = "c893efa28eb45626cdaa76c9f653b62488858837"
   version = "v1.2.0"
 
@@ -136,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cdcbaa3676ccf369e33b8d8778eeb318eaed53636d1252c033e27f81913b2731"
+  inputs-digest = "b6735059ca72af4844cf281e3f1a1c0a095943d408ae9072b95d9b1543aeb9eb"
   solver-name = "gps-cdcl"
   solver-version = 1
