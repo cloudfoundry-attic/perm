@@ -33,9 +33,9 @@ func sendGauge(logger lager.Logger, statter statsd.Statter, name string, value i
 	}
 }
 
-func recordHistogramDuration(logger lager.Logger, rw *sync.RWMutex, histogram *hdrhistogram.WindowedHistogram, d time.Duration) {
-	rw.Lock()
-	defer rw.Unlock()
+func recordHistogramDuration(logger lager.Logger, locker sync.Locker, histogram *hdrhistogram.WindowedHistogram, d time.Duration) {
+	locker.Lock()
+	defer locker.Unlock()
 
 	err := histogram.Current.RecordValue(int64(d))
 	if err != nil {
@@ -45,17 +45,17 @@ func recordHistogramDuration(logger lager.Logger, rw *sync.RWMutex, histogram *h
 	}
 }
 
-func sendHistogramQuantile(logger lager.Logger, statter statsd.Statter, rw *sync.RWMutex, histogram *hdrhistogram.WindowedHistogram, quantile float64, metric string) {
-	rw.RLock()
-	defer rw.RUnlock()
+func sendHistogramQuantile(logger lager.Logger, statter statsd.Statter, locker sync.Locker, histogram *hdrhistogram.WindowedHistogram, quantile float64, metric string) {
+	locker.Lock()
+	defer locker.Unlock()
 
 	v := histogram.Current.ValueAtQuantile(quantile)
 	sendGauge(logger, statter, metric, v)
 }
 
-func sendHistogramMax(logger lager.Logger, statter statsd.Statter, rw *sync.RWMutex, histogram *hdrhistogram.WindowedHistogram, metric string) {
-	rw.RLock()
-	defer rw.RUnlock()
+func sendHistogramMax(logger lager.Logger, statter statsd.Statter, locker sync.Locker, histogram *hdrhistogram.WindowedHistogram, metric string) {
+	locker.Lock()
+	defer locker.Unlock()
 
 	v := histogram.Current.Max()
 	sendGauge(logger, statter, metric, v)

@@ -71,13 +71,13 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 				}
 
 				for _, d := range durations {
-					recordHistogramDuration(logger, rw, histogram, d)
+					recordHistogramDuration(logger, rw.RLocker(), histogram, d)
 				}
 
-				sendHistogramQuantile(logger, statter, rw, histogram, 90, MetricQueryProbeTimingP90)
-				sendHistogramQuantile(logger, statter, rw, histogram, 99, MetricQueryProbeTimingP99)
-				sendHistogramQuantile(logger, statter, rw, histogram, 99.9, MetricQueryProbeTimingP999)
-				sendHistogramMax(logger, statter, rw, histogram, MetricQueryProbeTimingMax)
+				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 90, MetricQueryProbeTimingP90)
+				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 99, MetricQueryProbeTimingP99)
+				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 99.9, MetricQueryProbeTimingP999)
+				sendHistogramMax(logger, statter, rw.RLocker(), histogram, MetricQueryProbeTimingMax)
 			}
 		}(metricsLogger)
 	}
@@ -85,11 +85,11 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	wg.Done()
 }
 
-func rotateHistogramPeriodically(wg *sync.WaitGroup, rw *sync.RWMutex, d time.Duration, histogram *hdrhistogram.WindowedHistogram) {
+func rotateHistogramPeriodically(wg *sync.WaitGroup, locker sync.Locker, d time.Duration, histogram *hdrhistogram.WindowedHistogram) {
 	for range time.NewTicker(d).C {
 		func() {
-			rw.Lock()
-			defer rw.Unlock()
+			locker.Lock()
+			defer locker.Unlock()
 
 			histogram.Rotate()
 		}()

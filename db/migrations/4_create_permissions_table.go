@@ -41,11 +41,7 @@ func CreatePermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx
 	}
 
 	_, err = tx.ExecContext(ctx, addPermissionRoleIDForeignKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func CreatePermissionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {

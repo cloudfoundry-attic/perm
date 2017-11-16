@@ -42,6 +42,15 @@ func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger) error {
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
+	err := p.setupCreateRole(ctx, logger)
+	if err != nil {
+		return err
+	}
+
+	return p.setupAssignRole(ctx, logger)
+}
+
+func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger) error {
 	createRoleRequest := &protos.CreateRoleRequest{
 		Name: QueryProbeRoleName,
 		Permissions: []*protos.Permission{
@@ -74,13 +83,17 @@ func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger) error {
 		}
 	}
 
+	return nil
+}
+
+func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger) error {
 	assignRoleRequest := &protos.AssignRoleRequest{
 		Actor:    QueryProbeActor,
 		RoleName: QueryProbeRoleName,
 	}
 
-	_, err = p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
-	s, ok = status.FromError(err)
+	_, err := p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
+	s, ok := status.FromError(err)
 
 	// Not a GRPC error
 	if err != nil && !ok {
@@ -202,7 +215,7 @@ func (p *QueryProbe) runAssignedPermission(ctx context.Context, logger lager.Log
 		return false, duration, err
 	}
 
-	if res.GetHasPermission() == false {
+	if !res.GetHasPermission() {
 		logger.Debug("incorrect-response", lager.Data{
 			"expected": "true",
 			"got":      "false",
@@ -236,7 +249,7 @@ func (p *QueryProbe) runUnassignedPermission(ctx context.Context, logger lager.L
 		return false, duration, err
 	}
 
-	if res.GetHasPermission() == true {
+	if res.GetHasPermission() {
 		logger.Debug("incorrect-response", lager.Data{
 			"expected": "false",
 			"got":      "true",
