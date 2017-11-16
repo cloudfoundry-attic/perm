@@ -24,6 +24,11 @@ var Migrations = []sqlx.Migration{
 		Down: migrations.CreateRoleAssignmentsTableDown,
 	},
 	{
+		Name: "create_permission_definitions_table",
+		Up:   migrations.CreatePermissionDefinitionsTableUp,
+		Down: migrations.CreatePermissionDefinitionsTableDown,
+	},
+	{
 		Name: "create_permissions_table",
 		Up:   migrations.CreatePermissionsTableUp,
 		Down: migrations.CreatePermissionsTableDown,

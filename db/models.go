@@ -18,3 +18,8 @@ type permission struct {
 	ID int64
 	*models.Permission
 }
+
+type permissionDefinition struct {
+	ID int64
+	*models.PermissionDefinition
+}

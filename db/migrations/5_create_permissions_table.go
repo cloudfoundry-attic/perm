@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS permission
 (
 	id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	role_id BIGINT NOT NULL,
-	name VARCHAR(255) NOT NULL UNIQUE,
+	permission_definition_id BIGINT NOT NULL,
 	resource_pattern VARCHAR(255) NOT NULL
 )
 `
@@ -24,6 +24,15 @@ ALTER TABLE
 ADD CONSTRAINT
 	permission_role_id_fkey
 FOREIGN KEY(role_id) REFERENCES role(id)
+ON DELETE CASCADE
+`
+
+var addPermissionPermissionDefinitionIDForeignKey = `
+ALTER TABLE
+	permission
+ADD CONSTRAINT
+	permission_permission_definition_id_fkey
+FOREIGN KEY(permission_definition_id) REFERENCES permission_definition(id)
 ON DELETE CASCADE
 `
 
@@ -41,6 +50,11 @@ func CreatePermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx
 	}
 
 	_, err = tx.ExecContext(ctx, addPermissionRoleIDForeignKey)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, addPermissionPermissionDefinitionIDForeignKey)
 	return err
 }
 

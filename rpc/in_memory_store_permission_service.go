@@ -30,7 +30,7 @@ func (s *InMemoryStore) HasPermission(ctx context.Context, logger lager.Logger, 
 
 	var hasPermission bool
 	for _, permission := range permissions {
-		if permission.Name == query.PermissionQuery.Name && permission.ResourcePattern == query.PermissionQuery.ResourceID {
+		if permission.Name == query.PermissionQuery.PermissionDefinitionQuery.Name && permission.ResourcePattern == query.PermissionQuery.ResourceID {
 			hasPermission = true
 		}
 	}

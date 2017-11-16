@@ -11,4 +11,10 @@ var (
 
 	ErrActorNotFound      = errdefs.NewErrNotFound("actor")
 	ErrActorAlreadyExists = errdefs.NewErrAlreadyExists("actor")
+
+	ErrPermissionDefinitionNotFound      = errdefs.NewErrNotFound("permission-definition")
+	ErrPermissionDefinitionAlreadyExists = errdefs.NewErrAlreadyExists("permission-definition")
+
+	ErrPermissionNotFound      = errdefs.NewErrNotFound("permission")
+	ErrPermissionAlreadyExists = errdefs.NewErrAlreadyExists("permission")
 )

@@ -59,7 +59,9 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				Name:       "some-permission",
+				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
+					Name: "some-permission",
+				},
 				ResourceID: "some-resource-ID",
 			}
 
@@ -95,7 +97,9 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				Name:       "some-permission",
+				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
+					Name: "some-permission",
+				},
 				ResourceID: "some-resource-ID",
 			}
 
@@ -123,7 +127,9 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				Name:       "some-permission",
+				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
+					Name: "some-permission",
+				},
 				ResourceID: "some-resource-ID",
 			}
 

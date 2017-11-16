@@ -23,7 +23,35 @@ func NewDataService(conn *sqlx.DB) *DataService {
 	}
 }
 
-func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string, permissions ...*models.Permission) (*role, error) {
+func createRoleAndAssignPermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName string, permissions ...*models.Permission) (*role, error) {
+	role, err := createRole(ctx, logger, conn, roleName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, permission := range permissions {
+		_, err = createPermissionDefinition(ctx, logger, conn, permission.Name)
+		if err != nil && err != models.ErrPermissionAlreadyExists {
+			return nil, err
+		}
+
+		var p *permissionDefinition
+		p, err = findPermissionDefinition(ctx, logger, conn, &models.PermissionDefinitionQuery{Name: permission.Name})
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = createPermission(ctx, logger, conn, p.ID, role.ID, permission.ResourcePattern, permission.Name)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	return role, nil
+}
+
+func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*role, error) {
 	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
 
@@ -39,24 +67,6 @@ func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 		if err2 != nil {
 			logger.Error(messages.FailedToRetrieveID, err2)
 			return nil, err2
-		}
-
-		if len(permissions) > 0 {
-			builder := squirrel.Insert("permission").
-				Columns("role_id", "name", "resource_pattern")
-
-			for _, p := range permissions {
-				builder = builder.Values(id, p.Name, p.ResourcePattern)
-			}
-
-			_, err = builder.
-				RunWith(conn).
-				ExecContext(ctx)
-
-			if err != nil {
-				logger.Error(messages.FailedToCreateRole, err)
-				return nil, err
-			}
 		}
 
 		role := &role{
@@ -430,14 +440,88 @@ func listRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 	return findRolePermissions(ctx, logger, conn, role.ID)
 }
 
+func createPermissionDefinition(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*permissionDefinition, error) {
+	logger = logger.Session("create-permission-definition")
+	u := uuid.NewV4().Bytes()
+
+	result, err := squirrel.Insert("permission_definition").
+		Columns("uuid", "name").
+		Values(u, name).
+		RunWith(conn).
+		ExecContext(ctx)
+
+	switch e := err.(type) {
+	case nil:
+		id, err2 := result.LastInsertId()
+		if err2 != nil {
+			logger.Error(messages.FailedToRetrieveID, err2)
+			return nil, err2
+		}
+
+		permissionDefinition := &permissionDefinition{
+			ID: id,
+			PermissionDefinition: &models.PermissionDefinition{
+				Name: name,
+			},
+		}
+		return permissionDefinition, nil
+	case *mysql.MySQLError:
+		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(messages.ErrPermissionDefinitionAlreadyExists)
+			return nil, models.ErrPermissionDefinitionAlreadyExists
+		}
+
+		logger.Error(messages.FailedToCreatePermissionDefinition, err)
+		return nil, err
+	default:
+		logger.Error(messages.FailedToCreatePermissionDefinition, err)
+		return nil, err
+	}
+}
+
+func findPermissionDefinition(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query *models.PermissionDefinitionQuery) (*permissionDefinition, error) {
+	logger = logger.Session("find-permission-definition")
+
+	var (
+		id   int64
+		name string
+	)
+
+	err := squirrel.Select("id", "name").
+		From("permission_definition").
+		Where(squirrel.Eq{
+			"name": query.Name,
+		}).
+		RunWith(conn).
+		ScanContext(ctx, &id, &name)
+
+	switch err {
+	case nil:
+		return &permissionDefinition{
+			ID: id,
+			PermissionDefinition: &models.PermissionDefinition{
+
+				Name: name,
+			},
+		}, nil
+	case sql.ErrNoRows:
+		logger.Debug(messages.ErrPermissionDefinitionNotFound)
+		return nil, models.ErrPermissionDefinitionNotFound
+	default:
+		logger.Error(messages.FailedToFindPermissionDefinition, err)
+		return nil, err
+	}
+}
+
 func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID int64) ([]*permission, error) {
 	logger = logger.Session("find-role-permissions").WithData(lager.Data{
 		"role.id": roleID,
 	})
 
-	rows, err := squirrel.Select("p.id", "p.name", "p.resource_pattern").
+	rows, err := squirrel.Select("p.id", "pd.name", "p.resource_pattern").
 		From("permission p").
 		JoinClause("INNER JOIN role r ON p.role_id = r.id").
+		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
 		Where(squirrel.Eq{"role_id": roleID}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -474,10 +558,10 @@ func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 
 func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.HasPermissionQuery) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
-		"actor.issuer":          query.ActorQuery.Issuer,
-		"actor.domainID":        query.ActorQuery.DomainID,
-		"permission.name":       query.PermissionQuery.Name,
-		"permission.resourceID": query.PermissionQuery.ResourceID,
+		"actor.issuer":               query.ActorQuery.Issuer,
+		"actor.domainID":             query.ActorQuery.DomainID,
+		"permission_definition.name": query.PermissionQuery.PermissionDefinitionQuery.Name,
+		"permission.resourceID":      query.PermissionQuery.ResourceID,
 	})
 
 	var count int
@@ -486,10 +570,11 @@ func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseR
 		From("role_assignment ra").
 		JoinClause("INNER JOIN actor a ON a.id = ra.actor_id").
 		JoinClause("INNER JOIN permission p ON ra.role_id = p.role_id").
+		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
 		Where(squirrel.Eq{
 			"a.issuer":           query.ActorQuery.Issuer,
 			"a.domain_id":        query.ActorQuery.DomainID,
-			"p.name":             query.PermissionQuery.Name,
+			"pd.name":            query.PermissionQuery.PermissionDefinitionQuery.Name,
 			"p.resource_pattern": query.PermissionQuery.ResourceID,
 		}).
 		RunWith(conn).
@@ -505,4 +590,43 @@ func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseR
 	}
 
 	return true, nil
+}
+
+func createPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, permissionDefinitionID int64, roleID int64, resourcePattern string, permissionName string) (*permission, error) {
+	logger = logger.Session("create-permission-definition")
+
+	result, err := squirrel.Insert("permission").
+		Columns("permission_definition_id", "role_id", "resource_pattern").
+		Values(permissionDefinitionID, roleID, resourcePattern).
+		RunWith(conn).
+		ExecContext(ctx)
+
+	switch e := err.(type) {
+	case nil:
+		id, err2 := result.LastInsertId()
+		if err2 != nil {
+			logger.Error(messages.FailedToRetrieveID, err2)
+			return nil, err2
+		}
+
+		permission := &permission{
+			ID: id,
+			Permission: &models.Permission{
+				Name:            permissionName,
+				ResourcePattern: resourcePattern,
+			},
+		}
+		return permission, nil
+	case *mysql.MySQLError:
+		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(messages.ErrPermissionAlreadyExists)
+			return nil, models.ErrPermissionAlreadyExists
+		}
+
+		logger.Error(messages.FailedToCreatePermission, err)
+		return nil, err
+	default:
+		logger.Error(messages.FailedToCreatePermission, err)
+		return nil, err
+	}
 }

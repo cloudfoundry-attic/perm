@@ -2,6 +2,10 @@ package models
 
 import "code.cloudfoundry.org/perm/protos"
 
+type PermissionDefinition struct {
+	Name string
+}
+
 type Permission struct {
 	Name            string
 	ResourcePattern string

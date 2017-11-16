@@ -4,16 +4,35 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/sqlx"
 )
 
-func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string, permissions ...*models.Permission) (*models.Role, error) {
-	role, err := createRole(ctx, logger.Session("data-service"), s.conn, name, permissions...)
+func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string, permissions ...*models.Permission) (r *models.Role, err error) {
+	logger = logger.Session("data-service")
+
+	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		logger.Error(messages.FailedToStartTransaction, err)
+		return
 	}
 
-	return role.Role, nil
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = sqlx.Commit(logger, tx, err)
+	}()
+
+	var r2 *role
+	r2, err = createRoleAndAssignPermissions(ctx, logger, tx, name, permissions...)
+	if err != nil {
+		return
+	}
+	r = r2.Role
+
+	return
 }
 
 func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {

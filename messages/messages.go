@@ -57,7 +57,17 @@ const (
 	FailedToFindRoleAssignment   = "failed-to-find-role-assignment"
 	FailedToFindRoleAssignments  = "failed-to-find-role-assignments"
 
-	FailedToFindPermissions = "failed-to-find-permissions"
+	ErrPermissionNotFound      = "permission-not-found"
+	ErrPermissionAlreadyExists = "permission-already-exists"
+
+	FailedToFindPermissions  = "failed-to-find-permissions"
+	FailedToCreatePermission = "failed-to-create-permission"
+
+	ErrPermissionDefinitionAlreadyExists = "permission-definition-already-exists"
+	ErrPermissionDefinitionNotFound      = "permission-definition-not-found"
+
+	FailedToCreatePermissionDefinition = "failed-to-create-permission-definition"
+	FailedToFindPermissionDefinition   = "failed-to-find-permission-definition"
 )
 
 // Migration messages

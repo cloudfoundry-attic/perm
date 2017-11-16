@@ -6,9 +6,13 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+type PermissionDefinitionQuery struct {
+	Name string
+}
+
 type PermissionQuery struct {
-	Name       string
-	ResourceID string
+	PermissionDefinitionQuery PermissionDefinitionQuery
+	ResourceID                string
 }
 
 type HasPermissionQuery struct {

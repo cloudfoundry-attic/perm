@@ -44,7 +44,9 @@ func (s *PermissionServiceServer) HasPermission(ctx context.Context, req *protos
 			Issuer:   issuer,
 		},
 		PermissionQuery: models.PermissionQuery{
-			Name:       permissionName,
+			PermissionDefinitionQuery: models.PermissionDefinitionQuery{
+				Name: permissionName,
+			},
 			ResourceID: resourceID,
 		},
 	}
