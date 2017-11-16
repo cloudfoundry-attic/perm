@@ -31,7 +31,7 @@ func createRoleAndAssignPermissions(ctx context.Context, logger lager.Logger, co
 
 	for _, permission := range permissions {
 		_, err = createPermissionDefinition(ctx, logger, conn, permission.Name)
-		if err != nil && err != models.ErrPermissionAlreadyExists {
+		if err != nil && err != models.ErrPermissionDefinitionAlreadyExists {
 			return nil, err
 		}
 
