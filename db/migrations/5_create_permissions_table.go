@@ -12,6 +12,7 @@ var createPermissionsTable = `
 CREATE TABLE IF NOT EXISTS permission
 (
 	id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  	uuid BINARY(16) NOT NULL UNIQUE,
 	role_id BIGINT NOT NULL,
 	permission_definition_id BIGINT NOT NULL,
 	resource_pattern VARCHAR(255) NOT NULL

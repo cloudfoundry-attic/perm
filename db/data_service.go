@@ -594,10 +594,11 @@ func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseR
 
 func createPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, permissionDefinitionID int64, roleID int64, resourcePattern string, permissionName string) (*permission, error) {
 	logger = logger.Session("create-permission-definition")
+	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("permission").
-		Columns("permission_definition_id", "role_id", "resource_pattern").
-		Values(permissionDefinitionID, roleID, resourcePattern).
+		Columns("uuid", "permission_definition_id", "role_id", "resource_pattern").
+		Values(u, permissionDefinitionID, roleID, resourcePattern).
 		RunWith(conn).
 		ExecContext(ctx)
 
