@@ -23,8 +23,9 @@ const (
 	FailedToOpenSQLConnection = "failed-to-open-sql-connection"
 	FailedToPingSQLConnection = "failed-to-ping-sql-connection"
 
-	FailedToConnectToStatsD = "failed-to-connect-to-statsd"
-	FailedToSendMetric      = "failed-to-send-metric"
+	FailedToConnectToStatsD      = "failed-to-connect-to-statsd"
+	FailedToSendMetric           = "failed-to-send-metric"
+	FailedToRecordHistogramValue = "failed-to-record-histogram-value"
 
 	FailedToReadCertificate  = "failed-to-read-certificate"
 	FailedToAppendCertToPool = "failed-to-append-cert-to-pool"

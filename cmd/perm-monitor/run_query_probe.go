@@ -44,7 +44,7 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	runLogger := logger.Session("run")
 
 	histogram := hdrhistogram.NewWindowed(QueryProbeHistogramWindow, int64(QueryProbeMinResponseTime), int64(QueryProbeMaxResponseTime), 3)
-	var rw sync.RWMutex
+	var rw = &sync.RWMutex{}
 
 	wg.Add(1)
 	go rotateHistogramPeriodically(wg, rw, QueryProbeHistogramRefreshTime, histogram)
@@ -55,45 +55,37 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	ticker := time.NewTicker(QueryProbeTickDuration)
 
 	for range ticker.C {
-		func() {
+		func(logger lager.Logger) {
 			cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
 			defer cancel()
 
 			correct, durations, err = probe.Run(cctx, runLogger)
 
-			incrementStat(metricsLogger, statter, MetricQueryProbeRunsTotal)
+			incrementStat(logger, statter, MetricQueryProbeRunsTotal)
 
 			if err != nil {
-				incrementStat(metricsLogger, statter, MetricQueryProbeRunsFailed)
+				incrementStat(logger, statter, MetricQueryProbeRunsFailed)
 			} else {
 				if !correct {
 					incrementStat(logger, statter, MetricQueryProbeRunsIncorrect)
 				}
 
 				for _, d := range durations {
-					histogram.Current.RecordValue(int64(d))
+					recordHistogramDuration(logger, rw, histogram, d)
 				}
 
-				rw.RLock()
-				defer rw.RUnlock()
-
-				p90 := histogram.Current.ValueAtQuantile(90)
-				p99 := histogram.Current.ValueAtQuantile(99)
-				p999 := histogram.Current.ValueAtQuantile(99.9)
-				max := histogram.Current.Max()
-
-				sendGauge(logger, statter, MetricQueryProbeTimingP90, p90)
-				sendGauge(logger, statter, MetricQueryProbeTimingP99, p99)
-				sendGauge(logger, statter, MetricQueryProbeTimingP999, p999)
-				sendGauge(logger, statter, MetricQueryProbeTimingMax, max)
+				sendHistogramQuantile(logger, statter, rw, histogram, 90, MetricQueryProbeTimingP90)
+				sendHistogramQuantile(logger, statter, rw, histogram, 99, MetricQueryProbeTimingP99)
+				sendHistogramQuantile(logger, statter, rw, histogram, 99.9, MetricQueryProbeTimingP999)
+				sendHistogramMax(logger, statter, rw, histogram, MetricQueryProbeTimingMax)
 			}
-		}()
+		}(metricsLogger)
 	}
 
 	wg.Done()
 }
 
-func rotateHistogramPeriodically(wg *sync.WaitGroup, rw sync.RWMutex, d time.Duration, histogram *hdrhistogram.WindowedHistogram) {
+func rotateHistogramPeriodically(wg *sync.WaitGroup, rw *sync.RWMutex, d time.Duration, histogram *hdrhistogram.WindowedHistogram) {
 	for range time.NewTicker(d).C {
 		func() {
 			rw.Lock()
@@ -101,7 +93,6 @@ func rotateHistogramPeriodically(wg *sync.WaitGroup, rw sync.RWMutex, d time.Dur
 
 			histogram.Rotate()
 		}()
-
 	}
 
 	wg.Done()
