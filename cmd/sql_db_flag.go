@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"strconv"
+	"time"
 
 	"crypto/tls"
 	"crypto/x509"
@@ -15,8 +16,9 @@ import (
 )
 
 type SQLFlag struct {
-	DB  DBFlag     `group:"DB" namespace:"db"`
-	TLS SQLTLSFlag `group:"TLS" namespace:"tls"`
+	DB     DBFlag        `group:"DB" namespace:"db"`
+	TLS    SQLTLSFlag    `group:"TLS" namespace:"tls"`
+	Tuning SQLTuningFlag `group:"tuning" namespace:"tuning"`
 }
 
 type DBFlag struct {
@@ -31,6 +33,10 @@ type DBFlag struct {
 type SQLTLSFlag struct {
 	Required bool               `long:"required" description:"Require TLS connections to the SQL backend"`
 	RootCAs  []FileOrStringFlag `long:"root-ca" description:"CA certificate(s) for TLS connection to the SQL backend"`
+}
+
+type SQLTuningFlag struct {
+	ConnMaxLifetime int `long:"connection-max-lifetime" description:"Limit the lifetime in milliseconds of a SQL connection"`
 }
 
 func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sqlx.DB, error) {
@@ -68,7 +74,14 @@ func (o *SQLFlag) Open(statter Statter, reader FileReader) (*sqlx.DB, error) {
 			cfg.TLSConfig = tlsConfigName
 		}
 
-		return sqlx.Connect(context.Background(), o.DB.Driver, cfg.FormatDSN())
+		conn, err := sqlx.Connect(context.Background(), o.DB.Driver, cfg.FormatDSN())
+		if err != nil {
+			return nil, err
+		}
+
+		conn.SetConnMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond)
+
+		return conn, nil
 	default:
 		return nil, errors.New("unsupported sql driver")
 	}
