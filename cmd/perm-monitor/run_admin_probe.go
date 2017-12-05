@@ -14,8 +14,7 @@ const (
 	AdminProbeTickDuration = 30 * time.Second
 	AdminProbeTimeout      = 3 * time.Second
 
-	MetricAdminProbeRunsTotal  = "perm.probe.admin.runs.total"
-	MetricAdminProbeRunsFailed = "perm.probe.admin.runs.failed"
+	MetricAdminProbeRunsSuccess = "perm.probe.admin.runs.success"
 )
 
 func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.AdminProbe, statter statsd.Statter) {
@@ -39,9 +38,10 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 
 			err = probe.Run(cctx, runLogger)
 
-			incrementStat(metricsLogger, statter, MetricAdminProbeRunsTotal)
-			if err != nil {
-				incrementStat(metricsLogger, statter, MetricAdminProbeRunsFailed)
+			if err == nil {
+				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, 1.0)
+			} else {
+				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, 0.0)
 			}
 		}()
 	}

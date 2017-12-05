@@ -21,9 +21,8 @@ const (
 	QueryProbeHistogramWindow      = 5 // Minutes
 	QueryProbeHistogramRefreshTime = 1 * time.Minute
 
-	MetricQueryProbeRunsTotal     = "perm.probe.query.runs.total"
-	MetricQueryProbeRunsFailed    = "perm.probe.query.runs.failed"
-	MetricQueryProbeRunsIncorrect = "perm.probe.query.runs.incorrect"
+	MetricQueryProbeRunsSuccess = "perm.probe.query.runs.success"
+	MetricQueryProbeRunsCorrect = "perm.probe.query.runs.correct"
 
 	MetricQueryProbeTimingMax  = "perm.probe.query.responses.timing.max"  // gauge
 	MetricQueryProbeTimingP90  = "perm.probe.query.responses.timing.p90"  // gauge
@@ -61,14 +60,14 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 
 			correct, durations, err = probe.Run(cctx, runLogger)
 
-			incrementStat(logger, statter, MetricQueryProbeRunsTotal)
-
 			if err != nil {
-				incrementStat(logger, statter, MetricQueryProbeRunsFailed)
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 0.0)
+			} else if !correct {
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 0.0)
+				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, 0.0)
 			} else {
-				if !correct {
-					incrementStat(logger, statter, MetricQueryProbeRunsIncorrect)
-				}
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 1.0)
+				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, 1.0)
 
 				for _, d := range durations {
 					recordHistogramDuration(logger, rw.RLocker(), histogram, d)
