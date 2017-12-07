@@ -46,7 +46,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (cmd DownCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
 	if err != nil {
 		return err
 	}

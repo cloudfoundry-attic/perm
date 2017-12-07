@@ -39,7 +39,7 @@ type SQLTuningFlag struct {
 	ConnMaxLifetime int `long:"connection-max-lifetime" description:"Limit the lifetime in milliseconds of a SQL connection"`
 }
 
-func (o *SQLFlag) Open(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
+func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
 	logger = logger.WithData(lager.Data{
 		"db_driver":   o.DB.Driver,
 		"db_host":     o.DB.Host,
@@ -48,13 +48,37 @@ func (o *SQLFlag) Open(ctx context.Context, logger lager.Logger, statter Statter
 		"db_username": o.DB.Username,
 	})
 
-	openLogger := logger.Session(messages.OpenSQLConnection)
-	openLogger.Debug(messages.Starting)
+	conn, err := o.open(ctx, logger.Session(messages.OpenSQLConnection), statter, reader)
+	if err != nil {
+		return nil, err
+	}
+
+	conn.SetConnMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond)
+
+	err = ping(ctx, logger.Session(messages.PingSQLConnection), conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+func (o *SQLFlag) open(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
+	logger.Debug(messages.Starting)
 
 	var (
 		conn *sqlx.DB
 		err  error
 	)
+
+	defer func() {
+		if err != nil {
+			logger.Error(messages.FailedToOpenSQLConnection, err)
+
+		} else {
+			logger.Debug(messages.Finished)
+		}
+	}()
 
 	switch o.DB.Driver {
 	case "mysql":
@@ -73,12 +97,10 @@ func (o *SQLFlag) Open(ctx context.Context, logger lager.Logger, statter Statter
 				var pem []byte
 				pem, err = rootCA.Bytes(statter, reader)
 				if err != nil {
-					openLogger.Error(messages.FailedToOpenSQLConnection, err)
 					return nil, err
 				}
 				if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
 					err = ErrFailedToAppendCertsFromPem
-					openLogger.Error(messages.FailedToOpenSQLConnection, err)
 					return nil, err
 				}
 			}
@@ -89,53 +111,49 @@ func (o *SQLFlag) Open(ctx context.Context, logger lager.Logger, statter Statter
 				RootCAs:    rootCertPool,
 			})
 			if err != nil {
-				openLogger.Error(messages.FailedToOpenSQLConnection, err)
 				return nil, err
 			}
 			cfg.TLSConfig = tlsConfigName
 		}
 
 		conn, err = sqlx.Connect(context.Background(), o.DB.Driver, cfg.FormatDSN())
+
 		if err != nil {
-			openLogger.Error(messages.FailedToOpenSQLConnection, err)
 			return nil, err
 		}
 
+		return conn, nil
 	default:
 		err = ErrUnsupportedSQLDriver
-		openLogger.Error(messages.FailedToOpenSQLConnection, err)
 		return nil, err
 	}
+}
 
-	conn.SetConnMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond)
-
-	pingLogger := logger.Session(messages.PingSQLConnection)
-	pingLogger.Debug(messages.Starting)
+func ping(ctx context.Context, logger lager.Logger, conn *sqlx.DB) error {
+	logger.Debug(messages.Starting)
 
 	var attempt int
 	for {
 		attempt++
 
 		if attempt > 10 {
-			err = NewAttemptError(10)
-			pingLogger.Error(messages.FailedToPingSQLConnection, err)
-			return nil, err
+			err := NewAttemptError(10)
+			logger.Error(messages.FailedToPingSQLConnection, err)
+			return err
 		}
 
-		err = conn.PingContext(ctx)
+		err := conn.PingContext(ctx)
 		if err != nil {
-			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
+			logger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
 				"attempt": attempt,
 			})
 
 			time.Sleep(1 * time.Second)
 		} else {
+			logger.Debug(messages.Finished)
 			break
 		}
 	}
 
-	pingLogger.Debug(messages.Finished)
-	openLogger.Debug(messages.Finished)
-
-	return conn, err
+	return nil
 }

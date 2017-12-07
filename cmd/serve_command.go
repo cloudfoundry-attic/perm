@@ -72,7 +72,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
 	if err != nil {
 		return err
 	}

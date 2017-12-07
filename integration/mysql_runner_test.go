@@ -85,7 +85,7 @@ func (r *MySQLRunner) DropTestDB() {
 }
 
 func (r *MySQLRunner) Truncate() {
-	dbConn, err := r.SQLFlag.Open(context.Background(), lagertest.NewTestLogger("mysql-migrator"), statter{}, ioReader{})
+	dbConn, err := r.SQLFlag.Connect(context.Background(), lagertest.NewTestLogger("mysql-migrator"), statter{}, ioReader{})
 	Expect(err).NotTo(HaveOccurred())
 
 	for _, s := range truncateStmts {
