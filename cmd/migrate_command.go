@@ -80,7 +80,7 @@ func (cmd UpCommand) Execute([]string) error {
 			break
 		}
 	}
-	pingLogger.Debug(messages.Finished)
+	pingLogger.Info(messages.Finished)
 
 	return sqlx.ApplyMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations)
 }
@@ -106,7 +106,7 @@ func (cmd DownCommand) Execute([]string) error {
 		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
 		return err
 	}
-	pingLogger.Debug(messages.Finished)
+	pingLogger.Info(messages.Finished)
 
 	defer conn.Close()
 
