@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"time"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -83,7 +85,7 @@ func (r *MySQLRunner) DropTestDB() {
 }
 
 func (r *MySQLRunner) Truncate() {
-	dbConn, err := r.SQLFlag.Open(statter{}, ioReader{})
+	dbConn, err := r.SQLFlag.Open(context.Background(), lagertest.NewTestLogger("mysql-migrator"), statter{}, ioReader{})
 	Expect(err).NotTo(HaveOccurred())
 
 	for _, s := range truncateStmts {

@@ -8,13 +8,8 @@ import (
 
 	"strconv"
 
-	"errors"
-
-	"time"
-
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/olekukonko/tablewriter"
 )
@@ -51,36 +46,11 @@ func (cmd UpCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(OS, IOReader)
+	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
 	if err != nil {
-		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 	defer conn.Close()
-
-	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
-	pingLogger.Debug(messages.Starting)
-
-	var attempt int
-	for {
-		attempt++
-
-		if attempt > 10 {
-			return errors.New("failed to talk to database within 10 attempts")
-		}
-
-		err = conn.PingContext(ctx)
-		if err != nil {
-			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
-				"attempt": attempt,
-			})
-
-			time.Sleep(1 * time.Second)
-		} else {
-			break
-		}
-	}
-	pingLogger.Info(messages.Finished)
 
 	return sqlx.ApplyMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations)
 }
@@ -93,21 +63,10 @@ func (cmd DownCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(OS, IOReader)
+	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
 	if err != nil {
-		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
-
-	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
-	pingLogger.Debug(messages.Starting)
-	err = conn.PingContext(ctx)
-	if err != nil {
-		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
-		return err
-	}
-	pingLogger.Info(messages.Finished)
-
 	defer conn.Close()
 
 	return sqlx.RollbackMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations, cmd.All)
@@ -119,21 +78,10 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Open(OS, IOReader)
+	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
 	if err != nil {
-		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
-
-	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
-	pingLogger.Debug(messages.Starting)
-	err = conn.PingContext(ctx)
-	if err != nil {
-		pingLogger.Error(messages.FailedToPingSQLConnection, err, cmd.SQL.LagerData())
-		return err
-	}
-	pingLogger.Debug(messages.Finished)
-
 	defer conn.Close()
 
 	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, db.MigrationsTableName)

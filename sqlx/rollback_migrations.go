@@ -40,7 +40,7 @@ func RollbackMigrations(ctx context.Context, logger lager.Logger, conn *DB, tabl
 			continue
 		}
 
-		err := rollbackMigration(ctx, migrationLogger, conn, tableName, version, migration)
+		err = rollbackMigration(ctx, migrationLogger, conn, tableName, version, migration)
 		if err != nil {
 			return err
 		}

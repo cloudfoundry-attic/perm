@@ -14,6 +14,9 @@ import (
 
 	"strconv"
 
+	"context"
+
+	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/models"
 	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
@@ -77,7 +80,7 @@ var _ = Describe("DataService", func() {
 
 	BeforeEach(func() {
 		var err error
-		conn, err = flag.Open(cmd.OS, cmd.IOReader)
+		conn, err = flag.Open(context.Background(), lagertest.NewTestLogger("data-service-test"), cmd.OS, cmd.IOReader)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(conn.Ping()).To(Succeed())

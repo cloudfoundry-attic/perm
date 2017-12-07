@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"net"
-	"time"
 
 	"strconv"
 
 	"context"
-
-	"errors"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
@@ -75,36 +72,11 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	conn, err := cmd.SQL.Open(OS, IOReader)
+	conn, err := cmd.SQL.Open(ctx, logger, OS, IOReader)
 	if err != nil {
-		logger.Error(messages.FailedToOpenSQLConnection, err)
 		return err
 	}
 	defer conn.Close()
-
-	pingLogger := logger.Session(messages.PingSQLConnection, cmd.SQL.LagerData())
-	pingLogger.Debug(messages.Starting)
-
-	var attempt int
-	for {
-		attempt++
-
-		if attempt > 10 {
-			return errors.New("failed to talk to database within 10 attempts")
-		}
-
-		err = conn.PingContext(ctx)
-		if err != nil {
-			pingLogger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
-				"attempt": attempt,
-			})
-
-			time.Sleep(1 * time.Second)
-		} else {
-			break
-		}
-	}
-	pingLogger.Debug(messages.Finished)
 
 	migrationLogger := logger.Session("verify-migrations")
 	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(context.Background(), migrationLogger, conn, db.MigrationsTableName, db.Migrations)

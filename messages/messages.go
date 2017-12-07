@@ -18,6 +18,7 @@ const (
 	FailedToListen              = "failed-to-listen"
 	FailedToParseTLSCredentials = "failed-to-parse-tls-credentials"
 
+	OpenSQLConnection = "open-sql-connection"
 	PingSQLConnection = "ping-sql-connection"
 
 	FailedToOpenSQLConnection = "failed-to-open-sql-connection"
