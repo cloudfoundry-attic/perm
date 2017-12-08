@@ -61,13 +61,13 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 			correct, durations, err = probe.Run(cctx, runLogger)
 
 			if err != nil {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 0.0)
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricFailure)
 			} else if !correct {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 0.0)
-				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, 0.0)
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricFailure)
+				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, MetricFailure)
 			} else {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, 1.0)
-				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, 1.0)
+				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricSuccess)
+				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, MetricSuccess)
 
 				for _, d := range durations {
 					recordHistogramDuration(logger, rw.RLocker(), histogram, d)

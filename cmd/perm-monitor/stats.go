@@ -12,6 +12,9 @@ import (
 )
 
 const (
+	MetricFailure = 0.0
+	MetricSuccess = 1.0
+
 	AlwaysSendMetric = 1.0
 )
 

@@ -30,6 +30,7 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 		func() {
 			err = probe.Cleanup(ctx, cleanupLogger)
 			if err != nil {
+				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, MetricFailure)
 				return
 			}
 
@@ -39,9 +40,9 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 			err = probe.Run(cctx, runLogger)
 
 			if err == nil {
-				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, 1.0)
+				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, MetricSuccess)
 			} else {
-				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, 0.0)
+				sendGauge(metricsLogger, statter, MetricAdminProbeRunsSuccess, MetricFailure)
 			}
 		}()
 	}
