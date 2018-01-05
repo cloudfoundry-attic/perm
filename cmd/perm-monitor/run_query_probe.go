@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/monitor"
-	"github.com/cactus/go-statsd-client/statsd"
 )
 
 const (
@@ -19,30 +18,20 @@ const (
 
 	QueryProbeHistogramWindow      = 5 // Minutes
 	QueryProbeHistogramRefreshTime = 1 * time.Minute
-
-	MetricQueryProbeRunsSuccess = "perm.probe.query.runs.success"
-	MetricQueryProbeRunsCorrect = "perm.probe.query.runs.correct"
-
-	MetricQueryProbeTimingMax  = "perm.probe.query.responses.timing.max"  // gauge
-	MetricQueryProbeTimingP90  = "perm.probe.query.responses.timing.p90"  // gauge
-	MetricQueryProbeTimingP99  = "perm.probe.query.responses.timing.p99"  // gauge
-	MetricQueryProbeTimingP999 = "perm.probe.query.responses.timing.p999" // gauge
 )
 
-func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter) {
+func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *Statter) {
 	defer wg.Done()
-
-	histogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
 
 	var innerWG sync.WaitGroup
 	innerWG.Add(2)
-	go rotateHistogramPeriodically(&innerWG, QueryProbeHistogramRefreshTime, histogram)
-	go runProbePeriodically(ctx, logger, &innerWG, probe, statter, histogram)
+	go rotateHistogramPeriodically(&innerWG, QueryProbeHistogramRefreshTime, statter)
+	go runProbePeriodically(ctx, logger, &innerWG, probe, statter)
 
 	innerWG.Wait()
 }
 
-func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter, histogram *monitor.Histogram) {
+func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *Statter) {
 	defer wg.Done()
 
 	var (
@@ -68,31 +57,23 @@ func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.Wai
 			correct, durations, err = probe.Run(cctx, runLogger)
 
 			if err != nil {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricFailure)
+				statter.SendFailedQueryProbe(metricsLogger)
 			} else if !correct {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricFailure)
-				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, MetricFailure)
+				statter.SendIncorrectQueryProbe(logger)
 			} else {
-				sendGauge(logger, statter, MetricQueryProbeRunsSuccess, MetricSuccess)
-				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, MetricSuccess)
-
 				for _, d := range durations {
-					recordHistogramDuration(logger, histogram, d)
+					statter.RecordQueryProbeDuration(logger, d)
 				}
-
-				sendHistogramQuantile(logger, statter, histogram, 90, MetricQueryProbeTimingP90)
-				sendHistogramQuantile(logger, statter, histogram, 99, MetricQueryProbeTimingP99)
-				sendHistogramQuantile(logger, statter, histogram, 99.9, MetricQueryProbeTimingP999)
-				sendHistogramMax(logger, statter, histogram, MetricQueryProbeTimingMax)
+				statter.SendCorrectQueryProbe(logger)
 			}
 		}(metricsLogger)
 	}
 }
 
-func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, histogram *monitor.Histogram) {
+func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, statter *Statter) {
 	defer wg.Done()
 
 	for range time.NewTicker(d).C {
-		histogram.Rotate()
+		statter.Rotate()
 	}
 }

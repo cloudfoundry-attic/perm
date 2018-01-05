@@ -123,11 +123,17 @@ func main() {
 		PermissionServiceClient: permissionServiceClient,
 	}
 
+	queryProbeHistogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
+	statter := &Statter{
+		StatsD:    statsDClient,
+		Histogram: queryProbeHistogram,
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statsDClient)
-	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statsDClient)
+	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statter)
+	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statter)
 
 	wg.Wait()
 	os.Exit(0)
