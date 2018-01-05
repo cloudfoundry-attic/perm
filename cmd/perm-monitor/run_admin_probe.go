@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/monitor"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -30,13 +31,12 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 }
 
 func runAdminProbe(ctx context.Context, logger lager.Logger, probe *monitor.AdminProbe) error {
-	err := probe.Cleanup(ctx, logger.Session("cleanup"))
-	if err != nil {
-		return err
-	}
+	u := uuid.NewV4()
+
+	defer probe.Cleanup(ctx, logger.Session("cleanup"), u.String())
 
 	cctx, cancel := context.WithTimeout(ctx, AdminProbeTimeout)
 	defer cancel()
 
-	return probe.Run(cctx, logger.Session("run"))
+	return probe.Run(cctx, logger.Session("run"), u.String())
 }

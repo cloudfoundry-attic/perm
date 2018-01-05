@@ -23,6 +23,8 @@ var _ = Describe("AdminProbe", func() {
 		fakeLogger            *lagertest.TestLogger
 		fakeContext           context.Context
 
+		uniqueSuffix string
+
 		someError error
 	)
 
@@ -31,6 +33,8 @@ var _ = Describe("AdminProbe", func() {
 
 		fakeLogger = lagertest.NewTestLogger("admin-probe")
 		fakeContext = context.Background()
+
+		uniqueSuffix = "foobar"
 
 		p = &AdminProbe{
 			RoleServiceClient: fakeRoleServiceClient,
@@ -41,12 +45,12 @@ var _ = Describe("AdminProbe", func() {
 
 	Describe("Cleanup", func() {
 		It("deletes the role", func() {
-			err := p.Cleanup(fakeContext, fakeLogger)
+			err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
 			_, deleteRoleRequest, _ := fakeRoleServiceClient.DeleteRoleArgsForCall(0)
-			Expect(deleteRoleRequest.GetName()).To(Equal("system.admin-probe"))
+			Expect(deleteRoleRequest.GetName()).To(Equal("system.admin-probe.foobar"))
 		})
 
 		Context("when the role doesn't exist", func() {
@@ -55,7 +59,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("swallows the error", func() {
-				err := p.Cleanup(fakeContext, fakeLogger)
+				err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -66,7 +70,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("errors", func() {
-				err := p.Cleanup(fakeContext, fakeLogger)
+				err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -74,28 +78,28 @@ var _ = Describe("AdminProbe", func() {
 
 	Describe("Run", func() {
 		It("creates a role, assigns a role, unassigns a role, and deletes the role", func() {
-			err := p.Run(fakeContext, fakeLogger)
+			err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
 			_, createRoleRequest, _ := fakeRoleServiceClient.CreateRoleArgsForCall(0)
-			Expect(createRoleRequest.GetName()).To(Equal("system.admin-probe"))
+			Expect(createRoleRequest.GetName()).To(Equal("system.admin-probe.foobar"))
 
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			_, assignRoleRequest, _ := fakeRoleServiceClient.AssignRoleArgsForCall(0)
-			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.admin-probe"))
+			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.admin-probe.foobar"))
 			Expect(assignRoleRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("admin-probe"))
 
 			Expect(fakeRoleServiceClient.UnassignRoleCallCount()).To(Equal(1))
 			_, unassignRoleRequest, _ := fakeRoleServiceClient.UnassignRoleArgsForCall(0)
-			Expect(unassignRoleRequest.GetRoleName()).To(Equal("system.admin-probe"))
+			Expect(unassignRoleRequest.GetRoleName()).To(Equal("system.admin-probe.foobar"))
 			Expect(unassignRoleRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(unassignRoleRequest.GetActor().GetID()).To(Equal("admin-probe"))
 
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
 			_, deleteRoleRequest, _ := fakeRoleServiceClient.DeleteRoleArgsForCall(0)
-			Expect(deleteRoleRequest.GetName()).To(Equal("system.admin-probe"))
+			Expect(deleteRoleRequest.GetName()).To(Equal("system.admin-probe.foobar"))
 		})
 
 		Context("when creating a role fails", func() {
@@ -104,7 +108,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("errors and does not assign, unassign, or delete", func() {
-				err := p.Run(fakeContext, fakeLogger)
+				err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 
 				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
@@ -120,7 +124,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("errors and does not unassign or delete", func() {
-				err := p.Run(fakeContext, fakeLogger)
+				err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 
 				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
@@ -136,7 +140,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("errors and does not unassign or delete", func() {
-				err := p.Run(fakeContext, fakeLogger)
+				err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 
 				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
@@ -152,7 +156,7 @@ var _ = Describe("AdminProbe", func() {
 			})
 
 			It("errors and does not unassign or delete", func() {
-				err := p.Run(fakeContext, fakeLogger)
+				err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 
 				Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))

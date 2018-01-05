@@ -26,12 +26,18 @@ var AdminProbeActor = &protos.Actor{
 	Issuer: "system",
 }
 
-func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger) error {
+func adminRoleName(s string) string {
+	return AdminProbeRoleName + "." + s
+}
+
+func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
+	roleName := adminRoleName(uniqueSuffix)
+
 	deleteRoleRequest := &protos.DeleteRoleRequest{
-		Name: AdminProbeRoleName,
+		Name: roleName,
 	}
 	_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
 	s, ok := status.FromError(err)
@@ -60,15 +66,16 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger) error {
 	return nil
 }
 
-func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
+func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
+	roleName := adminRoleName(uniqueSuffix)
 	var err error
 
 	// CreateRole
 	createRoleRequest := &protos.CreateRoleRequest{
-		Name: AdminProbeRoleName,
+		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
 	if err != nil {
@@ -81,7 +88,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 
 	// AssignRole
 	assignRoleRequest := &protos.AssignRoleRequest{
-		RoleName: AdminProbeRoleName,
+		RoleName: roleName,
 		Actor:    AdminProbeActor,
 	}
 	_, err = p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
@@ -97,7 +104,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 	// UnassignRole
 	unassignRoleRequest := &protos.UnassignRoleRequest{
 		Actor:    AdminProbeActor,
-		RoleName: AdminProbeRoleName,
+		RoleName: roleName,
 	}
 	_, err = p.RoleServiceClient.UnassignRole(ctx, unassignRoleRequest)
 	if err != nil {
@@ -111,7 +118,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger) error {
 
 	// DeleteRole
 	deleteRoleRequest := &protos.DeleteRoleRequest{
-		Name: AdminProbeRoleName,
+		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
 	if err != nil {
