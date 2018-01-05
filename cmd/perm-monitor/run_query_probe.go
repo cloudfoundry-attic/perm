@@ -7,6 +7,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/monitor"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -59,14 +60,16 @@ func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, statter *m
 }
 
 func runQueryProbe(ctx context.Context, logger lager.Logger, probe *monitor.QueryProbe) (bool, []time.Duration, error) {
-	err := probe.Setup(ctx, logger.Session("setup"))
+	u := uuid.NewV4()
+
+	err := probe.Setup(ctx, logger.Session("setup"), u.String())
 	if err != nil {
 		return false, nil, err
 	}
-	defer probe.Cleanup(ctx, logger.Session("cleanup"))
+	defer probe.Cleanup(ctx, logger.Session("cleanup"), u.String())
 
 	cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
 	defer cancel()
 
-	return probe.Run(cctx, logger.Session("run"))
+	return probe.Run(cctx, logger.Session("run"), u.String())
 }

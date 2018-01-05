@@ -25,6 +25,8 @@ var _ = Describe("QueryProbe", func() {
 		fakeLogger                   *lagertest.TestLogger
 		fakeContext                  context.Context
 
+		uniqueSuffix string
+
 		someError error
 	)
 
@@ -32,8 +34,10 @@ var _ = Describe("QueryProbe", func() {
 		fakeRoleServiceClient = new(monitorfakes.FakeRoleServiceClient)
 		fakePermissionsServiceClient = new(monitorfakes.FakePermissionServiceClient)
 
-		fakeLogger = lagertest.NewTestLogger("admin-probe")
+		fakeLogger = lagertest.NewTestLogger("query-probe")
 		fakeContext = context.Background()
+
+		uniqueSuffix = "foobar"
 
 		p = &QueryProbe{
 			RoleServiceClient:       fakeRoleServiceClient,
@@ -45,20 +49,20 @@ var _ = Describe("QueryProbe", func() {
 
 	Describe("Setup", func() {
 		It("creates a role with a permission and assigns it to a test user", func() {
-			err := p.Setup(fakeContext, fakeLogger)
+			err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
 			_, createRoleRequest, _ := fakeRoleServiceClient.CreateRoleArgsForCall(0)
-			Expect(createRoleRequest.GetName()).To(Equal("system.query-probe"))
+			Expect(createRoleRequest.GetName()).To(Equal("system.query-probe.foobar"))
 			permissions := createRoleRequest.GetPermissions()
 			Expect(permissions).To(HaveLen(1))
-			Expect(permissions[0].GetName()).To(Equal("system.query-probe.assigned-permission.name"))
-			Expect(permissions[0].GetResourcePattern()).To(Equal("system.query-probe.assigned-permission.resource-id"))
+			Expect(permissions[0].GetName()).To(Equal("system.query-probe.assigned-permission.name.foobar"))
+			Expect(permissions[0].GetResourcePattern()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
 
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			_, assignRoleRequest, _ := fakeRoleServiceClient.AssignRoleArgsForCall(0)
-			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.query-probe"))
+			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.query-probe.foobar"))
 			Expect(assignRoleRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("query-probe"))
 		})
@@ -70,7 +74,7 @@ var _ = Describe("QueryProbe", func() {
 					fakeRoleServiceClient.CreateRoleReturns(nil, status.Error(codes.AlreadyExists, "role-already-exists"))
 				})
 				It("swallows the error", func() {
-					err := p.Setup(fakeContext, fakeLogger)
+					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -81,7 +85,7 @@ var _ = Describe("QueryProbe", func() {
 				})
 
 				It("errors", func() {
-					err := p.Setup(fakeContext, fakeLogger)
+					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -95,7 +99,7 @@ var _ = Describe("QueryProbe", func() {
 				})
 
 				It("swallows the error", func() {
-					err := p.Setup(fakeContext, fakeLogger)
+					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -106,7 +110,7 @@ var _ = Describe("QueryProbe", func() {
 				})
 
 				It("errors", func() {
-					err := p.Setup(fakeContext, fakeLogger)
+					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -115,12 +119,12 @@ var _ = Describe("QueryProbe", func() {
 
 	Describe("Cleanup", func() {
 		It("deletes the role", func() {
-			err := p.Cleanup(fakeContext, fakeLogger)
+			err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
 			_, deleteRoleRequest, _ := fakeRoleServiceClient.DeleteRoleArgsForCall(0)
-			Expect(deleteRoleRequest.GetName()).To(Equal("system.query-probe"))
+			Expect(deleteRoleRequest.GetName()).To(Equal("system.query-probe.foobar"))
 		})
 
 		Context("when the role doesn't exist", func() {
@@ -129,7 +133,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("swallows the error", func() {
-				err := p.Cleanup(fakeContext, fakeLogger)
+				err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -140,7 +144,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("errors", func() {
-				err := p.Cleanup(fakeContext, fakeLogger)
+				err := p.Cleanup(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -153,7 +157,7 @@ var _ = Describe("QueryProbe", func() {
 		})
 
 		It("asks if the actor has a permission it should have, and a permission it shouldn't", func() {
-			correct, durations, err := p.Run(fakeContext, fakeLogger)
+			correct, durations, err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
 			Expect(durations).To(HaveLen(2))
@@ -163,14 +167,14 @@ var _ = Describe("QueryProbe", func() {
 			_, hasPositivePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(0)
 			Expect(hasPositivePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.assigned-permission.name"))
-			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.query-probe.assigned-permission.resource-id"))
+			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.assigned-permission.name.foobar"))
+			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
 
 			_, hasNegativePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(1)
 			Expect(hasNegativePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.unassigned-permission.name"))
-			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.query-probe.unassigned-permission.resource-id"))
+			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.unassigned-permission.name.foobar"))
+			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.query-probe.unassigned-permission.resource-id.foobar"))
 		})
 
 		Context("when checking for the permission it should have errors", func() {
@@ -179,7 +183,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("errors and does not ask for the next permission", func() {
-				_, durations, err := p.Run(fakeContext, fakeLogger)
+				_, durations, err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 				Expect(durations).To(HaveLen(1))
 
@@ -193,7 +197,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("returns that it's incorrect and does not ask for the next permission", func() {
-				correct, durations, err := p.Run(fakeContext, fakeLogger)
+				correct, durations, err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(correct).To(BeFalse())
 				Expect(durations).To(HaveLen(1))
@@ -208,7 +212,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("errors", func() {
-				_, durations, err := p.Run(fakeContext, fakeLogger)
+				_, durations, err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError(someError))
 				Expect(durations).To(HaveLen(2))
 
@@ -222,7 +226,7 @@ var _ = Describe("QueryProbe", func() {
 			})
 
 			It("returns that it's incorrect", func() {
-				correct, durations, err := p.Run(fakeContext, fakeLogger)
+				correct, durations, err := p.Run(fakeContext, fakeLogger, uniqueSuffix)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(correct).To(BeFalse())
 				Expect(durations).To(HaveLen(2))
