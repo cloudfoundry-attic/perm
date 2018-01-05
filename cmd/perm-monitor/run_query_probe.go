@@ -20,7 +20,7 @@ const (
 	QueryProbeHistogramRefreshTime = 1 * time.Minute
 )
 
-func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *Statter) {
+func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *monitor.Statter) {
 	defer wg.Done()
 
 	var innerWG sync.WaitGroup
@@ -31,7 +31,7 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	innerWG.Wait()
 }
 
-func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *Statter) {
+func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *monitor.Statter) {
 	defer wg.Done()
 
 	var (
@@ -70,7 +70,7 @@ func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.Wai
 	}
 }
 
-func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, statter *Statter) {
+func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, statter *monitor.Statter) {
 	defer wg.Done()
 
 	for range time.NewTicker(d).C {

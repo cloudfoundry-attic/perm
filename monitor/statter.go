@@ -1,11 +1,10 @@
-package main
+package monitor
 
 import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
-	"code.cloudfoundry.org/perm/monitor"
 	"github.com/cactus/go-statsd-client/statsd"
 )
 
@@ -26,9 +25,11 @@ const (
 	MetricQueryProbeTimingP999 = "perm.probe.query.responses.timing.p999" // gauge
 )
 
+//go:generate counterfeiter github.com/cactus/go-statsd-client/statsd.Statter
+
 type Statter struct {
 	StatsD    statsd.Statter
-	Histogram *monitor.Histogram
+	Histogram *Histogram
 }
 
 func (s *Statter) Rotate() {

@@ -124,7 +124,7 @@ func main() {
 	}
 
 	queryProbeHistogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
-	statter := &Statter{
+	statter := &monitor.Statter{
 		StatsD:    statsDClient,
 		Histogram: queryProbeHistogram,
 	}
