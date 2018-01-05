@@ -18,6 +18,8 @@ const (
 )
 
 func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.AdminProbe, statter statsd.Statter) {
+	defer wg.Done()
+
 	var err error
 
 	metricsLogger := logger.Session("metrics")
@@ -46,6 +48,4 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 			}
 		}()
 	}
-
-	wg.Done()
 }

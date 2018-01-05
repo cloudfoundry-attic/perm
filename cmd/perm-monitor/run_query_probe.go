@@ -30,6 +30,21 @@ const (
 )
 
 func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter) {
+	defer wg.Done()
+
+	histogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
+
+	var innerWG sync.WaitGroup
+	innerWG.Add(2)
+	go rotateHistogramPeriodically(&innerWG, QueryProbeHistogramRefreshTime, histogram)
+	go runProbePeriodically(ctx, logger, &innerWG, probe, statter, histogram)
+
+	innerWG.Wait()
+}
+
+func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter statsd.Statter, histogram *monitor.Histogram) {
+	defer wg.Done()
+
 	var (
 		correct   bool
 		err       error
@@ -41,16 +56,10 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	cleanupLogger := logger.Session("cleanup")
 	runLogger := logger.Session("run")
 
-	histogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
-
-	wg.Add(1)
-	go rotateHistogramPeriodically(wg, QueryProbeHistogramRefreshTime, histogram)
-
 	err = probe.Setup(ctx, setupLogger)
 	defer probe.Cleanup(ctx, cleanupLogger)
 
 	ticker := time.NewTicker(QueryProbeTickDuration)
-
 	for range ticker.C {
 		func(logger lager.Logger) {
 			cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
@@ -78,14 +87,12 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 			}
 		}(metricsLogger)
 	}
-
-	wg.Done()
 }
 
 func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, histogram *monitor.Histogram) {
+	defer wg.Done()
+
 	for range time.NewTicker(d).C {
 		histogram.Rotate()
 	}
-
-	wg.Done()
 }
