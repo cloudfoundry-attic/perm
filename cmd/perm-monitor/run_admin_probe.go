@@ -19,30 +19,24 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 
 	var err error
 
-	metricsLogger := logger.Session("metrics")
-	cleanupLogger := logger.Session("cleanup")
-	runLogger := logger.Session("run")
-
-	ticker := time.NewTicker(AdminProbeTickDuration)
-
-	for range ticker.C {
-		func() {
-			err = probe.Cleanup(ctx, cleanupLogger)
-			if err != nil {
-				statter.SendFailedAdminProbe(metricsLogger)
-				return
-			}
-
-			cctx, cancel := context.WithTimeout(ctx, AdminProbeTimeout)
-			defer cancel()
-
-			err = probe.Run(cctx, runLogger)
-
-			if err == nil {
-				statter.SendFailedAdminProbe(metricsLogger)
-			} else {
-				statter.SendSuccessfulAdminProbe(metricsLogger)
-			}
-		}()
+	for range time.NewTicker(AdminProbeTickDuration).C {
+		err = runProbe(ctx, logger, probe)
+		if err != nil {
+			statter.SendFailedAdminProbe(logger.Session("metrics"))
+		} else {
+			statter.SendSuccessfulAdminProbe(logger.Session("metrics"))
+		}
 	}
+}
+
+func runProbe(ctx context.Context, logger lager.Logger, probe *monitor.AdminProbe) error {
+	err := probe.Cleanup(ctx, logger.Session("cleanup"))
+	if err != nil {
+		return err
+	}
+
+	cctx, cancel := context.WithTimeout(ctx, AdminProbeTimeout)
+	defer cancel()
+
+	return probe.Run(cctx, logger.Session("run"))
 }
