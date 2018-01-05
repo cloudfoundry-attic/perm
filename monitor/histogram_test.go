@@ -45,7 +45,7 @@ var _ = Describe("Histogram", func() {
 	})
 
 	Describe("#Rotate", func() {
-		It("resets the values", func() {
+		It("resets the values once it's rotated out of the window size", func() {
 			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(0)))
 
 			subject.RecordValue(1)
@@ -55,7 +55,14 @@ var _ = Describe("Histogram", func() {
 			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(2)))
 
 			subject.Rotate()
-
+			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(2)))
+			subject.Rotate()
+			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(2)))
+			subject.Rotate()
+			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(2)))
+			subject.Rotate()
+			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(2)))
+			subject.Rotate()
 			Expect(subject.ValueAtQuantile(50)).To(Equal(int64(0)))
 		})
 	})

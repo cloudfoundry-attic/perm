@@ -40,7 +40,7 @@ func (h *Histogram) ValueAtQuantile(q float64) int64 {
 	h.rw.RLock()
 	defer h.rw.RUnlock()
 
-	return h.histogram.Current.ValueAtQuantile(q)
+	return h.histogram.Merge().ValueAtQuantile(q)
 }
 
 func (h *Histogram) Rotate() {
