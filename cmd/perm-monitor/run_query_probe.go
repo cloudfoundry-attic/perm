@@ -8,7 +8,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/monitor"
 	"github.com/cactus/go-statsd-client/statsd"
-	"github.com/codahale/hdrhistogram"
 )
 
 const (
@@ -42,11 +41,10 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	cleanupLogger := logger.Session("cleanup")
 	runLogger := logger.Session("run")
 
-	histogram := hdrhistogram.NewWindowed(QueryProbeHistogramWindow, int64(QueryProbeMinResponseTime), int64(QueryProbeMaxResponseTime), 3)
-	var rw = &sync.RWMutex{}
+	histogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
 
 	wg.Add(1)
-	go rotateHistogramPeriodically(wg, rw, QueryProbeHistogramRefreshTime, histogram)
+	go rotateHistogramPeriodically(wg, QueryProbeHistogramRefreshTime, histogram)
 
 	err = probe.Setup(ctx, setupLogger)
 	defer probe.Cleanup(ctx, cleanupLogger)
@@ -70,13 +68,13 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 				sendGauge(logger, statter, MetricQueryProbeRunsCorrect, MetricSuccess)
 
 				for _, d := range durations {
-					recordHistogramDuration(logger, rw.RLocker(), histogram, d)
+					recordHistogramDuration(logger, histogram, d)
 				}
 
-				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 90, MetricQueryProbeTimingP90)
-				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 99, MetricQueryProbeTimingP99)
-				sendHistogramQuantile(logger, statter, rw.RLocker(), histogram, 99.9, MetricQueryProbeTimingP999)
-				sendHistogramMax(logger, statter, rw.RLocker(), histogram, MetricQueryProbeTimingMax)
+				sendHistogramQuantile(logger, statter, histogram, 90, MetricQueryProbeTimingP90)
+				sendHistogramQuantile(logger, statter, histogram, 99, MetricQueryProbeTimingP99)
+				sendHistogramQuantile(logger, statter, histogram, 99.9, MetricQueryProbeTimingP999)
+				sendHistogramMax(logger, statter, histogram, MetricQueryProbeTimingMax)
 			}
 		}(metricsLogger)
 	}
@@ -84,14 +82,9 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	wg.Done()
 }
 
-func rotateHistogramPeriodically(wg *sync.WaitGroup, locker sync.Locker, d time.Duration, histogram *hdrhistogram.WindowedHistogram) {
+func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, histogram *monitor.Histogram) {
 	for range time.NewTicker(d).C {
-		func() {
-			locker.Lock()
-			defer locker.Unlock()
-
-			histogram.Rotate()
-		}()
+		histogram.Rotate()
 	}
 
 	wg.Done()
