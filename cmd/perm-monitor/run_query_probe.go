@@ -34,39 +34,19 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 func runProbePeriodically(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *monitor.Statter) {
 	defer wg.Done()
 
-	var (
-		correct   bool
-		err       error
-		durations []time.Duration
-	)
+	for range time.NewTicker(QueryProbeTickDuration).C {
+		correct, durations, err := runQueryProbe(ctx, logger, probe)
 
-	metricsLogger := logger.Session("metrics")
-	setupLogger := logger.Session("setup")
-	cleanupLogger := logger.Session("cleanup")
-	runLogger := logger.Session("run")
-
-	err = probe.Setup(ctx, setupLogger)
-	defer probe.Cleanup(ctx, cleanupLogger)
-
-	ticker := time.NewTicker(QueryProbeTickDuration)
-	for range ticker.C {
-		func(logger lager.Logger) {
-			cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
-			defer cancel()
-
-			correct, durations, err = probe.Run(cctx, runLogger)
-
-			if err != nil {
-				statter.SendFailedQueryProbe(metricsLogger)
-			} else if !correct {
-				statter.SendIncorrectQueryProbe(logger)
-			} else {
-				for _, d := range durations {
-					statter.RecordQueryProbeDuration(logger, d)
-				}
-				statter.SendCorrectQueryProbe(logger)
+		if err != nil {
+			statter.SendFailedQueryProbe(logger.Session("metrics"))
+		} else if !correct {
+			statter.SendIncorrectQueryProbe(logger.Session("metrics"))
+		} else {
+			for _, d := range durations {
+				statter.RecordQueryProbeDuration(logger.Session("metrics"), d)
 			}
-		}(metricsLogger)
+			statter.SendCorrectQueryProbe(logger.Session("metrics"))
+		}
 	}
 }
 
@@ -76,4 +56,17 @@ func rotateHistogramPeriodically(wg *sync.WaitGroup, d time.Duration, statter *m
 	for range time.NewTicker(d).C {
 		statter.Rotate()
 	}
+}
+
+func runQueryProbe(ctx context.Context, logger lager.Logger, probe *monitor.QueryProbe) (bool, []time.Duration, error) {
+	err := probe.Setup(ctx, logger.Session("setup"))
+	if err != nil {
+		return false, nil, err
+	}
+	defer probe.Cleanup(ctx, logger.Session("cleanup"))
+
+	cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
+	defer cancel()
+
+	return probe.Run(cctx, logger.Session("run"))
 }

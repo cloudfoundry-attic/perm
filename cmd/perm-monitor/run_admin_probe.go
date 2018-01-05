@@ -20,7 +20,7 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	var err error
 
 	for range time.NewTicker(AdminProbeTickDuration).C {
-		err = runProbe(ctx, logger, probe)
+		err = runAdminProbe(ctx, logger, probe)
 		if err != nil {
 			statter.SendFailedAdminProbe(logger.Session("metrics"))
 		} else {
@@ -29,7 +29,7 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	}
 }
 
-func runProbe(ctx context.Context, logger lager.Logger, probe *monitor.AdminProbe) error {
+func runAdminProbe(ctx context.Context, logger lager.Logger, probe *monitor.AdminProbe) error {
 	err := probe.Cleanup(ctx, logger.Session("cleanup"))
 	if err != nil {
 		return err
