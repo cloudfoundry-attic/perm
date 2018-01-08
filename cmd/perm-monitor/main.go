@@ -123,7 +123,7 @@ func main() {
 		PermissionServiceClient: permissionServiceClient,
 	}
 
-	queryProbeHistogram := monitor.NewHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
+	queryProbeHistogram := monitor.NewThreadSafeHistogram(QueryProbeHistogramWindow, QueryProbeMinResponseTime, QueryProbeMaxResponseTime, 3)
 	statter := &monitor.Statter{
 		StatsD:    statsDClient,
 		Histogram: queryProbeHistogram,

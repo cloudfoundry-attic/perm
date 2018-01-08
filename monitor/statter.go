@@ -29,7 +29,7 @@ const (
 
 type Statter struct {
 	StatsD    statsd.Statter
-	Histogram *Histogram
+	Histogram *ThreadSafeHistogram
 }
 
 func (s *Statter) Rotate() {

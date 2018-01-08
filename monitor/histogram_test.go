@@ -9,13 +9,13 @@ import (
 	. "code.cloudfoundry.org/perm/monitor"
 )
 
-var _ = Describe("Histogram", func() {
+var _ = Describe("ThreadSafeHistogram", func() {
 	var (
-		subject *Histogram
+		subject *ThreadSafeHistogram
 	)
 
 	BeforeEach(func() {
-		subject = NewHistogram(5, 1*time.Nanosecond, 1*time.Second, 5)
+		subject = NewThreadSafeHistogram(5, 1*time.Nanosecond, 1*time.Second, 5)
 	})
 
 	Describe("#Max", func() {
