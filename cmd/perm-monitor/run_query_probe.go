@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/monitor"
-	"github.com/satori/go.uuid"
 )
 
 const (
@@ -38,7 +38,7 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 		defer innerWG.Done()
 
 		for range time.NewTicker(QueryProbeTickDuration).C {
-			correct, durations, err := runQueryProbe(ctx, logger, probe)
+			correct, durations, err := cmd.RunQueryProbe(ctx, logger, probe, QueryProbeTimeout)
 
 			if err != nil {
 				statter.SendFailedQueryProbe(logger.Session("metrics"))
@@ -54,19 +54,4 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	}()
 
 	innerWG.Wait()
-}
-
-func runQueryProbe(ctx context.Context, logger lager.Logger, probe *monitor.QueryProbe) (bool, []time.Duration, error) {
-	u := uuid.NewV4()
-
-	err := probe.Setup(ctx, logger.Session("setup"), u.String())
-	if err != nil {
-		return false, nil, err
-	}
-	defer probe.Cleanup(ctx, logger.Session("cleanup"), u.String())
-
-	cctx, cancel := context.WithTimeout(ctx, QueryProbeTimeout)
-	defer cancel()
-
-	return probe.Run(cctx, logger.Session("run"), u.String())
 }
