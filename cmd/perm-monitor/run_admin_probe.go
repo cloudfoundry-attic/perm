@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/monitor"
-	"github.com/satori/go.uuid"
 )
 
 const (
@@ -21,22 +21,11 @@ func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup,
 	var err error
 
 	for range time.NewTicker(AdminProbeTickDuration).C {
-		err = runAdminProbe(ctx, logger, probe)
+		err = cmd.RunAdminProbe(ctx, logger, probe, AdminProbeTimeout)
 		if err != nil {
 			statter.SendFailedAdminProbe(logger.Session("metrics"))
 		} else {
 			statter.SendSuccessfulAdminProbe(logger.Session("metrics"))
 		}
 	}
-}
-
-func runAdminProbe(ctx context.Context, logger lager.Logger, probe *monitor.AdminProbe) error {
-	u := uuid.NewV4()
-
-	defer probe.Cleanup(ctx, logger.Session("cleanup"), u.String())
-
-	cctx, cancel := context.WithTimeout(ctx, AdminProbeTimeout)
-	defer cancel()
-
-	return probe.Run(cctx, logger.Session("run"), u.String())
 }

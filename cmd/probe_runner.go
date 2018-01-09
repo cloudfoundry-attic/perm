@@ -21,7 +21,7 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, probe QueryProbe, t
 
 	defer func() {
 		cleanupErr := probe.Cleanup(ctx, logger.Session("cleanup"), uuid.String())
-		if err == nil && cleanupErr != nil {
+		if err == nil {
 			err = cleanupErr
 		}
 	}()
@@ -33,6 +33,33 @@ func RunQueryProbe(ctx context.Context, logger lager.Logger, probe QueryProbe, t
 	cctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	correct, durations, err = probe.Run(cctx, logger.Session("run"), uuid.String())
-	return
+	return probe.Run(cctx, logger.Session("run"), uuid.String())
+}
+
+//go:generate counterfeiter . AdminProbe
+
+type AdminProbe interface {
+	Cleanup(context.Context, lager.Logger, string) error
+	Run(context.Context, lager.Logger, string) error
+}
+
+func RunAdminProbe(
+	ctx context.Context,
+	logger lager.Logger,
+	probe AdminProbe,
+	timeout time.Duration,
+) (err error) {
+	uuid := guuid.NewV4()
+
+	defer func() {
+		cleanupErr := probe.Cleanup(ctx, logger.Session("cleanup"), uuid.String())
+		if err == nil {
+			err = cleanupErr
+		}
+	}()
+
+	cctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return probe.Run(cctx, logger.Session("run"), uuid.String())
 }

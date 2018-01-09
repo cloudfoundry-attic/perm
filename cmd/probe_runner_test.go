@@ -16,8 +16,37 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var cancellableComputation = func(ctx context.Context, timeout time.Duration) error {
+	done := make(chan struct{}, 1)
+
+	go func() {
+		time.Sleep(timeout)
+		// Run completed successfully
+		close(done)
+	}()
+	select {
+	case <-ctx.Done():
+		// Context was cancelled before computation succeeded
+		// i.e. computation was cancelled
+		return ctx.Err()
+	case <-done:
+		// Long computation succeeded
+		return nil
+	}
+}
+
 var _ = Describe("Running the Probes", func() {
-	Describe("RunQueryProbe", func() {
+	var (
+		someErr      error
+		someOtherErr error
+	)
+
+	BeforeEach(func() {
+		someErr = errors.New("some-error")
+		someOtherErr = errors.New("some-other-error")
+	})
+
+	Describe(".RunQueryProbe", func() {
 		var (
 			queryProbe *cmdfakes.FakeQueryProbe
 
@@ -27,7 +56,6 @@ var _ = Describe("Running the Probes", func() {
 			timeout time.Duration
 
 			expectedDurations []time.Duration
-			someErr           error
 		)
 
 		BeforeEach(func() {
@@ -37,8 +65,6 @@ var _ = Describe("Running the Probes", func() {
 			logger = lagertest.NewTestLogger("run-query-probe")
 
 			timeout = 5 * time.Second
-
-			someErr = errors.New("some-error")
 
 			expectedDurations = []time.Duration{1 * time.Second, 2 * time.Second}
 			queryProbe.RunReturns(true, expectedDurations, nil)
@@ -51,30 +77,27 @@ var _ = Describe("Running the Probes", func() {
 			Expect(queryProbe.RunCallCount()).To(Equal(1))
 			Expect(queryProbe.CleanupCallCount()).To(Equal(1))
 
+			_, _, setupId := queryProbe.SetupArgsForCall(0)
+			_, _, runId := queryProbe.RunArgsForCall(0)
+			_, _, cleanupId := queryProbe.CleanupArgsForCall(0)
+
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
 			Expect(durations).To(Equal(expectedDurations))
+
+			Expect(setupId).To(Equal(runId))
+			Expect(runId).To(Equal(cleanupId))
 		})
 
 		Context("timeouts", func() {
 			It("errors if it times out", func() {
 				queryProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, []time.Duration, error) {
-					done := make(chan struct{}, 1)
-
-					go func() {
-						time.Sleep(10 * time.Millisecond)
-						// Run completed successfully
-						close(done)
-					}()
-					select {
-					case <-ctx.Done():
-						// Context was cancelled before computation succeeded
-						// i.e. computation was cancelled
-						return false, nil, ctx.Err()
-					case <-done:
-						// Long computation succeeded
-						return true, nil, nil
+					err := cancellableComputation(ctx, 10*time.Millisecond)
+					if err != nil {
+						return false, nil, err
 					}
+
+					return true, nil, err
 				}
 
 				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 10*time.Nanosecond)
@@ -89,22 +112,12 @@ var _ = Describe("Running the Probes", func() {
 
 			It("succeeds if the timeout is not exceeded", func() {
 				queryProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, []time.Duration, error) {
-					done := make(chan struct{}, 1)
-
-					go func() {
-						time.Sleep(10 * time.Millisecond)
-						// Run completed successfully
-						close(done)
-					}()
-					select {
-					case <-ctx.Done():
-						// Context was cancelled before computation succeeded
-						// i.e. computation was cancelled
-						return false, nil, ctx.Err()
-					case <-done:
-						// Long computation succeeded
-						return true, nil, nil
+					err := cancellableComputation(ctx, 10*time.Millisecond)
+					if err != nil {
+						return false, nil, err
 					}
+
+					return true, nil, err
 				}
 
 				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 20*time.Millisecond)
@@ -166,42 +179,151 @@ var _ = Describe("Running the Probes", func() {
 		})
 
 		Context("when setup and cleanup fail", func() {
-			var (
-				cleanupErr error
-			)
-
 			BeforeEach(func() {
-				cleanupErr = errors.New("cleanup-error")
-
 				queryProbe.SetupReturns(someErr)
-				queryProbe.CleanupReturns(cleanupErr)
+				queryProbe.CleanupReturns(someOtherErr)
 			})
 
 			It("returns the setup error", func() {
 				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
 
 				Expect(err).To(MatchError(someErr))
-				Expect(err).NotTo(MatchError(cleanupErr))
+				Expect(err).NotTo(MatchError(someOtherErr))
 			})
 		})
 
 		Context("when run and cleanup fail", func() {
-			var (
-				cleanupErr error
-			)
-
 			BeforeEach(func() {
-				cleanupErr = errors.New("cleanup-error")
-
 				queryProbe.RunReturns(false, nil, someErr)
-				queryProbe.CleanupReturns(cleanupErr)
+				queryProbe.CleanupReturns(someOtherErr)
 			})
 
 			It("returns the run error", func() {
 				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
 
 				Expect(err).To(MatchError(someErr))
-				Expect(err).NotTo(MatchError(cleanupErr))
+				Expect(err).NotTo(MatchError(someOtherErr))
+			})
+		})
+	})
+
+	Describe(".RunAdminProbe", func() {
+		var (
+			ctx        context.Context
+			logger     *lagertest.TestLogger
+			adminProbe *cmdfakes.FakeAdminProbe
+			timeout    time.Duration
+		)
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			logger = lagertest.NewTestLogger("run-admin-probe")
+			adminProbe = new(cmdfakes.FakeAdminProbe)
+			timeout = 1 * time.Second
+		})
+
+		It("calls run and cleanup with a uuid", func() {
+			err := RunAdminProbe(
+				ctx,
+				logger,
+				adminProbe,
+				timeout,
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(adminProbe.RunCallCount()).To(Equal(1))
+			Expect(adminProbe.CleanupCallCount()).To(Equal(1))
+
+			_, _, runId := adminProbe.RunArgsForCall(0)
+			_, _, cleanupId := adminProbe.CleanupArgsForCall(0)
+
+			Expect(runId).To(Equal(cleanupId))
+		})
+
+		Describe("Timeouts", func() {
+			Context("when the run times out", func() {
+				It("runs the cleanup and returns an error", func() {
+					adminProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+						return cancellableComputation(ctx, 20*time.Millisecond)
+					}
+
+					err := RunAdminProbe(
+						ctx,
+						logger,
+						adminProbe,
+						10*time.Millisecond,
+					)
+
+					Expect(err).To(MatchError(context.DeadlineExceeded))
+					Expect(adminProbe.CleanupCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("when the run finishes in time", func() {
+				It("finishes successfully", func() {
+					adminProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+						return cancellableComputation(ctx, 5*time.Millisecond)
+					}
+
+					err := RunAdminProbe(
+						ctx,
+						logger,
+						adminProbe,
+						10*time.Millisecond,
+					)
+
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+		})
+
+		Describe("Correct cleanup every time", func() {
+			Context("when the run fails", func() {
+				It("runs the cleanup", func() {
+					adminProbe.RunReturns(someErr)
+
+					err := RunAdminProbe(
+						ctx,
+						logger,
+						adminProbe,
+						10*time.Millisecond,
+					)
+
+					Expect(err).To(MatchError(someErr))
+					Expect(adminProbe.CleanupCallCount()).To(Equal(1))
+				})
+			})
+		})
+
+		Describe("when cleanup fails", func() {
+			It("fails", func() {
+				adminProbe.CleanupReturns(someErr)
+
+				actualErr := RunAdminProbe(
+					ctx,
+					logger,
+					adminProbe,
+					10*time.Millisecond,
+				)
+
+				Expect(actualErr).To(MatchError(someErr))
+			})
+		})
+
+		Describe("when run and cleanup fail", func() {
+			It("returns the run error", func() {
+				adminProbe.RunReturns(someErr)
+				adminProbe.CleanupReturns(someOtherErr)
+
+				actualErr := RunAdminProbe(
+					ctx,
+					logger,
+					adminProbe,
+					10*time.Millisecond,
+				)
+
+				Expect(actualErr).To(MatchError(someErr))
 			})
 		})
 	})
