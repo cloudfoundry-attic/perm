@@ -2,13 +2,13 @@ package monitor_test
 
 import (
 	. "code.cloudfoundry.org/perm/monitor"
+	"code.cloudfoundry.org/perm/protos/protosfakes"
 
 	"context"
 
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/protos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,8 +20,8 @@ var _ = Describe("QueryProbe", func() {
 	var (
 		p *QueryProbe
 
-		fakeRoleServiceClient        *monitorfakes.FakeRoleServiceClient
-		fakePermissionsServiceClient *monitorfakes.FakePermissionServiceClient
+		fakeRoleServiceClient        *protosfakes.FakeRoleServiceClient
+		fakePermissionsServiceClient *protosfakes.FakePermissionServiceClient
 		fakeLogger                   *lagertest.TestLogger
 		fakeContext                  context.Context
 
@@ -31,8 +31,8 @@ var _ = Describe("QueryProbe", func() {
 	)
 
 	BeforeEach(func() {
-		fakeRoleServiceClient = new(monitorfakes.FakeRoleServiceClient)
-		fakePermissionsServiceClient = new(monitorfakes.FakePermissionServiceClient)
+		fakeRoleServiceClient = new(protosfakes.FakeRoleServiceClient)
+		fakePermissionsServiceClient = new(protosfakes.FakePermissionServiceClient)
 
 		fakeLogger = lagertest.NewTestLogger("query-probe")
 		fakeContext = context.Background()

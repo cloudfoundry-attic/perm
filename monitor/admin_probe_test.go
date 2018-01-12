@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/monitor/monitorfakes"
+	"code.cloudfoundry.org/perm/protos/protosfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -19,7 +19,7 @@ var _ = Describe("AdminProbe", func() {
 	var (
 		p *AdminProbe
 
-		fakeRoleServiceClient *monitorfakes.FakeRoleServiceClient
+		fakeRoleServiceClient *protosfakes.FakeRoleServiceClient
 		fakeLogger            *lagertest.TestLogger
 		fakeContext           context.Context
 
@@ -29,7 +29,7 @@ var _ = Describe("AdminProbe", func() {
 	)
 
 	BeforeEach(func() {
-		fakeRoleServiceClient = new(monitorfakes.FakeRoleServiceClient)
+		fakeRoleServiceClient = new(protosfakes.FakeRoleServiceClient)
 
 		fakeLogger = lagertest.NewTestLogger("admin-probe")
 		fakeContext = context.Background()

@@ -27,8 +27,6 @@ var QueryProbeActor = &protos.Actor{
 	Issuer: "system",
 }
 
-//go:generate counterfeiter code.cloudfoundry.org/perm/protos.PermissionServiceClient
-
 type QueryProbe struct {
 	RoleServiceClient       protos.RoleServiceClient
 	PermissionServiceClient protos.PermissionServiceClient

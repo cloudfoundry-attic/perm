@@ -11,8 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//go:generate counterfeiter code.cloudfoundry.org/perm/protos.RoleServiceClient
-
 type AdminProbe struct {
 	RoleServiceClient protos.RoleServiceClient
 }
