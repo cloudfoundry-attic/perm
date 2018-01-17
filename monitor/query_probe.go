@@ -162,7 +162,11 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 	return nil
 }
 
-func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, []time.Duration, error) {
+func (p *QueryProbe) Run(
+	ctx context.Context,
+	logger lager.Logger,
+	uniqueSuffix string,
+) (bool, []time.Duration, error) {
 	logger.Debug(messages.Starting)
 	defer logger.Debug(messages.Finished)
 
@@ -197,7 +201,11 @@ func (p *QueryProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	return true, durations, nil
 }
 
-func (p *QueryProbe) runAssignedPermission(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, time.Duration, error) {
+func (p *QueryProbe) runAssignedPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	uniqueSuffix string,
+) (bool, time.Duration, error) {
 	assignedPermission := &protos.Permission{
 		Name:            QueryProbeAssignedPermissionName + "." + uniqueSuffix,
 		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
@@ -236,7 +244,11 @@ func (p *QueryProbe) runAssignedPermission(ctx context.Context, logger lager.Log
 	return true, duration, nil
 }
 
-func (p *QueryProbe) runUnassignedPermission(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, time.Duration, error) {
+func (p *QueryProbe) runUnassignedPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	uniqueSuffix string,
+) (bool, time.Duration, error) {
 	unassignedPermission := &protos.Permission{
 		Name:            QueryProbeUnassignedPermissionName + "." + uniqueSuffix,
 		ResourcePattern: QueryProbeUnassignedPermissionResourceID + "." + uniqueSuffix,

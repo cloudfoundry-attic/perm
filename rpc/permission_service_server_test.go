@@ -33,7 +33,8 @@ var _ = Describe("PermissionServiceServer", func() {
 	})
 
 	Describe("HasPermission", func() {
-		It("returns true if they have been assigned a role with a permission with a name matching the permission name and a resource pattern that matches the resourceID of the query", func() {
+		It("returns true if they have been assigned a role with a permission with a name "+
+			"matching the permission name and a resource pattern that matches the resourceID of the query", func() {
 			roleName := "role"
 			actor := &protos.Actor{
 				ID:     "actor",

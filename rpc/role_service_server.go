@@ -16,7 +16,11 @@ type RoleServiceServer struct {
 	roleAssignmentService models.RoleAssignmentService
 }
 
-func NewRoleServiceServer(logger lager.Logger, roleService models.RoleService, roleAssignmentService models.RoleAssignmentService) *RoleServiceServer {
+func NewRoleServiceServer(
+	logger lager.Logger,
+	roleService models.RoleService,
+	roleAssignmentService models.RoleAssignmentService,
+) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:                logger,
 		roleService:           roleService,
@@ -24,7 +28,10 @@ func NewRoleServiceServer(logger lager.Logger, roleService models.RoleService, r
 	}
 }
 
-func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRoleRequest) (*protos.CreateRoleResponse, error) {
+func (s *RoleServiceServer) CreateRole(
+	ctx context.Context,
+	req *protos.CreateRoleRequest,
+) (*protos.CreateRoleResponse, error) {
 	name := req.GetName()
 	var permissions []*models.Permission
 	for _, p := range req.GetPermissions() {
@@ -49,7 +56,10 @@ func (s *RoleServiceServer) CreateRole(ctx context.Context, req *protos.CreateRo
 	}, nil
 }
 
-func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequest) (*protos.GetRoleResponse, error) {
+func (s *RoleServiceServer) GetRole(
+	ctx context.Context,
+	req *protos.GetRoleRequest,
+) (*protos.GetRoleResponse, error) {
 	name := req.GetName()
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
@@ -65,7 +75,10 @@ func (s *RoleServiceServer) GetRole(ctx context.Context, req *protos.GetRoleRequ
 	}, nil
 }
 
-func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error) {
+func (s *RoleServiceServer) DeleteRole(
+	ctx context.Context,
+	req *protos.DeleteRoleRequest,
+) (*protos.DeleteRoleResponse, error) {
 	name := req.GetName()
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
@@ -81,7 +94,10 @@ func (s *RoleServiceServer) DeleteRole(ctx context.Context, req *protos.DeleteRo
 	return &protos.DeleteRoleResponse{}, nil
 }
 
-func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRoleRequest) (*protos.AssignRoleResponse, error) {
+func (s *RoleServiceServer) AssignRole(
+	ctx context.Context,
+	req *protos.AssignRoleRequest,
+) (*protos.AssignRoleResponse, error) {
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
@@ -103,7 +119,10 @@ func (s *RoleServiceServer) AssignRole(ctx context.Context, req *protos.AssignRo
 	return &protos.AssignRoleResponse{}, nil
 }
 
-func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error) {
+func (s *RoleServiceServer) UnassignRole(
+	ctx context.Context,
+	req *protos.UnassignRoleRequest,
+) (*protos.UnassignRoleResponse, error) {
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
@@ -129,7 +148,10 @@ func (s *RoleServiceServer) UnassignRole(ctx context.Context, req *protos.Unassi
 	return &protos.UnassignRoleResponse{}, nil
 }
 
-func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequest) (*protos.HasRoleResponse, error) {
+func (s *RoleServiceServer) HasRole(
+	ctx context.Context,
+	req *protos.HasRoleRequest,
+) (*protos.HasRoleResponse, error) {
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 	domainID := pActor.GetID()
@@ -165,7 +187,10 @@ func (s *RoleServiceServer) HasRole(ctx context.Context, req *protos.HasRoleRequ
 	return &protos.HasRoleResponse{HasRole: found}, nil
 }
 
-func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
+func (s *RoleServiceServer) ListActorRoles(
+	ctx context.Context,
+	req *protos.ListActorRolesRequest,
+) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
 	domainID := pActor.GetID()
 	issuer := pActor.GetIssuer()
@@ -175,7 +200,8 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	})
 	logger.Debug(messages.Starting)
 
-	roles, err := s.roleAssignmentService.ListActorRoles(ctx, logger, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actorQuery := models.ActorQuery{DomainID: domainID, Issuer: issuer}
+	roles, err := s.roleAssignmentService.ListActorRoles(ctx, logger, actorQuery)
 	if err != nil {
 		if err == models.ErrActorNotFound {
 			roles = []*models.Role{}
@@ -196,7 +222,10 @@ func (s *RoleServiceServer) ListActorRoles(ctx context.Context, req *protos.List
 	}, nil
 }
 
-func (s *RoleServiceServer) ListRolePermissions(ctx context.Context, req *protos.ListRolePermissionsRequest) (*protos.ListRolePermissionsResponse, error) {
+func (s *RoleServiceServer) ListRolePermissions(
+	ctx context.Context,
+	req *protos.ListRolePermissionsRequest,
+) (*protos.ListRolePermissionsResponse, error) {
 	roleName := req.GetRoleName()
 	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
 		"role.name": roleName,

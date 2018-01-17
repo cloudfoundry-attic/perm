@@ -10,7 +10,13 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string, migrations []Migration) error {
+func ApplyMigrations(
+	ctx context.Context,
+	logger lager.Logger,
+	conn *DB,
+	tableName string,
+	migrations []Migration,
+) error {
 	createTableLogger := logger.Session("create-migrations-table").WithData(lager.Data{
 		"table_name": tableName,
 	})
@@ -55,7 +61,11 @@ func ApplyMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableNa
 	return nil
 }
 
-func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *DB, tableName string) (err error) {
+func createMigrationsTable(
+	ctx context.Context,
+	logger lager.Logger,
+	conn *DB, tableName string,
+) (err error) {
 	var tx *Tx
 	tx, err = conn.BeginTx(ctx, nil)
 
@@ -71,12 +81,20 @@ func createMigrationsTable(ctx context.Context, logger lager.Logger, conn *DB, t
 		err = Commit(logger, tx, err)
 	}()
 
-	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+"` (version INTEGER, name VARCHAR(255), applied_at DATETIME)")
+	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+
+		"` (version INTEGER, name VARCHAR(255), applied_at DATETIME)")
 
 	return
 }
 
-func applyMigration(ctx context.Context, logger lager.Logger, conn *DB, tableName string, version int, migration Migration) (err error) {
+func applyMigration(
+	ctx context.Context,
+	logger lager.Logger,
+	conn *DB,
+	tableName string,
+	version int,
+	migration Migration,
+) (err error) {
 	logger.Debug(messages.Starting)
 
 	tx, err := conn.BeginTx(ctx, nil)

@@ -15,7 +15,13 @@ const (
 	AdminProbeTimeout      = 3 * time.Second
 )
 
-func RunAdminProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.AdminProbe, statter *monitor.Statter) {
+func RunAdminProbe(
+	ctx context.Context,
+	logger lager.Logger,
+	wg *sync.WaitGroup,
+	probe *monitor.AdminProbe,
+	statter *monitor.Statter,
+) {
 	defer wg.Done()
 
 	var err error

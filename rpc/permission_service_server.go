@@ -15,14 +15,20 @@ type PermissionServiceServer struct {
 	permissionService models.PermissionService
 }
 
-func NewPermissionServiceServer(logger lager.Logger, permissionService models.PermissionService) *PermissionServiceServer {
+func NewPermissionServiceServer(
+	logger lager.Logger,
+	permissionService models.PermissionService,
+) *PermissionServiceServer {
 	return &PermissionServiceServer{
 		logger:            logger,
 		permissionService: permissionService,
 	}
 }
 
-func (s *PermissionServiceServer) HasPermission(ctx context.Context, req *protos.HasPermissionRequest) (*protos.HasPermissionResponse, error) {
+func (s *PermissionServiceServer) HasPermission(
+	ctx context.Context,
+	req *protos.HasPermissionRequest,
+) (*protos.HasPermissionResponse, error) {
 	pActor := req.GetActor()
 	domainID := pActor.GetID()
 	issuer := pActor.GetIssuer()

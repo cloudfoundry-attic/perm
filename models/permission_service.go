@@ -21,5 +21,9 @@ type HasPermissionQuery struct {
 }
 
 type PermissionService interface {
-	HasPermission(ctx context.Context, logger lager.Logger, query HasPermissionQuery) (bool, error)
+	HasPermission(
+		ctx context.Context,
+		logger lager.Logger,
+		query HasPermissionQuery,
+	) (bool, error)
 }

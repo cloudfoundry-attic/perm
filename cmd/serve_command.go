@@ -64,10 +64,16 @@ func (cmd ServeCommand) Execute([]string) error {
 			return grpcErr
 		}),
 	}
+	streamMiddleware := grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))
+	unaryMiddleware := grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))
+
+	streamInterceptor := grpc.StreamInterceptor(streamMiddleware)
+	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
+
 	serverOpts := []grpc.ServerOption{
 		grpc.Creds(tlsCreds),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))),
+		streamInterceptor,
+		unaryInterceptor,
 	}
 
 	grpcServer := grpc.NewServer(serverOpts...)
@@ -79,7 +85,13 @@ func (cmd ServeCommand) Execute([]string) error {
 	defer conn.Close()
 
 	migrationLogger := logger.Session("verify-migrations")
-	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(context.Background(), migrationLogger, conn, db.MigrationsTableName, db.Migrations)
+	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(
+		context.Background(),
+		migrationLogger,
+		conn,
+		db.MigrationsTableName,
+		db.Migrations,
+	)
 	if err != nil {
 		return err
 	}

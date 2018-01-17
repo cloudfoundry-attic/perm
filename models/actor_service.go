@@ -12,6 +12,16 @@ type ActorQuery struct {
 }
 
 type ActorService interface {
-	CreateActor(ctx context.Context, logger lager.Logger, domainID, issuer string) (*Actor, error)
-	FindActor(ctx context.Context, logger lager.Logger, query ActorQuery) (*Actor, error)
+	CreateActor(
+		ctx context.Context,
+		logger lager.Logger,
+		domainID,
+		issuer string,
+	) (*Actor, error)
+
+	FindActor(
+		ctx context.Context,
+		logger lager.Logger,
+		query ActorQuery,
+	) (*Actor, error)
 }

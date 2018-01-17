@@ -7,7 +7,11 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-func (s *InMemoryStore) HasPermission(ctx context.Context, logger lager.Logger, query models.HasPermissionQuery) (bool, error) {
+func (s *InMemoryStore) HasPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.HasPermissionQuery,
+) (bool, error) {
 	actor := models.Actor{
 		DomainID: query.ActorQuery.DomainID,
 		Issuer:   query.ActorQuery.Issuer,
@@ -28,12 +32,18 @@ func (s *InMemoryStore) HasPermission(ctx context.Context, logger lager.Logger, 
 		permissions = append(permissions, p...)
 	}
 
-	var hasPermission bool
 	for _, permission := range permissions {
-		if permission.Name == query.PermissionQuery.PermissionDefinitionQuery.Name && permission.ResourcePattern == query.PermissionQuery.ResourceID {
-			hasPermission = true
+		if hasPermission(permission, query) {
+			return true, nil
 		}
 	}
 
-	return hasPermission, nil
+	return false, nil
+}
+
+func hasPermission(permission *models.Permission, query models.HasPermissionQuery) bool {
+	namesMatch := permission.Name == query.PermissionQuery.PermissionDefinitionQuery.Name
+	resourcesMatch := permission.ResourcePattern == query.PermissionQuery.ResourceID
+
+	return namesMatch && resourcesMatch
 }

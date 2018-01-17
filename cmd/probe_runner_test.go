@@ -91,7 +91,11 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("timeouts", func() {
 			It("errors if it times out", func() {
-				queryProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, []time.Duration, error) {
+				queryProbe.RunStub = func(
+					ctx context.Context,
+					logger lager.Logger,
+					uniqueSuffix string,
+				) (bool, []time.Duration, error) {
 					err := cancellableComputation(ctx, 10*time.Millisecond)
 					if err != nil {
 						return false, nil, err
@@ -111,7 +115,11 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("succeeds if the timeout is not exceeded", func() {
-				queryProbe.RunStub = func(ctx context.Context, logger lager.Logger, uniqueSuffix string) (bool, []time.Duration, error) {
+				queryProbe.RunStub = func(
+					ctx context.Context,
+					logger lager.Logger,
+					uniqueSuffix string,
+				) (bool, []time.Duration, error) {
 					err := cancellableComputation(ctx, 10*time.Millisecond)
 					if err != nil {
 						return false, nil, err

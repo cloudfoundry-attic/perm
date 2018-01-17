@@ -9,7 +9,13 @@ import (
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
-func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) (err error) {
+func (s *DataService) AssignRole(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName string,
+	domainID string,
+	issuer string,
+) (err error) {
 	logger = logger.Session("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
@@ -30,7 +36,13 @@ func (s *DataService) AssignRole(ctx context.Context, logger lager.Logger, roleN
 	return
 }
 
-func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) (err error) {
+func (s *DataService) UnassignRole(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName string,
+	domainID string,
+	issuer string,
+) (err error) {
 	logger = logger.Session("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
@@ -51,11 +63,19 @@ func (s *DataService) UnassignRole(ctx context.Context, logger lager.Logger, rol
 	return
 }
 
-func (s *DataService) HasRole(ctx context.Context, logger lager.Logger, query models.RoleAssignmentQuery) (bool, error) {
+func (s *DataService) HasRole(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleAssignmentQuery,
+) (bool, error) {
 	return hasRole(ctx, logger.Session("data-service"), s.conn, query)
 }
 
-func (s *DataService) ListActorRoles(ctx context.Context, logger lager.Logger, query models.ActorQuery) ([]*models.Role, error) {
+func (s *DataService) ListActorRoles(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.ActorQuery,
+) ([]*models.Role, error) {
 	r, err := listActorRoles(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err

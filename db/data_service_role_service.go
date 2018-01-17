@@ -9,7 +9,12 @@ import (
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
-func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name string, permissions ...*models.Permission) (r *models.Role, err error) {
+func (s *DataService) CreateRole(
+	ctx context.Context,
+	logger lager.Logger,
+	name string,
+	permissions ...*models.Permission,
+) (r *models.Role, err error) {
 	logger = logger.Session("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
@@ -35,7 +40,11 @@ func (s *DataService) CreateRole(ctx context.Context, logger lager.Logger, name 
 	return
 }
 
-func (s *DataService) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {
+func (s *DataService) FindRole(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleQuery,
+) (*models.Role, error) {
 	role, err := findRole(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err

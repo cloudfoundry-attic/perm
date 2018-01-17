@@ -23,7 +23,13 @@ func NewDataService(conn *sqlx.DB) *DataService {
 	}
 }
 
-func createRoleAndAssignPermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName string, permissions ...*models.Permission) (*role, error) {
+func createRoleAndAssignPermissions(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleName string,
+	permissions ...*models.Permission,
+) (*role, error) {
 	role, err := createRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return nil, err
@@ -51,7 +57,12 @@ func createRoleAndAssignPermissions(ctx context.Context, logger lager.Logger, co
 	return role, nil
 }
 
-func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*role, error) {
+func createRole(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	name string,
+) (*role, error) {
 	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
 
@@ -90,7 +101,12 @@ func createRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 	}
 }
 
-func findRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) (*role, error) {
+func findRole(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.RoleQuery,
+) (*role, error) {
 	logger = logger.Session("find-role")
 
 	var (
@@ -124,7 +140,12 @@ func findRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner
 	}
 }
 
-func deleteRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) error {
+func deleteRole(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.RoleQuery,
+) error {
 	logger = logger.Session("delete-role")
 	result, err := squirrel.Delete("role").
 		Where(squirrel.Eq{
@@ -156,7 +177,13 @@ func deleteRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 	}
 }
 
-func createActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, domainID, issuer string) (*actor, error) {
+func createActor(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	domainID,
+	issuer string,
+) (*actor, error) {
 	logger = logger.Session("create-actor")
 
 	u := uuid.NewV4().Bytes()
@@ -195,7 +222,12 @@ func createActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRun
 	}
 }
 
-func findActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.ActorQuery) (*actor, error) {
+func findActor(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.ActorQuery,
+) (*actor, error) {
 	logger = logger.Session("find-actor")
 
 	sQuery := squirrel.Eq{}
@@ -235,7 +267,13 @@ func findActor(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunne
 	}
 }
 
-func assignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
+func assignRole(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleName, domainID,
+	issuer string,
+) error {
 	logger = logger.Session("assign-role")
 
 	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
@@ -256,7 +294,12 @@ func assignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunn
 	return createRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
 }
 
-func createRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) error {
+func createRoleAssignment(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID, actorID int64,
+) error {
 	logger = logger.Session("create-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
 		"actor.id": actorID,
@@ -285,7 +328,12 @@ func createRoleAssignment(ctx context.Context, logger lager.Logger, conn squirre
 	}
 }
 
-func unassignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleName, domainID, issuer string) error {
+func unassignRole(ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleName, domainID,
+	issuer string,
+) error {
 	logger = logger.Session("unassign-role")
 
 	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
@@ -301,7 +349,13 @@ func unassignRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRu
 	return deleteRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
 }
 
-func deleteRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) error {
+func deleteRoleAssignment(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID,
+	actorID int64,
+) error {
 	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
 		"actor.id": actorID,
@@ -338,7 +392,12 @@ func deleteRoleAssignment(ctx context.Context, logger lager.Logger, conn squirre
 	}
 }
 
-func hasRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleAssignmentQuery) (bool, error) {
+func hasRole(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.RoleAssignmentQuery,
+) (bool, error) {
 	logger = logger.Session("has-role")
 
 	actor, err := findActor(ctx, logger, conn, query.ActorQuery)
@@ -354,7 +413,13 @@ func hasRole(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner,
 	return findRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
 }
 
-func findRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID, actorID int64) (bool, error) {
+func findRoleAssignment(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID int64,
+	actorID int64,
+) (bool, error) {
 	logger = logger.Session("find-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
 		"actor.id": actorID,
@@ -377,7 +442,12 @@ func findRoleAssignment(ctx context.Context, logger lager.Logger, conn squirrel.
 	}
 }
 
-func listActorRoles(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.ActorQuery) ([]*role, error) {
+func listActorRoles(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.ActorQuery,
+) ([]*role, error) {
 	logger = logger.Session("list-actor-roles")
 
 	actor, err := findActor(ctx, logger, conn, query)
@@ -388,7 +458,12 @@ func listActorRoles(ctx context.Context, logger lager.Logger, conn squirrel.Base
 	return findActorRoleAssignments(ctx, logger, conn, actor.ID)
 }
 
-func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, actorID int64) ([]*role, error) {
+func findActorRoleAssignments(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	actorID int64,
+) ([]*role, error) {
 	logger = logger.Session("find-actor-role-assignments").WithData(lager.Data{
 		"actor.id": actorID,
 	})
@@ -429,7 +504,12 @@ func findActorRoleAssignments(ctx context.Context, logger lager.Logger, conn squ
 	return roles, nil
 }
 
-func listRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.RoleQuery) ([]*permission, error) {
+func listRolePermissions(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.RoleQuery,
+) ([]*permission, error) {
 	logger = logger.Session("list-role-permissions")
 
 	role, err := findRole(ctx, logger, conn, query)
@@ -440,7 +520,12 @@ func listRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 	return findRolePermissions(ctx, logger, conn, role.ID)
 }
 
-func createPermissionDefinition(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, name string) (*permissionDefinition, error) {
+func createPermissionDefinition(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	name string,
+) (*permissionDefinition, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
@@ -479,7 +564,12 @@ func createPermissionDefinition(ctx context.Context, logger lager.Logger, conn s
 	}
 }
 
-func findPermissionDefinition(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query *models.PermissionDefinitionQuery) (*permissionDefinition, error) {
+func findPermissionDefinition(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query *models.PermissionDefinitionQuery,
+) (*permissionDefinition, error) {
 	logger = logger.Session("find-permission-definition")
 
 	var (
@@ -513,7 +603,12 @@ func findPermissionDefinition(ctx context.Context, logger lager.Logger, conn squ
 	}
 }
 
-func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, roleID int64) ([]*permission, error) {
+func findRolePermissions(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID int64,
+) ([]*permission, error) {
 	logger = logger.Session("find-role-permissions").WithData(lager.Data{
 		"role.id": roleID,
 	})
@@ -544,7 +639,8 @@ func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 			return nil, e
 		}
 
-		permissions = append(permissions, &permission{ID: id, Permission: &models.Permission{Name: name, ResourcePattern: resourcePattern}})
+		p := permission{ID: id, Permission: &models.Permission{Name: name, ResourcePattern: resourcePattern}}
+		permissions = append(permissions, &p)
 	}
 
 	err = rows.Err()
@@ -556,7 +652,12 @@ func findRolePermissions(ctx context.Context, logger lager.Logger, conn squirrel
 	return permissions, nil
 }
 
-func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, query models.HasPermissionQuery) (bool, error) {
+func hasPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.HasPermissionQuery,
+) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
 		"actor.issuer":               query.ActorQuery.Issuer,
 		"actor.domainID":             query.ActorQuery.DomainID,
@@ -592,7 +693,15 @@ func hasPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseR
 	return true, nil
 }
 
-func createPermission(ctx context.Context, logger lager.Logger, conn squirrel.BaseRunner, permissionDefinitionID int64, roleID int64, resourcePattern string, permissionName string) (*permission, error) {
+func createPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	permissionDefinitionID int64,
+	roleID int64,
+	resourcePattern string,
+	permissionName string,
+) (*permission, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 

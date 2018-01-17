@@ -18,6 +18,15 @@ var _ = Describe("InMemoryStore", func() {
 
 	BehavesLikeARoleService(func() models.RoleService { return store })
 	BehavesLikeAnActorService(func() models.ActorService { return store })
-	BehavesLikeARoleAssignmentService(func() models.RoleAssignmentService { return store }, func() models.RoleService { return store }, func() models.ActorService { return store })
-	BehavesLikeAPermissionService(func() models.PermissionService { return store }, func() models.RoleService { return store }, func() models.ActorService { return store }, func() models.RoleAssignmentService { return store })
+	BehavesLikeARoleAssignmentService(
+		func() models.RoleAssignmentService { return store },
+		func() models.RoleService { return store },
+		func() models.ActorService { return store },
+	)
+	BehavesLikeAPermissionService(
+		func() models.PermissionService { return store },
+		func() models.RoleService { return store },
+		func() models.ActorService { return store },
+		func() models.RoleAssignmentService { return store },
+	)
 })

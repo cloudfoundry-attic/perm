@@ -8,7 +8,12 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-func (s *InMemoryStore) CreateRole(ctx context.Context, logger lager.Logger, name string, permissions ...*models.Permission) (*models.Role, error) {
+func (s *InMemoryStore) CreateRole(
+	ctx context.Context,
+	logger lager.Logger,
+	name string,
+	permissions ...*models.Permission,
+) (*models.Role, error) {
 	if _, exists := s.roles[name]; exists {
 		return nil, models.ErrRoleAlreadyExists
 	}
@@ -22,7 +27,11 @@ func (s *InMemoryStore) CreateRole(ctx context.Context, logger lager.Logger, nam
 	return role, nil
 }
 
-func (s *InMemoryStore) FindRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) (*models.Role, error) {
+func (s *InMemoryStore) FindRole(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleQuery,
+) (*models.Role, error) {
 	name := query.Name
 	role, exists := s.roles[name]
 
@@ -33,7 +42,11 @@ func (s *InMemoryStore) FindRole(ctx context.Context, logger lager.Logger, query
 	return role, nil
 }
 
-func (s *InMemoryStore) DeleteRole(ctx context.Context, logger lager.Logger, query models.RoleQuery) error {
+func (s *InMemoryStore) DeleteRole(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleQuery,
+) error {
 	name := query.Name
 
 	if _, exists := s.roles[name]; !exists {
@@ -67,7 +80,13 @@ func (s *InMemoryStore) DeleteRole(ctx context.Context, logger lager.Logger, que
 	return nil
 }
 
-func (s *InMemoryStore) AssignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) error {
+func (s *InMemoryStore) AssignRole(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName string,
+	domainID string,
+	issuer string,
+) error {
 	if _, exists := s.roles[roleName]; !exists {
 		return models.ErrRoleNotFound
 	}
@@ -95,7 +114,13 @@ func (s *InMemoryStore) AssignRole(ctx context.Context, logger lager.Logger, rol
 	return nil
 }
 
-func (s *InMemoryStore) UnassignRole(ctx context.Context, logger lager.Logger, roleName string, domainID string, issuer string) error {
+func (s *InMemoryStore) UnassignRole(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName string,
+	domainID string,
+	issuer string,
+) error {
 	if _, exists := s.roles[roleName]; !exists {
 		return models.ErrRoleNotFound
 	}
@@ -124,7 +149,11 @@ func (s *InMemoryStore) UnassignRole(ctx context.Context, logger lager.Logger, r
 	return err
 }
 
-func (s *InMemoryStore) HasRole(ctx context.Context, logger lager.Logger, query models.RoleAssignmentQuery) (bool, error) {
+func (s *InMemoryStore) HasRole(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleAssignmentQuery,
+) (bool, error) {
 	actor := models.Actor{
 		DomainID: query.ActorQuery.DomainID,
 		Issuer:   query.ActorQuery.Issuer,
@@ -154,7 +183,11 @@ func (s *InMemoryStore) HasRole(ctx context.Context, logger lager.Logger, query 
 	return found, nil
 }
 
-func (s *InMemoryStore) ListActorRoles(ctx context.Context, logger lager.Logger, query models.ActorQuery) ([]*models.Role, error) {
+func (s *InMemoryStore) ListActorRoles(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.ActorQuery,
+) ([]*models.Role, error) {
 	actor := models.Actor(query)
 
 	assignments, ok := s.assignments[actor]
@@ -176,7 +209,12 @@ func (s *InMemoryStore) ListActorRoles(ctx context.Context, logger lager.Logger,
 	return roles, nil
 }
 
-func (s *InMemoryStore) CreateActor(ctx context.Context, logger lager.Logger, domainID, issuer string) (*models.Actor, error) {
+func (s *InMemoryStore) CreateActor(
+	ctx context.Context,
+	logger lager.Logger,
+	domainID,
+	issuer string,
+) (*models.Actor, error) {
 	actor := models.Actor{
 		DomainID: domainID,
 		Issuer:   issuer,
@@ -191,7 +229,11 @@ func (s *InMemoryStore) CreateActor(ctx context.Context, logger lager.Logger, do
 	return &actor, nil
 }
 
-func (s *InMemoryStore) FindActor(ctx context.Context, logger lager.Logger, query models.ActorQuery) (*models.Actor, error) {
+func (s *InMemoryStore) FindActor(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.ActorQuery,
+) (*models.Actor, error) {
 	actor := models.Actor(query)
 
 	if _, exists := s.assignments[actor]; !exists {
@@ -201,7 +243,11 @@ func (s *InMemoryStore) FindActor(ctx context.Context, logger lager.Logger, quer
 	return &actor, nil
 }
 
-func (s *InMemoryStore) ListRolePermissions(ctx context.Context, logger lager.Logger, query models.RoleQuery) ([]*models.Permission, error) {
+func (s *InMemoryStore) ListRolePermissions(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.RoleQuery,
+) ([]*models.Permission, error) {
 	roleName := query.Name
 
 	permissions, exists := s.permissions[roleName]

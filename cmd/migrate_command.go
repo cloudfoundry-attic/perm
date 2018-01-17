@@ -100,10 +100,15 @@ func (cmd StatusCommand) Execute([]string) error {
 		version := i
 
 		appliedMigration, ok := appliedMigrations[version]
+
+		migrationVersion := strconv.Itoa(version)
+		migrationName := migration.Name
+
 		if ok {
-			appliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name, appliedMigration.AppliedAt.Local().String()})
+			appliedAtTime := appliedMigration.AppliedAt.Local().String()
+			appliedMigrationsTable.Append([]string{migrationVersion, migrationName, appliedAtTime})
 		} else {
-			unappliedMigrationsTable.Append([]string{strconv.Itoa(version), migration.Name})
+			unappliedMigrationsTable.Append([]string{migrationVersion, migrationName})
 		}
 	}
 

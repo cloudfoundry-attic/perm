@@ -21,7 +21,12 @@ const (
 	QueryProbeHistogramRefreshTime = 1 * time.Minute
 )
 
-func RunQueryProbe(ctx context.Context, logger lager.Logger, wg *sync.WaitGroup, probe *monitor.QueryProbe, statter *monitor.Statter) {
+func RunQueryProbe(ctx context.Context,
+	logger lager.Logger,
+	wg *sync.WaitGroup,
+	probe *monitor.QueryProbe,
+	statter *monitor.Statter,
+) {
 	defer wg.Done()
 
 	var innerWG sync.WaitGroup

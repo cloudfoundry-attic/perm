@@ -101,8 +101,10 @@ var _ = Describe("#RollbackMigrations", func() {
 				)
 
 			mock.ExpectBegin()
-			mock.ExpectExec("SOME FAKE MIGRATION 2").WillReturnResult(sqlmock.NewResult(0, 0))
-			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("SOME FAKE MIGRATION 2").
+				WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").
+				WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit()
 
 			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
@@ -128,12 +130,16 @@ var _ = Describe("#RollbackMigrations", func() {
 				)
 
 			mock.ExpectBegin()
-			mock.ExpectExec("SOME FAKE MIGRATION 2").WillReturnResult(sqlmock.NewResult(0, 0))
-			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("SOME FAKE MIGRATION 2").
+				WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").
+				WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit()
 			mock.ExpectBegin()
-			mock.ExpectExec("SOME FAKE MIGRATION 1").WillReturnResult(sqlmock.NewResult(0, 0))
-			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(0).WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("SOME FAKE MIGRATION 1").
+				WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").
+				WithArgs(0).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit()
 
 			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)
@@ -165,8 +171,10 @@ var _ = Describe("#RollbackMigrations", func() {
 				)
 
 			mock.ExpectBegin()
-			mock.ExpectExec("SOME FAKE MIGRATION 2").WillReturnResult(sqlmock.NewResult(0, 0))
-			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("SOME FAKE MIGRATION 2").
+				WillReturnResult(sqlmock.NewResult(0, 0))
+			mock.ExpectExec("DELETE FROM " + migrationTableName + " WHERE version").
+				WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 0))
 			mock.ExpectCommit().WillReturnError(errors.New("some-commit-error"))
 
 			err := RollbackMigrations(ctx, fakeLogger, conn, migrationTableName, migrations, all)

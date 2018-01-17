@@ -7,6 +7,10 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-func (s *DataService) HasPermission(ctx context.Context, logger lager.Logger, query models.HasPermissionQuery) (bool, error) {
+func (s *DataService) HasPermission(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.HasPermissionQuery,
+) (bool, error) {
 	return hasPermission(ctx, logger.Session("data-service"), s.conn, query)
 }

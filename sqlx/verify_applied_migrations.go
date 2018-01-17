@@ -7,8 +7,15 @@ import (
 	"code.cloudfoundry.org/perm/messages"
 )
 
-func VerifyAppliedMigrations(ctx context.Context, logger lager.Logger, conn *DB, tableName string, migrations []Migration) (bool, error) {
-	appliedMigrations, err := RetrieveAppliedMigrations(ctx, logger.Session("retrieve-applied-migrations"), conn, tableName)
+func VerifyAppliedMigrations(
+	ctx context.Context,
+	logger lager.Logger,
+	conn *DB,
+	tableName string,
+	migrations []Migration,
+) (bool, error) {
+	retrieveLogger := logger.Session("retrieve-applied-migrations")
+	appliedMigrations, err := RetrieveAppliedMigrations(ctx, retrieveLogger, conn, tableName)
 	if err != nil {
 		return false, err
 	}

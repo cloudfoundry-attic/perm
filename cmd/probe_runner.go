@@ -16,7 +16,12 @@ type QueryProbe interface {
 	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 }
 
-func RunQueryProbe(ctx context.Context, logger lager.Logger, probe QueryProbe, timeout time.Duration) (correct bool, durations []time.Duration, err error) {
+func RunQueryProbe(
+	ctx context.Context,
+	logger lager.Logger,
+	probe QueryProbe,
+	timeout time.Duration,
+) (correct bool, durations []time.Duration, err error) {
 	uuid := guuid.NewV4()
 
 	defer func() {
