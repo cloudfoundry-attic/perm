@@ -278,7 +278,7 @@ var _ = Describe("Running the Probes", func() {
 						ctx,
 						logger,
 						adminProbe,
-						10*time.Millisecond,
+						300*time.Millisecond,
 					)
 
 					Expect(err).NotTo(HaveOccurred())
