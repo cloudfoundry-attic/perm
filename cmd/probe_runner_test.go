@@ -128,7 +128,7 @@ var _ = Describe("Running the Probes", func() {
 					return true, nil, err
 				}
 
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 20*time.Millisecond)
+				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 300*time.Millisecond)
 
 				Expect(queryProbe.SetupCallCount()).To(Equal(1))
 				Expect(queryProbe.RunCallCount()).To(Equal(1))
