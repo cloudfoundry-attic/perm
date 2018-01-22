@@ -7,12 +7,14 @@ import (
 )
 
 type PermissionDefinitionQuery struct {
-	Name string
+	Name PermissionDefinitionName
 }
 
+type ResourceID string
+
 type PermissionQuery struct {
-	PermissionDefinitionQuery PermissionDefinitionQuery
-	ResourceID                string
+	PermissionName PermissionName
+	ResourceID     ResourceID
 }
 
 type HasPermissionQuery struct {

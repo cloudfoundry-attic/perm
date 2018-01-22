@@ -35,8 +35,8 @@ func BehavesLikeAnActorService(actorServiceCreator func() models.ActorService) {
 
 	Describe("#CreateActor", func() {
 		It("saves the actor", func() {
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			actor, err := subject.CreateActor(ctx, logger, domainID, issuer)
 
@@ -54,8 +54,8 @@ func BehavesLikeAnActorService(actorServiceCreator func() models.ActorService) {
 		})
 
 		It("fails if an actor with the domain ID/issuer combo already exists", func() {
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := subject.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -63,18 +63,21 @@ func BehavesLikeAnActorService(actorServiceCreator func() models.ActorService) {
 			_, err = subject.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).To(Equal(models.ErrActorAlreadyExists))
 
-			_, err = subject.CreateActor(ctx, logger, uuid.NewV4().String(), issuer)
+			uniqueDomainID := models.ActorDomainID(uuid.NewV4().String())
+			_, err = subject.CreateActor(ctx, logger, uniqueDomainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.CreateActor(ctx, logger, domainID, uuid.NewV4().String())
+			uniqueIssuer := models.ActorIssuer(uuid.NewV4().String())
+			_, err = subject.CreateActor(ctx, logger, domainID, uniqueIssuer)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
 	Describe("#FindActor", func() {
 		It("fails if the actor does not exist", func() {
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
+
 			_, err := subject.FindActor(ctx, logger, models.ActorQuery{DomainID: domainID, Issuer: issuer})
 
 			Expect(err).To(Equal(models.ErrActorNotFound))

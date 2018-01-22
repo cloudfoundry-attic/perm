@@ -5,16 +5,16 @@ import (
 )
 
 type InMemoryStore struct {
-	roles       map[string]*models.Role
-	permissions map[string][]*models.Permission
+	roles       map[models.RoleName]*models.Role
+	permissions map[models.RoleName][]*models.Permission
 
-	assignments map[models.Actor][]string
+	assignments map[models.Actor][]models.RoleName
 }
 
 func NewInMemoryStore() *InMemoryStore {
 	return &InMemoryStore{
-		roles:       make(map[string]*models.Role),
-		assignments: make(map[models.Actor][]string),
-		permissions: make(map[string][]*models.Permission),
+		roles:       make(map[models.RoleName]*models.Role),
+		assignments: make(map[models.Actor][]models.RoleName),
+		permissions: make(map[models.RoleName][]*models.Permission),
 	}
 }

@@ -4,22 +4,24 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
+type id int64
+
 type actor struct {
-	ID int64
+	ID id
 	*models.Actor
 }
 
 type role struct {
-	ID int64
+	ID id
 	*models.Role
 }
 
 type permission struct {
-	ID int64
+	ID id
 	*models.Permission
 }
 
 type permissionDefinition struct {
-	ID int64
+	ID id
 	*models.PermissionDefinition
 }

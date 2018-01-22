@@ -12,7 +12,7 @@ import (
 func (s *DataService) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
-	name string,
+	name models.RoleName,
 	permissions ...*models.Permission,
 ) (r *models.Role, err error) {
 	logger = logger.Session("data-service")

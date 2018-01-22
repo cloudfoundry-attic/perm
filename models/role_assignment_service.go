@@ -10,17 +10,17 @@ type RoleAssignmentService interface {
 	AssignRole(
 		ctx context.Context,
 		logger lager.Logger,
-		roleName string,
-		domainID string,
-		issuer string,
+		roleName RoleName,
+		domainID ActorDomainID,
+		issuer ActorIssuer,
 	) error
 
 	UnassignRole(
 		ctx context.Context,
 		logger lager.Logger,
-		roleName string,
-		domainID string,
-		issuer string,
+		roleName RoleName,
+		domainID ActorDomainID,
+		issuer ActorIssuer,
 	) error
 
 	HasRole(

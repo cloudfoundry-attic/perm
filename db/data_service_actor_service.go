@@ -10,8 +10,8 @@ import (
 func (s *DataService) CreateActor(
 	ctx context.Context,
 	logger lager.Logger,
-	domainID,
-	issuer string,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) (*models.Actor, error) {
 	actor, err := createActor(ctx, logger.Session("data-service"), s.conn, domainID, issuer)
 	if err != nil {

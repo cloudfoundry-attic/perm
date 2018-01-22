@@ -2,14 +2,18 @@ package models
 
 import "code.cloudfoundry.org/perm/protos"
 
+type ActorDomainID string
+
+type ActorIssuer string
+
 type Actor struct {
-	DomainID string
-	Issuer   string
+	DomainID ActorDomainID
+	Issuer   ActorIssuer
 }
 
 func (a *Actor) ToProto() *protos.Actor {
 	return &protos.Actor{
-		ID:     a.DomainID,
-		Issuer: a.Issuer,
+		ID:     string(a.DomainID),
+		Issuer: string(a.Issuer),
 	}
 }

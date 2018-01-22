@@ -42,8 +42,8 @@ func (s *InMemoryStore) HasPermission(
 }
 
 func hasPermission(permission *models.Permission, query models.HasPermissionQuery) bool {
-	namesMatch := permission.Name == query.PermissionQuery.PermissionDefinitionQuery.Name
-	resourcesMatch := permission.ResourcePattern == query.PermissionQuery.ResourceID
+	namesMatch := permission.Name == query.PermissionQuery.PermissionName
+	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourceID)
 
 	return namesMatch && resourcesMatch
 }

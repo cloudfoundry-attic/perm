@@ -10,7 +10,7 @@ type RoleService interface {
 	CreateRole(
 		ctx context.Context,
 		logger lager.Logger,
-		name string,
+		name RoleName,
 		permissions ...*Permission,
 	) (*Role, error)
 
@@ -34,5 +34,5 @@ type RoleService interface {
 }
 
 type RoleQuery struct {
-	Name string
+	Name RoleName
 }

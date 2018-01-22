@@ -7,16 +7,16 @@ import (
 )
 
 type ActorQuery struct {
-	DomainID string
-	Issuer   string
+	DomainID ActorDomainID
+	Issuer   ActorIssuer
 }
 
 type ActorService interface {
 	CreateActor(
 		ctx context.Context,
 		logger lager.Logger,
-		domainID,
-		issuer string,
+		domainID ActorDomainID,
+		issuer ActorIssuer,
 	) (*Actor, error)
 
 	FindActor(

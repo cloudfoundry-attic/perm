@@ -13,7 +13,11 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignmentService, roleServiceCreator func() models.RoleService, actorServiceCreator func() models.ActorService) {
+func BehavesLikeARoleAssignmentService(
+	subjectCreator func() models.RoleAssignmentService,
+	roleServiceCreator func() models.RoleService,
+	actorServiceCreator func() models.ActorService,
+) {
 	var (
 		subject models.RoleAssignmentService
 
@@ -24,9 +28,13 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		logger *lagertest.TestLogger
 
 		cancelFunc context.CancelFunc
+
+		roleName models.RoleName
 	)
 
 	BeforeEach(func() {
+		roleName = models.RoleName(uuid.NewV4().String())
+
 		subject = subjectCreator()
 
 		roleService = roleServiceCreator()
@@ -42,9 +50,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 
 	Describe("#AssignRole", func() {
 		It("saves the role assignment, saving the actor if it does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -69,9 +76,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the role assignment already exists", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -85,9 +91,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the role does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			err := subject.AssignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).To(Equal(models.ErrRoleNotFound))
@@ -96,9 +101,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 
 	Describe("#UnassignRole", func() {
 		It("removes the role assignment", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -128,9 +132,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the actor does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -140,18 +143,16 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the role does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			err := subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
 
 		It("fails if the role assignment does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -166,9 +167,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 
 	Describe("#HasRole", func() {
 		It("returns true if they have been assigned the role", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -192,9 +192,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -218,9 +217,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the role does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -240,9 +238,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the actor does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -264,18 +261,18 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 
 	Describe("#ListActorRoles", func() {
 		It("returns a list of all roles that the actor has been assigned to", func() {
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			roleName1 := uuid.NewV4().String()
+			roleName1 := models.RoleName(uuid.NewV4().String())
 			role1, err := roleService.CreateRole(ctx, logger, roleName1)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleName2 := uuid.NewV4().String()
+			roleName2 := models.RoleName(uuid.NewV4().String())
 			role2, err := roleService.CreateRole(ctx, logger, roleName2)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleName3 := uuid.NewV4().String()
+			roleName3 := models.RoleName(uuid.NewV4().String())
 			role3, err := roleService.CreateRole(ctx, logger, roleName3)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -299,9 +296,8 @@ func BehavesLikeARoleAssignmentService(subjectCreator func() models.RoleAssignme
 		})
 
 		It("fails if the actor does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())

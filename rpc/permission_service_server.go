@@ -30,11 +30,11 @@ func (s *PermissionServiceServer) HasPermission(
 	req *protos.HasPermissionRequest,
 ) (*protos.HasPermissionResponse, error) {
 	pActor := req.GetActor()
-	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
 
-	permissionName := req.GetPermissionName()
-	resourceID := req.GetResourceId()
+	permissionName := models.PermissionName(req.GetPermissionName())
+	resourceID := models.ResourceID(req.GetResourceId())
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
 		"actor.id":              domainID,
@@ -50,10 +50,8 @@ func (s *PermissionServiceServer) HasPermission(
 			Issuer:   issuer,
 		},
 		PermissionQuery: models.PermissionQuery{
-			PermissionDefinitionQuery: models.PermissionDefinitionQuery{
-				Name: permissionName,
-			},
-			ResourceID: resourceID,
+			PermissionName: permissionName,
+			ResourceID:     resourceID,
 		},
 	}
 

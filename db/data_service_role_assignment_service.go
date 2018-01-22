@@ -12,9 +12,9 @@ import (
 func (s *DataService) AssignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName string,
-	domainID string,
-	issuer string,
+	roleName models.RoleName,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) (err error) {
 	logger = logger.Session("data-service")
 
@@ -39,9 +39,9 @@ func (s *DataService) AssignRole(
 func (s *DataService) UnassignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName string,
-	domainID string,
-	issuer string,
+	roleName models.RoleName,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) (err error) {
 	logger = logger.Session("data-service")
 

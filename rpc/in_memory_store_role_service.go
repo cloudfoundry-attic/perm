@@ -11,7 +11,7 @@ import (
 func (s *InMemoryStore) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
-	name string,
+	name models.RoleName,
 	permissions ...*models.Permission,
 ) (*models.Role, error) {
 	if _, exists := s.roles[name]; exists {
@@ -83,9 +83,9 @@ func (s *InMemoryStore) DeleteRole(
 func (s *InMemoryStore) AssignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName string,
-	domainID string,
-	issuer string,
+	roleName models.RoleName,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
 		return models.ErrRoleNotFound
@@ -97,7 +97,7 @@ func (s *InMemoryStore) AssignRole(
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		assignments = []string{}
+		assignments = []models.RoleName{}
 	}
 
 	for _, role := range assignments {
@@ -117,9 +117,9 @@ func (s *InMemoryStore) AssignRole(
 func (s *InMemoryStore) UnassignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName string,
-	domainID string,
-	issuer string,
+	roleName models.RoleName,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
 		return models.ErrRoleNotFound
@@ -212,8 +212,8 @@ func (s *InMemoryStore) ListActorRoles(
 func (s *InMemoryStore) CreateActor(
 	ctx context.Context,
 	logger lager.Logger,
-	domainID,
-	issuer string,
+	domainID models.ActorDomainID,
+	issuer models.ActorIssuer,
 ) (*models.Actor, error) {
 	actor := models.Actor{
 		DomainID: domainID,
@@ -224,7 +224,7 @@ func (s *InMemoryStore) CreateActor(
 		return nil, models.ErrActorAlreadyExists
 	}
 
-	s.assignments[actor] = []string{}
+	s.assignments[actor] = []models.RoleName{}
 
 	return &actor, nil
 }

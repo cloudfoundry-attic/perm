@@ -35,7 +35,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 
 	Describe("#CreateRole", func() {
 		It("saves the role", func() {
-			name := uuid.NewV4().String()
+			name := models.RoleName(uuid.NewV4().String())
 
 			role, err := subject.CreateRole(ctx, logger, name)
 
@@ -52,7 +52,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 		})
 
 		It("fails if a role with the name already exists", func() {
-			name := uuid.NewV4().String()
+			name := models.RoleName(uuid.NewV4().String())
 
 			_, err := subject.CreateRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
@@ -65,7 +65,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 
 	Describe("#FindRole", func() {
 		It("fails if the role does not exist", func() {
-			name := uuid.NewV4().String()
+			name := models.RoleName(uuid.NewV4().String())
 
 			role, err := subject.FindRole(ctx, logger, models.RoleQuery{Name: name})
 
@@ -76,7 +76,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
-			name := uuid.NewV4().String()
+			name := models.RoleName(uuid.NewV4().String())
 
 			_, err := subject.CreateRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
@@ -91,7 +91,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 		})
 
 		It("fails if the role does not exist", func() {
-			name := uuid.NewV4().String()
+			name := models.RoleName(uuid.NewV4().String())
 
 			err := subject.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
 
@@ -101,7 +101,7 @@ func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
 
 	Describe("#ListRolePermissions", func() {
 		It("returns a list of all permissions that the role has been created with", func() {
-			roleName := uuid.NewV4().String()
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			permission1 := &models.Permission{Name: "permission-1", ResourcePattern: "resource-pattern-1"}
 			permission2 := &models.Permission{Name: "permission-2", ResourcePattern: "resource-pattern-2"}

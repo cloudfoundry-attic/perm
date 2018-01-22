@@ -32,12 +32,12 @@ func (s *RoleServiceServer) CreateRole(
 	ctx context.Context,
 	req *protos.CreateRoleRequest,
 ) (*protos.CreateRoleResponse, error) {
-	name := req.GetName()
+	name := models.RoleName(req.GetName())
 	var permissions []*models.Permission
 	for _, p := range req.GetPermissions() {
 		permissions = append(permissions, &models.Permission{
-			Name:            p.GetName(),
-			ResourcePattern: p.GetResourcePattern(),
+			Name:            models.PermissionName(p.GetName()),
+			ResourcePattern: models.PermissionResourcePattern(p.GetResourcePattern()),
 		})
 	}
 
@@ -60,7 +60,7 @@ func (s *RoleServiceServer) GetRole(
 	ctx context.Context,
 	req *protos.GetRoleRequest,
 ) (*protos.GetRoleResponse, error) {
-	name := req.GetName()
+	name := models.RoleName(req.GetName())
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
 
@@ -79,7 +79,7 @@ func (s *RoleServiceServer) DeleteRole(
 	ctx context.Context,
 	req *protos.DeleteRoleRequest,
 ) (*protos.DeleteRoleResponse, error) {
-	name := req.GetName()
+	name := models.RoleName(req.GetName())
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
 	})
@@ -98,11 +98,11 @@ func (s *RoleServiceServer) AssignRole(
 	ctx context.Context,
 	req *protos.AssignRoleRequest,
 ) (*protos.AssignRoleResponse, error) {
-	roleName := req.GetRoleName()
+	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
 
-	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
 	logger := s.logger.Session("assign-role").WithData(lager.Data{
 		"actor.id":     domainID,
 		"actor.issuer": issuer,
@@ -123,11 +123,11 @@ func (s *RoleServiceServer) UnassignRole(
 	ctx context.Context,
 	req *protos.UnassignRoleRequest,
 ) (*protos.UnassignRoleResponse, error) {
-	roleName := req.GetRoleName()
+	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
 
-	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
 	actor := models.Actor{
 		DomainID: domainID,
 		Issuer:   issuer,
@@ -152,10 +152,10 @@ func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
 ) (*protos.HasRoleResponse, error) {
-	roleName := req.GetRoleName()
+	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
-	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
 		"actor.id":     domainID,
@@ -192,8 +192,8 @@ func (s *RoleServiceServer) ListActorRoles(
 	req *protos.ListActorRolesRequest,
 ) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
-	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
 	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
 		"actor.id":     domainID,
 		"actor.issuer": issuer,
@@ -226,7 +226,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	ctx context.Context,
 	req *protos.ListRolePermissionsRequest,
 ) (*protos.ListRolePermissionsResponse, error) {
-	roleName := req.GetRoleName()
+	roleName := models.RoleName(req.GetRoleName())
 	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
 		"role.name": roleName,
 	})

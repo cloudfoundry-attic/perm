@@ -2,12 +2,14 @@ package models
 
 import "code.cloudfoundry.org/perm/protos"
 
+type RoleName string
+
 type Role struct {
-	Name string
+	Name RoleName
 }
 
 func (r *Role) ToProto() *protos.Role {
 	return &protos.Role{
-		Name: r.Name,
+		Name: string(r.Name),
 	}
 }

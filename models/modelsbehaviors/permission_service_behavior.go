@@ -13,7 +13,12 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeAPermissionService(subjectCreator func() models.PermissionService, roleServiceCreator func() models.RoleService, actorServiceCreator func() models.ActorService, roleAssignmentServiceCreator func() models.RoleAssignmentService) {
+func BehavesLikeAPermissionService(
+	subjectCreator func() models.PermissionService,
+	roleServiceCreator func() models.RoleService,
+	actorServiceCreator func() models.ActorService,
+	roleAssignmentServiceCreator func() models.RoleAssignmentService,
+) {
 	var (
 		subject models.PermissionService
 
@@ -43,10 +48,10 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 	})
 
 	Describe("#HasPermission", func() {
-		It("returns true if they have been assigned a role with a permission with a name matching the permission name and a resource pattern that matches the resourceID of the query", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+		It("returns true if they have been assigned to a role that has the permission", func() {
+			roleName := models.RoleName(uuid.NewV4().String())
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			permission := &models.Permission{
 				Name:            "some-permission",
@@ -59,10 +64,8 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
-					Name: "some-permission",
-				},
-				ResourceID: "some-resource-ID",
+				PermissionName: "some-permission",
+				ResourceID:     "some-resource-ID",
 			}
 
 			actorQuery := models.ActorQuery{
@@ -82,9 +85,9 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			roleName := models.RoleName(uuid.NewV4().String())
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			permission := &models.Permission{
 				Name:            "some-permission",
@@ -97,10 +100,8 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
-					Name: "some-permission",
-				},
-				ResourceID: "some-resource-ID",
+				PermissionName: "some-permission",
+				ResourceID:     "some-resource-ID",
 			}
 
 			actorQuery := models.ActorQuery{
@@ -119,18 +120,16 @@ func BehavesLikeAPermissionService(subjectCreator func() models.PermissionServic
 		})
 
 		It("return false if the actor does not exist", func() {
-			roleName := uuid.NewV4().String()
-			domainID := uuid.NewV4().String()
-			issuer := uuid.NewV4().String()
+			roleName := models.RoleName(uuid.NewV4().String())
+			domainID := models.ActorDomainID(uuid.NewV4().String())
+			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			_, err := roleService.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
-				PermissionDefinitionQuery: models.PermissionDefinitionQuery{
-					Name: "some-permission",
-				},
-				ResourceID: "some-resource-ID",
+				PermissionName: "some-permission",
+				ResourceID:     "some-resource-ID",
 			}
 
 			actorQuery := models.ActorQuery{
