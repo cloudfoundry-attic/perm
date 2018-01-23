@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/messages"
-	"code.cloudfoundry.org/perm/protos"
 	"code.cloudfoundry.org/perm/rpc"
 	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -103,10 +103,10 @@ func (cmd ServeCommand) Execute([]string) error {
 	store := db.NewDataService(conn)
 
 	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
-	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
+	perm_go.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 
 	permissionServiceServer := rpc.NewPermissionServiceServer(logger, store)
-	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
+	perm_go.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
 
 	logger.Debug(messages.Starting, listeningLogData)
 

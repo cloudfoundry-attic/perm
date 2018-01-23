@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/protos"
 )
 
 type PermissionServiceServer struct {
@@ -27,8 +27,8 @@ func NewPermissionServiceServer(
 
 func (s *PermissionServiceServer) HasPermission(
 	ctx context.Context,
-	req *protos.HasPermissionRequest,
-) (*protos.HasPermissionResponse, error) {
+	req *perm_go.HasPermissionRequest,
+) (*perm_go.HasPermissionResponse, error) {
 	pActor := req.GetActor()
 	domainID := models.ActorDomainID(pActor.GetID())
 	issuer := models.ActorIssuer(pActor.GetIssuer())
@@ -58,12 +58,12 @@ func (s *PermissionServiceServer) HasPermission(
 	found, err := s.permissionService.HasPermission(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
-			return &protos.HasPermissionResponse{HasPermission: false}, nil
+			return &perm_go.HasPermissionResponse{HasPermission: false}, nil
 		}
 
 		return nil, togRPCError(err)
 	}
 
 	logger.Debug(messages.Success)
-	return &protos.HasPermissionResponse{HasPermission: found}, nil
+	return &perm_go.HasPermissionResponse{HasPermission: found}, nil
 }

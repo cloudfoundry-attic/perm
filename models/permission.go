@@ -1,6 +1,6 @@
 package models
 
-import "code.cloudfoundry.org/perm/protos"
+import "code.cloudfoundry.org/perm-go"
 
 type PermissionDefinitionName string
 
@@ -16,8 +16,8 @@ type Permission struct {
 	ResourcePattern PermissionResourcePattern
 }
 
-func (p *Permission) ToProto() *protos.Permission {
-	return &protos.Permission{
+func (p *Permission) ToProto() *perm_go.Permission {
+	return &perm_go.Permission{
 		Name:            string(p.Name),
 		ResourcePattern: string(p.ResourcePattern),
 	}

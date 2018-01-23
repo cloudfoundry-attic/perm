@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/messages"
-	"code.cloudfoundry.org/perm/protos"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -22,14 +22,14 @@ const (
 	QueryProbeUnassignedPermissionResourceID = "system.query-probe.unassigned-permission.resource-id"
 )
 
-var QueryProbeActor = &protos.Actor{
+var QueryProbeActor = &perm_go.Actor{
 	ID:     "query-probe",
 	Issuer: "system",
 }
 
 type QueryProbe struct {
-	RoleServiceClient       protos.RoleServiceClient
-	PermissionServiceClient protos.PermissionServiceClient
+	RoleServiceClient       perm_go.RoleServiceClient
+	PermissionServiceClient perm_go.PermissionServiceClient
 }
 
 func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
@@ -47,14 +47,14 @@ func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffi
 func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	roleName := QueryProbeRoleName + "." + uniqueSuffix
 
-	assignedPermission := &protos.Permission{
+	assignedPermission := &perm_go.Permission{
 		Name:            QueryProbeAssignedPermissionName + "." + uniqueSuffix,
 		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
-	createRoleRequest := &protos.CreateRoleRequest{
+	createRoleRequest := &perm_go.CreateRoleRequest{
 		Name: roleName,
-		Permissions: []*protos.Permission{
+		Permissions: []*perm_go.Permission{
 			assignedPermission,
 		},
 	}
@@ -90,7 +90,7 @@ func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, u
 func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	roleName := QueryProbeRoleName + "." + uniqueSuffix
 
-	assignRoleRequest := &protos.AssignRoleRequest{
+	assignRoleRequest := &perm_go.AssignRoleRequest{
 		Actor:    QueryProbeActor,
 		RoleName: roleName,
 	}
@@ -132,7 +132,7 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 
 	roleName := QueryProbeRoleName + "." + uniqueSuffix
 
-	deleteRoleRequest := &protos.DeleteRoleRequest{
+	deleteRoleRequest := &perm_go.DeleteRoleRequest{
 		Name: roleName,
 	}
 	_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
@@ -206,7 +206,7 @@ func (p *QueryProbe) runAssignedPermission(
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
-	assignedPermission := &protos.Permission{
+	assignedPermission := &perm_go.Permission{
 		Name:            QueryProbeAssignedPermissionName + "." + uniqueSuffix,
 		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
@@ -217,7 +217,7 @@ func (p *QueryProbe) runAssignedPermission(
 		"permission.name":             assignedPermission.GetName(),
 		"permission.resource_pattern": assignedPermission.GetResourcePattern(),
 	})
-	req := &protos.HasPermissionRequest{
+	req := &perm_go.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: assignedPermission.Name,
 		ResourceId:     assignedPermission.ResourcePattern,
@@ -249,7 +249,7 @@ func (p *QueryProbe) runUnassignedPermission(
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
-	unassignedPermission := &protos.Permission{
+	unassignedPermission := &perm_go.Permission{
 		Name:            QueryProbeUnassignedPermissionName + "." + uniqueSuffix,
 		ResourcePattern: QueryProbeUnassignedPermissionResourceID + "." + uniqueSuffix,
 	}
@@ -260,7 +260,7 @@ func (p *QueryProbe) runUnassignedPermission(
 		"permission.name":             unassignedPermission.GetName(),
 		"permission.resource_pattern": unassignedPermission.GetResourcePattern(),
 	})
-	req := &protos.HasPermissionRequest{
+	req := &perm_go.HasPermissionRequest{
 		Actor:          QueryProbeActor,
 		PermissionName: unassignedPermission.Name,
 		ResourceId:     unassignedPermission.ResourcePattern,

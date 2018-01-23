@@ -1,6 +1,7 @@
 package monitor_test
 
 import (
+	permgofakes "code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "code.cloudfoundry.org/perm/monitor"
 
 	"context"
@@ -8,7 +9,6 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/protos/protosfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -19,7 +19,7 @@ var _ = Describe("AdminProbe", func() {
 	var (
 		p *AdminProbe
 
-		fakeRoleServiceClient *protosfakes.FakeRoleServiceClient
+		fakeRoleServiceClient *permgofakes.FakeRoleServiceClient
 		fakeLogger            *lagertest.TestLogger
 		fakeContext           context.Context
 
@@ -29,7 +29,7 @@ var _ = Describe("AdminProbe", func() {
 	)
 
 	BeforeEach(func() {
-		fakeRoleServiceClient = new(protosfakes.FakeRoleServiceClient)
+		fakeRoleServiceClient = new(permgofakes.FakeRoleServiceClient)
 
 		fakeLogger = lagertest.NewTestLogger("admin-probe")
 		fakeContext = context.Background()

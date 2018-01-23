@@ -2,14 +2,14 @@ package monitor_test
 
 import (
 	. "code.cloudfoundry.org/perm/monitor"
-	"code.cloudfoundry.org/perm/protos/protosfakes"
 
 	"context"
 
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/protos"
+	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -20,8 +20,8 @@ var _ = Describe("QueryProbe", func() {
 	var (
 		p *QueryProbe
 
-		fakeRoleServiceClient        *protosfakes.FakeRoleServiceClient
-		fakePermissionsServiceClient *protosfakes.FakePermissionServiceClient
+		fakeRoleServiceClient        *permgofakes.FakeRoleServiceClient
+		fakePermissionsServiceClient *permgofakes.FakePermissionServiceClient
 		fakeLogger                   *lagertest.TestLogger
 		fakeContext                  context.Context
 
@@ -31,8 +31,8 @@ var _ = Describe("QueryProbe", func() {
 	)
 
 	BeforeEach(func() {
-		fakeRoleServiceClient = new(protosfakes.FakeRoleServiceClient)
-		fakePermissionsServiceClient = new(protosfakes.FakePermissionServiceClient)
+		fakeRoleServiceClient = new(permgofakes.FakeRoleServiceClient)
+		fakePermissionsServiceClient = new(permgofakes.FakePermissionServiceClient)
 
 		fakeLogger = lagertest.NewTestLogger("query-probe")
 		fakeContext = context.Background()
@@ -152,8 +152,8 @@ var _ = Describe("QueryProbe", func() {
 
 	Describe("Run", func() {
 		BeforeEach(func() {
-			fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &protos.HasPermissionResponse{HasPermission: true}, nil)
-			fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &protos.HasPermissionResponse{HasPermission: false}, nil)
+			fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &perm_go.HasPermissionResponse{HasPermission: true}, nil)
+			fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &perm_go.HasPermissionResponse{HasPermission: false}, nil)
 		})
 
 		It("asks if the actor has a permission it should have, and a permission it shouldn't", func() {
@@ -193,7 +193,7 @@ var _ = Describe("QueryProbe", func() {
 
 		Context("when checking for the permission it should have returns that the actor doesn't have permission", func() {
 			BeforeEach(func() {
-				fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &protos.HasPermissionResponse{HasPermission: false}, nil)
+				fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &perm_go.HasPermissionResponse{HasPermission: false}, nil)
 			})
 
 			It("returns that it's incorrect and does not ask for the next permission", func() {
@@ -222,7 +222,7 @@ var _ = Describe("QueryProbe", func() {
 
 		Context("when checking for the permission it should not have returns that the actor does have permission", func() {
 			BeforeEach(func() {
-				fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &protos.HasPermissionResponse{HasPermission: true}, nil)
+				fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &perm_go.HasPermissionResponse{HasPermission: true}, nil)
 			})
 
 			It("returns that it's incorrect", func() {

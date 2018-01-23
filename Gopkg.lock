@@ -8,6 +8,12 @@
   revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
 
 [[projects]]
+  name = "code.cloudfoundry.org/perm-go"
+  packages = ["."]
+  revision = "39fd1f4d01a44698151084d90bf25858be65006b"
+  version = "v0.0.1"
+
+[[projects]]
   name = "github.com/DATA-DOG/go-sqlmock"
   packages = ["."]
   revision = "d76b18b42f285b792bf985118980ce9eacea9d10"
@@ -148,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "458b1fdafeef3514601d2c9a6af935eb21666c495e91bc0cbedc2a9e3d67dd95"
+  inputs-digest = "3dd829545d09ec73eeda24c5b3a739a8b4687e954211f5b3f89c8d478239c3e1"
   solver-name = "gps-cdcl"
   solver-version = 1

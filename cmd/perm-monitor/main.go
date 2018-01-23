@@ -19,10 +19,10 @@ import (
 
 	"sync"
 
+	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/monitor"
-	"code.cloudfoundry.org/perm/protos"
 )
 
 type options struct {
@@ -108,8 +108,8 @@ func main() {
 	}
 	defer g.Close()
 
-	roleServiceClient := protos.NewRoleServiceClient(g)
-	permissionServiceClient := protos.NewPermissionServiceClient(g)
+	roleServiceClient := perm_go.NewRoleServiceClient(g)
+	permissionServiceClient := perm_go.NewPermissionServiceClient(g)
 	//////////////////////
 
 	ctx := context.Background()

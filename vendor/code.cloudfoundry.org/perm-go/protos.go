@@ -1,4 +1,4 @@
-package protos // import "code.cloudfoundry.org/perm/protos"
+package perm_go // import "code.cloudfoundry.org/perm-go"
 
 //go:generate counterfeiter . PermissionServiceClient
 

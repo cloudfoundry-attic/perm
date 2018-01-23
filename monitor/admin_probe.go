@@ -5,21 +5,21 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
-	"code.cloudfoundry.org/perm/protos"
 
+	"code.cloudfoundry.org/perm-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type AdminProbe struct {
-	RoleServiceClient protos.RoleServiceClient
+	RoleServiceClient perm_go.RoleServiceClient
 }
 
 const (
 	AdminProbeRoleName = "system.admin-probe"
 )
 
-var AdminProbeActor = &protos.Actor{
+var AdminProbeActor = &perm_go.Actor{
 	ID:     "admin-probe",
 	Issuer: "system",
 }
@@ -34,7 +34,7 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 
 	roleName := adminRoleName(uniqueSuffix)
 
-	deleteRoleRequest := &protos.DeleteRoleRequest{
+	deleteRoleRequest := &perm_go.DeleteRoleRequest{
 		Name: roleName,
 	}
 	_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
@@ -72,7 +72,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	var err error
 
 	// CreateRole
-	createRoleRequest := &protos.CreateRoleRequest{
+	createRoleRequest := &perm_go.CreateRoleRequest{
 		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
@@ -85,7 +85,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// AssignRole
-	assignRoleRequest := &protos.AssignRoleRequest{
+	assignRoleRequest := &perm_go.AssignRoleRequest{
 		RoleName: roleName,
 		Actor:    AdminProbeActor,
 	}
@@ -100,7 +100,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// UnassignRole
-	unassignRoleRequest := &protos.UnassignRoleRequest{
+	unassignRoleRequest := &perm_go.UnassignRoleRequest{
 		Actor:    AdminProbeActor,
 		RoleName: roleName,
 	}
@@ -115,7 +115,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// DeleteRole
-	deleteRoleRequest := &protos.DeleteRoleRequest{
+	deleteRoleRequest := &perm_go.DeleteRoleRequest{
 		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)

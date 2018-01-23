@@ -34,7 +34,7 @@
 		ListRolePermissionsRequest
 		ListRolePermissionsResponse
 */
-package protos
+package perm_go
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
