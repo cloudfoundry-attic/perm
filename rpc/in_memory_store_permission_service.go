@@ -41,6 +41,49 @@ func (s *InMemoryStore) HasPermission(
 	return false, nil
 }
 
+func (s *InMemoryStore) ListResourcePatterns(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.ListResourcePatternsQuery,
+) ([]models.PermissionResourcePattern, error) {
+	actor := models.Actor{
+		DomainID: query.ActorQuery.DomainID,
+		Issuer:   query.ActorQuery.Issuer,
+	}
+	permissionName := query.PermissionName
+
+	var resourcePatterns []models.PermissionResourcePattern
+
+	assignments, ok := s.assignments[actor]
+	if !ok {
+		return resourcePatterns, nil
+	}
+
+	var permissions []*models.Permission
+	for _, roleName := range assignments {
+		p, ok := s.permissions[roleName]
+		if !ok {
+			continue
+		}
+
+		permissions = append(permissions, p...)
+	}
+
+	patternMap := make(map[models.PermissionResourcePattern]interface{})
+
+	for _, permission := range permissions {
+		if permission.Name == permissionName {
+			patternMap[permission.ResourcePattern] = nil
+		}
+	}
+
+	for k := range patternMap {
+		resourcePatterns = append(resourcePatterns, k)
+	}
+
+	return resourcePatterns, nil
+}
+
 func hasPermission(permission *models.Permission, query models.HasPermissionQuery) bool {
 	namesMatch := permission.Name == query.PermissionQuery.PermissionName
 	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourceID)

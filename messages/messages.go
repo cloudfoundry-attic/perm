@@ -58,7 +58,6 @@ const (
 	FailedToFindRoleAssignment   = "failed-to-find-role-assignment"
 	FailedToFindRoleAssignments  = "failed-to-find-role-assignments"
 
-	ErrPermissionNotFound      = "permission-not-found"
 	ErrPermissionAlreadyExists = "permission-already-exists"
 
 	FailedToFindPermissions  = "failed-to-find-permissions"
@@ -69,6 +68,8 @@ const (
 
 	FailedToCreatePermissionDefinition = "failed-to-create-permission-definition"
 	FailedToFindPermissionDefinition   = "failed-to-find-permission-definition"
+
+	FailedToListResourcePatterns = "failed-to-list-resource-patterns"
 )
 
 // Migration messages

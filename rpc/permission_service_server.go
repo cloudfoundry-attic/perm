@@ -72,5 +72,43 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	ctx context.Context,
 	req *protos.ListResourcePatternsRequest,
 ) (*protos.ListResourcePatternsResponse, error) {
-	panic("Not implemented")
+	pActor := req.GetActor()
+	domainID := models.ActorDomainID(pActor.GetID())
+	issuer := models.ActorIssuer(pActor.GetIssuer())
+
+	permissionName := models.PermissionName(req.GetPermissionName())
+
+	logger := s.logger.Session("list-resource-patterns").
+		WithData(lager.Data{
+			"actor.id":        domainID,
+			"actor.issuer":    issuer,
+			"permission.name": permissionName,
+		})
+
+	logger.Debug(messages.Starting)
+
+	query := models.ListResourcePatternsQuery{
+		PermissionName: models.PermissionName(req.PermissionName),
+		ActorQuery: models.ActorQuery{
+			DomainID: models.ActorDomainID(req.Actor.ID),
+			Issuer:   models.ActorIssuer(req.Actor.Issuer),
+		},
+	}
+
+	resourcePatterns, err := s.permissionService.ListResourcePatterns(ctx, logger, query)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+
+	var resourcePatternStrings []string
+
+	for _, rp := range resourcePatterns {
+		resourcePatternStrings = append(resourcePatternStrings, string(rp))
+	}
+
+	logger.Debug(messages.Success)
+
+	return &protos.ListResourcePatternsResponse{
+		ResourcePatterns: resourcePatternStrings,
+	}, nil
 }

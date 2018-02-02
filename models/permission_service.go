@@ -22,10 +22,23 @@ type HasPermissionQuery struct {
 	ActorQuery      ActorQuery
 }
 
+type ListResourcePatternsQuery struct {
+	ActorQuery     ActorQuery
+	PermissionName PermissionName
+}
+
+//go:generate counterfeiter . PermissionService
+
 type PermissionService interface {
 	HasPermission(
 		ctx context.Context,
 		logger lager.Logger,
 		query HasPermissionQuery,
 	) (bool, error)
+
+	ListResourcePatterns(
+		ctx context.Context,
+		logger lager.Logger,
+		query ListResourcePatternsQuery,
+	) ([]PermissionResourcePattern, error)
 }

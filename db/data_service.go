@@ -751,3 +751,62 @@ func createPermission(
 		return nil, err
 	}
 }
+
+func listResourcePatterns(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query models.ListResourcePatternsQuery,
+) ([]models.PermissionResourcePattern, error) {
+	permissionName := query.PermissionName
+	issuer := query.ActorQuery.Issuer
+	domainID := query.ActorQuery.DomainID
+
+	logger = logger.Session("list-resource-patterns").
+		WithData(lager.Data{
+			"actor.issuer":    issuer,
+			"actor.domainID":  domainID,
+			"permission.name": permissionName,
+		})
+
+	rows, err := squirrel.Select("permission.resource_pattern").
+		Distinct().
+		From("role").
+		Join("role_assignment ON role.id = role_assignment.role_id").
+		Join("actor ON actor.id = role_assignment.actor_id").
+		Join("permission ON permission.role_id = role.id").
+		Join("permission_definition ON permission.permission_definition_id = permission_definition.id").
+		Where(squirrel.Eq{
+			"permission_definition.name": permissionName,
+			"actor.domain_id":            domainID,
+			"actor.issuer":               issuer,
+		}).
+		RunWith(conn).
+		QueryContext(ctx)
+	if err != nil {
+		logger.Error(messages.FailedToListResourcePatterns, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var resourcePatterns []models.PermissionResourcePattern
+	for rows.Next() {
+		var resourcePattern models.PermissionResourcePattern
+
+		err := rows.Scan(&resourcePattern)
+		if err != nil {
+			logger.Error(messages.FailedToScanRow, err)
+			return nil, err
+		}
+
+		resourcePatterns = append(resourcePatterns, resourcePattern)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		logger.Error(messages.FailedToIterateOverRows, err)
+		return nil, err
+	}
+
+	return resourcePatterns, nil
+}

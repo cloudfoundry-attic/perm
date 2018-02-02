@@ -14,3 +14,11 @@ func (s *DataService) HasPermission(
 ) (bool, error) {
 	return hasPermission(ctx, logger.Session("data-service"), s.conn, query)
 }
+
+func (s *DataService) ListResourcePatterns(
+	ctx context.Context,
+	logger lager.Logger,
+	query models.ListResourcePatternsQuery,
+) ([]models.PermissionResourcePattern, error) {
+	return listResourcePatterns(ctx, logger.Session("data-service"), s.conn, query)
+}

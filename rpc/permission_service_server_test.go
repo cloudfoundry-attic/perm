@@ -6,9 +6,14 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/rpc"
 
+	"errors"
+
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/models/modelsfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ = Describe("PermissionServiceServer", func() {
@@ -32,7 +37,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		subject = rpc.NewPermissionServiceServer(logger, inMemoryStore)
 	})
 
-	Describe("HasPermission", func() {
+	Describe("#HasPermission", func() {
 		It("returns true if they have been assigned a role with a permission with a name "+
 			"matching the permission name and a resource pattern that matches the resourceID of the query", func() {
 			roleName := "role"
@@ -180,6 +185,97 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
+		})
+	})
+
+	Describe("#ListResourcePatterns", func() {
+		It("returns the list of resource patterns", func() {
+			p1 := &protos.Permission{Name: "test-permission-name", ResourcePattern: "foo"}
+			p2 := &protos.Permission{Name: "another-permission-name", ResourcePattern: "bar"}
+			p3 := &protos.Permission{Name: "test-permission-name", ResourcePattern: "baz"}
+
+			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name:        "r1",
+				Permissions: []*protos.Permission{p1, p2},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name:        "r2",
+				Permissions: []*protos.Permission{p3},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := &protos.Actor{
+				Issuer: "test-issuer",
+				ID:     "fancy-id",
+			}
+
+			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: "r1",
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: "r2",
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			request := &protos.ListResourcePatternsRequest{
+				Actor:          actor,
+				PermissionName: "test-permission-name",
+			}
+
+			response, err := subject.ListResourcePatterns(ctx, request)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response).NotTo(BeNil())
+			Expect(response.ResourcePatterns).To(HaveLen(2))
+			Expect(response.ResourcePatterns).To(ConsistOf("foo", "baz"))
+		})
+
+		It("returns an empty list if there are no resource patterns", func() {
+			req := &protos.ListResourcePatternsRequest{
+				Actor: &protos.Actor{
+					ID:     "123",
+					Issuer: "issuer34",
+				},
+				PermissionName: "p12",
+			}
+
+			response, err := subject.ListResourcePatterns(ctx, req)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response).NotTo(BeNil())
+			Expect(response.ResourcePatterns).To(BeEmpty())
+		})
+
+		It("returns a relevant error if the query fails", func() {
+			permissionService := new(modelsfakes.FakePermissionService)
+			subject := rpc.NewPermissionServiceServer(logger, permissionService)
+
+			testErr := errors.New("test-error")
+
+			permissionService.ListResourcePatternsReturns(nil, testErr)
+
+			req := &protos.ListResourcePatternsRequest{
+				Actor: &protos.Actor{
+					ID:     "123",
+					Issuer: "issuer34",
+				},
+				PermissionName: "p12",
+			}
+
+			_, err := subject.ListResourcePatterns(ctx, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(status.Errorf(codes.Unknown, "test-error")))
 		})
 	})
 })

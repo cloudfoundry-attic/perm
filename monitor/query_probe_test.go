@@ -1,6 +1,7 @@
 package monitor_test
 
 import (
+	permgofakes "code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "code.cloudfoundry.org/perm/monitor"
 
 	"context"
@@ -9,7 +10,6 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
