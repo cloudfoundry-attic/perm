@@ -4,38 +4,53 @@ package permgofakes
 import (
 	"sync"
 
-	perm_go "code.cloudfoundry.org/perm-go"
+	protos "code.cloudfoundry.org/perm-go"
 	_ "github.com/gogo/protobuf/gogoproto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 type FakePermissionServiceClient struct {
-	HasPermissionStub        func(ctx context.Context, in *perm_go.HasPermissionRequest, opts ...grpc.CallOption) (*perm_go.HasPermissionResponse, error)
+	HasPermissionStub        func(ctx context.Context, in *protos.HasPermissionRequest, opts ...grpc.CallOption) (*protos.HasPermissionResponse, error)
 	hasPermissionMutex       sync.RWMutex
 	hasPermissionArgsForCall []struct {
 		ctx  context.Context
-		in   *perm_go.HasPermissionRequest
+		in   *protos.HasPermissionRequest
 		opts []grpc.CallOption
 	}
 	hasPermissionReturns struct {
-		result1 *perm_go.HasPermissionResponse
+		result1 *protos.HasPermissionResponse
 		result2 error
 	}
 	hasPermissionReturnsOnCall map[int]struct {
-		result1 *perm_go.HasPermissionResponse
+		result1 *protos.HasPermissionResponse
+		result2 error
+	}
+	ListResourcePatternsStub        func(ctx context.Context, in *protos.ListResourcePatternsRequest, opts ...grpc.CallOption) (*protos.ListResourcePatternsResponse, error)
+	listResourcePatternsMutex       sync.RWMutex
+	listResourcePatternsArgsForCall []struct {
+		ctx  context.Context
+		in   *protos.ListResourcePatternsRequest
+		opts []grpc.CallOption
+	}
+	listResourcePatternsReturns struct {
+		result1 *protos.ListResourcePatternsResponse
+		result2 error
+	}
+	listResourcePatternsReturnsOnCall map[int]struct {
+		result1 *protos.ListResourcePatternsResponse
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePermissionServiceClient) HasPermission(ctx context.Context, in *perm_go.HasPermissionRequest, opts ...grpc.CallOption) (*perm_go.HasPermissionResponse, error) {
+func (fake *FakePermissionServiceClient) HasPermission(ctx context.Context, in *protos.HasPermissionRequest, opts ...grpc.CallOption) (*protos.HasPermissionResponse, error) {
 	fake.hasPermissionMutex.Lock()
 	ret, specificReturn := fake.hasPermissionReturnsOnCall[len(fake.hasPermissionArgsForCall)]
 	fake.hasPermissionArgsForCall = append(fake.hasPermissionArgsForCall, struct {
 		ctx  context.Context
-		in   *perm_go.HasPermissionRequest
+		in   *protos.HasPermissionRequest
 		opts []grpc.CallOption
 	}{ctx, in, opts})
 	fake.recordInvocation("HasPermission", []interface{}{ctx, in, opts})
@@ -55,30 +70,83 @@ func (fake *FakePermissionServiceClient) HasPermissionCallCount() int {
 	return len(fake.hasPermissionArgsForCall)
 }
 
-func (fake *FakePermissionServiceClient) HasPermissionArgsForCall(i int) (context.Context, *perm_go.HasPermissionRequest, []grpc.CallOption) {
+func (fake *FakePermissionServiceClient) HasPermissionArgsForCall(i int) (context.Context, *protos.HasPermissionRequest, []grpc.CallOption) {
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
 	return fake.hasPermissionArgsForCall[i].ctx, fake.hasPermissionArgsForCall[i].in, fake.hasPermissionArgsForCall[i].opts
 }
 
-func (fake *FakePermissionServiceClient) HasPermissionReturns(result1 *perm_go.HasPermissionResponse, result2 error) {
+func (fake *FakePermissionServiceClient) HasPermissionReturns(result1 *protos.HasPermissionResponse, result2 error) {
 	fake.HasPermissionStub = nil
 	fake.hasPermissionReturns = struct {
-		result1 *perm_go.HasPermissionResponse
+		result1 *protos.HasPermissionResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePermissionServiceClient) HasPermissionReturnsOnCall(i int, result1 *perm_go.HasPermissionResponse, result2 error) {
+func (fake *FakePermissionServiceClient) HasPermissionReturnsOnCall(i int, result1 *protos.HasPermissionResponse, result2 error) {
 	fake.HasPermissionStub = nil
 	if fake.hasPermissionReturnsOnCall == nil {
 		fake.hasPermissionReturnsOnCall = make(map[int]struct {
-			result1 *perm_go.HasPermissionResponse
+			result1 *protos.HasPermissionResponse
 			result2 error
 		})
 	}
 	fake.hasPermissionReturnsOnCall[i] = struct {
-		result1 *perm_go.HasPermissionResponse
+		result1 *protos.HasPermissionResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakePermissionServiceClient) ListResourcePatterns(ctx context.Context, in *protos.ListResourcePatternsRequest, opts ...grpc.CallOption) (*protos.ListResourcePatternsResponse, error) {
+	fake.listResourcePatternsMutex.Lock()
+	ret, specificReturn := fake.listResourcePatternsReturnsOnCall[len(fake.listResourcePatternsArgsForCall)]
+	fake.listResourcePatternsArgsForCall = append(fake.listResourcePatternsArgsForCall, struct {
+		ctx  context.Context
+		in   *protos.ListResourcePatternsRequest
+		opts []grpc.CallOption
+	}{ctx, in, opts})
+	fake.recordInvocation("ListResourcePatterns", []interface{}{ctx, in, opts})
+	fake.listResourcePatternsMutex.Unlock()
+	if fake.ListResourcePatternsStub != nil {
+		return fake.ListResourcePatternsStub(ctx, in, opts...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.listResourcePatternsReturns.result1, fake.listResourcePatternsReturns.result2
+}
+
+func (fake *FakePermissionServiceClient) ListResourcePatternsCallCount() int {
+	fake.listResourcePatternsMutex.RLock()
+	defer fake.listResourcePatternsMutex.RUnlock()
+	return len(fake.listResourcePatternsArgsForCall)
+}
+
+func (fake *FakePermissionServiceClient) ListResourcePatternsArgsForCall(i int) (context.Context, *protos.ListResourcePatternsRequest, []grpc.CallOption) {
+	fake.listResourcePatternsMutex.RLock()
+	defer fake.listResourcePatternsMutex.RUnlock()
+	return fake.listResourcePatternsArgsForCall[i].ctx, fake.listResourcePatternsArgsForCall[i].in, fake.listResourcePatternsArgsForCall[i].opts
+}
+
+func (fake *FakePermissionServiceClient) ListResourcePatternsReturns(result1 *protos.ListResourcePatternsResponse, result2 error) {
+	fake.ListResourcePatternsStub = nil
+	fake.listResourcePatternsReturns = struct {
+		result1 *protos.ListResourcePatternsResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakePermissionServiceClient) ListResourcePatternsReturnsOnCall(i int, result1 *protos.ListResourcePatternsResponse, result2 error) {
+	fake.ListResourcePatternsStub = nil
+	if fake.listResourcePatternsReturnsOnCall == nil {
+		fake.listResourcePatternsReturnsOnCall = make(map[int]struct {
+			result1 *protos.ListResourcePatternsResponse
+			result2 error
+		})
+	}
+	fake.listResourcePatternsReturnsOnCall[i] = struct {
+		result1 *protos.ListResourcePatternsResponse
 		result2 error
 	}{result1, result2}
 }
@@ -88,6 +156,8 @@ func (fake *FakePermissionServiceClient) Invocations() map[string][][]interface{
 	defer fake.invocationsMutex.RUnlock()
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
+	fake.listResourcePatternsMutex.RLock()
+	defer fake.listResourcePatternsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
@@ -107,4 +177,4 @@ func (fake *FakePermissionServiceClient) recordInvocation(key string, args []int
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ perm_go.PermissionServiceClient = new(FakePermissionServiceClient)
+var _ protos.PermissionServiceClient = new(FakePermissionServiceClient)

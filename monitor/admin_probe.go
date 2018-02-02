@@ -12,14 +12,14 @@ import (
 )
 
 type AdminProbe struct {
-	RoleServiceClient perm_go.RoleServiceClient
+	RoleServiceClient protos.RoleServiceClient
 }
 
 const (
 	AdminProbeRoleName = "system.admin-probe"
 )
 
-var AdminProbeActor = &perm_go.Actor{
+var AdminProbeActor = &protos.Actor{
 	ID:     "admin-probe",
 	Issuer: "system",
 }
@@ -34,7 +34,7 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 
 	roleName := adminRoleName(uniqueSuffix)
 
-	deleteRoleRequest := &perm_go.DeleteRoleRequest{
+	deleteRoleRequest := &protos.DeleteRoleRequest{
 		Name: roleName,
 	}
 	_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
@@ -72,7 +72,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	var err error
 
 	// CreateRole
-	createRoleRequest := &perm_go.CreateRoleRequest{
+	createRoleRequest := &protos.CreateRoleRequest{
 		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
@@ -85,7 +85,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// AssignRole
-	assignRoleRequest := &perm_go.AssignRoleRequest{
+	assignRoleRequest := &protos.AssignRoleRequest{
 		RoleName: roleName,
 		Actor:    AdminProbeActor,
 	}
@@ -100,7 +100,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// UnassignRole
-	unassignRoleRequest := &perm_go.UnassignRoleRequest{
+	unassignRoleRequest := &protos.UnassignRoleRequest{
 		Actor:    AdminProbeActor,
 		RoleName: roleName,
 	}
@@ -115,7 +115,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 
 	// DeleteRole
-	deleteRoleRequest := &perm_go.DeleteRoleRequest{
+	deleteRoleRequest := &protos.DeleteRoleRequest{
 		Name: roleName,
 	}
 	_, err = p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)

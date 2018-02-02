@@ -11,8 +11,8 @@ type Actor struct {
 	Issuer   ActorIssuer
 }
 
-func (a *Actor) ToProto() *perm_go.Actor {
-	return &perm_go.Actor{
+func (a *Actor) ToProto() *protos.Actor {
+	return &protos.Actor{
 		ID:     string(a.DomainID),
 		Issuer: string(a.Issuer),
 	}

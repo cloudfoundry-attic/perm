@@ -108,8 +108,8 @@ func main() {
 	}
 	defer g.Close()
 
-	roleServiceClient := perm_go.NewRoleServiceClient(g)
-	permissionServiceClient := perm_go.NewPermissionServiceClient(g)
+	roleServiceClient := protos.NewRoleServiceClient(g)
+	permissionServiceClient := protos.NewPermissionServiceClient(g)
 	//////////////////////
 
 	ctx := context.Background()

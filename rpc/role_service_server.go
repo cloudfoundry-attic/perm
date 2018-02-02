@@ -30,8 +30,8 @@ func NewRoleServiceServer(
 
 func (s *RoleServiceServer) CreateRole(
 	ctx context.Context,
-	req *perm_go.CreateRoleRequest,
-) (*perm_go.CreateRoleResponse, error) {
+	req *protos.CreateRoleRequest,
+) (*protos.CreateRoleResponse, error) {
 	name := models.RoleName(req.GetName())
 	var permissions []*models.Permission
 	for _, p := range req.GetPermissions() {
@@ -51,15 +51,15 @@ func (s *RoleServiceServer) CreateRole(
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.CreateRoleResponse{
+	return &protos.CreateRoleResponse{
 		Role: role.ToProto(),
 	}, nil
 }
 
 func (s *RoleServiceServer) GetRole(
 	ctx context.Context,
-	req *perm_go.GetRoleRequest,
-) (*perm_go.GetRoleResponse, error) {
+	req *protos.GetRoleRequest,
+) (*protos.GetRoleResponse, error) {
 	name := models.RoleName(req.GetName())
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
@@ -70,15 +70,15 @@ func (s *RoleServiceServer) GetRole(
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.GetRoleResponse{
+	return &protos.GetRoleResponse{
 		Role: role.ToProto(),
 	}, nil
 }
 
 func (s *RoleServiceServer) DeleteRole(
 	ctx context.Context,
-	req *perm_go.DeleteRoleRequest,
-) (*perm_go.DeleteRoleResponse, error) {
+	req *protos.DeleteRoleRequest,
+) (*protos.DeleteRoleResponse, error) {
 	name := models.RoleName(req.GetName())
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
@@ -91,13 +91,13 @@ func (s *RoleServiceServer) DeleteRole(
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.DeleteRoleResponse{}, nil
+	return &protos.DeleteRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) AssignRole(
 	ctx context.Context,
-	req *perm_go.AssignRoleRequest,
-) (*perm_go.AssignRoleResponse, error) {
+	req *protos.AssignRoleRequest,
+) (*protos.AssignRoleResponse, error) {
 	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
 
@@ -116,13 +116,13 @@ func (s *RoleServiceServer) AssignRole(
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.AssignRoleResponse{}, nil
+	return &protos.AssignRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) UnassignRole(
 	ctx context.Context,
-	req *perm_go.UnassignRoleRequest,
-) (*perm_go.UnassignRoleResponse, error) {
+	req *protos.UnassignRoleRequest,
+) (*protos.UnassignRoleResponse, error) {
 	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
 
@@ -145,13 +145,13 @@ func (s *RoleServiceServer) UnassignRole(
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.UnassignRoleResponse{}, nil
+	return &protos.UnassignRoleResponse{}, nil
 }
 
 func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
-	req *perm_go.HasRoleRequest,
-) (*perm_go.HasRoleResponse, error) {
+	req *protos.HasRoleRequest,
+) (*protos.HasRoleResponse, error) {
 	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
 	domainID := models.ActorDomainID(pActor.GetID())
@@ -177,20 +177,20 @@ func (s *RoleServiceServer) HasRole(
 	found, err := s.roleAssignmentService.HasRole(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
-			return &perm_go.HasRoleResponse{HasRole: false}, nil
+			return &protos.HasRoleResponse{HasRole: false}, nil
 		}
 
 		return nil, togRPCError(err)
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.HasRoleResponse{HasRole: found}, nil
+	return &protos.HasRoleResponse{HasRole: found}, nil
 }
 
 func (s *RoleServiceServer) ListActorRoles(
 	ctx context.Context,
-	req *perm_go.ListActorRolesRequest,
-) (*perm_go.ListActorRolesResponse, error) {
+	req *protos.ListActorRolesRequest,
+) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
 	domainID := models.ActorDomainID(pActor.GetID())
 	issuer := models.ActorIssuer(pActor.GetIssuer())
@@ -210,22 +210,22 @@ func (s *RoleServiceServer) ListActorRoles(
 		}
 	}
 
-	var pRoles []*perm_go.Role
+	var pRoles []*protos.Role
 
 	for _, r := range roles {
 		pRoles = append(pRoles, r.ToProto())
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.ListActorRolesResponse{
+	return &protos.ListActorRolesResponse{
 		Roles: pRoles,
 	}, nil
 }
 
 func (s *RoleServiceServer) ListRolePermissions(
 	ctx context.Context,
-	req *perm_go.ListRolePermissionsRequest,
-) (*perm_go.ListRolePermissionsResponse, error) {
+	req *protos.ListRolePermissionsRequest,
+) (*protos.ListRolePermissionsResponse, error) {
 	roleName := models.RoleName(req.GetRoleName())
 	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
 		"role.name": roleName,
@@ -241,14 +241,14 @@ func (s *RoleServiceServer) ListRolePermissions(
 		}
 	}
 
-	var pPermissions []*perm_go.Permission
+	var pPermissions []*protos.Permission
 
 	for _, p := range permissions {
 		pPermissions = append(pPermissions, p.ToProto())
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.ListRolePermissionsResponse{
+	return &protos.ListRolePermissionsResponse{
 		Permissions: pPermissions,
 	}, nil
 }

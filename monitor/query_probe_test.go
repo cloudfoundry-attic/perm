@@ -152,8 +152,8 @@ var _ = Describe("QueryProbe", func() {
 
 	Describe("Run", func() {
 		BeforeEach(func() {
-			fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &perm_go.HasPermissionResponse{HasPermission: true}, nil)
-			fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &perm_go.HasPermissionResponse{HasPermission: false}, nil)
+			fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &protos.HasPermissionResponse{HasPermission: true}, nil)
+			fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &protos.HasPermissionResponse{HasPermission: false}, nil)
 		})
 
 		It("asks if the actor has a permission it should have, and a permission it shouldn't", func() {
@@ -193,7 +193,7 @@ var _ = Describe("QueryProbe", func() {
 
 		Context("when checking for the permission it should have returns that the actor doesn't have permission", func() {
 			BeforeEach(func() {
-				fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &perm_go.HasPermissionResponse{HasPermission: false}, nil)
+				fakePermissionsServiceClient.HasPermissionReturnsOnCall(0, &protos.HasPermissionResponse{HasPermission: false}, nil)
 			})
 
 			It("returns that it's incorrect and does not ask for the next permission", func() {
@@ -222,7 +222,7 @@ var _ = Describe("QueryProbe", func() {
 
 		Context("when checking for the permission it should not have returns that the actor does have permission", func() {
 			BeforeEach(func() {
-				fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &perm_go.HasPermissionResponse{HasPermission: true}, nil)
+				fakePermissionsServiceClient.HasPermissionReturnsOnCall(1, &protos.HasPermissionResponse{HasPermission: true}, nil)
 			})
 
 			It("returns that it's incorrect", func() {

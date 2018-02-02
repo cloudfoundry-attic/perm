@@ -27,8 +27,8 @@ func NewPermissionServiceServer(
 
 func (s *PermissionServiceServer) HasPermission(
 	ctx context.Context,
-	req *perm_go.HasPermissionRequest,
-) (*perm_go.HasPermissionResponse, error) {
+	req *protos.HasPermissionRequest,
+) (*protos.HasPermissionResponse, error) {
 	pActor := req.GetActor()
 	domainID := models.ActorDomainID(pActor.GetID())
 	issuer := models.ActorIssuer(pActor.GetIssuer())
@@ -58,12 +58,19 @@ func (s *PermissionServiceServer) HasPermission(
 	found, err := s.permissionService.HasPermission(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
-			return &perm_go.HasPermissionResponse{HasPermission: false}, nil
+			return &protos.HasPermissionResponse{HasPermission: false}, nil
 		}
 
 		return nil, togRPCError(err)
 	}
 
 	logger.Debug(messages.Success)
-	return &perm_go.HasPermissionResponse{HasPermission: found}, nil
+	return &protos.HasPermissionResponse{HasPermission: found}, nil
+}
+
+func (s *PermissionServiceServer) ListResourcePatterns(
+	ctx context.Context,
+	req *protos.ListResourcePatternsRequest,
+) (*protos.ListResourcePatternsResponse, error) {
+	panic("Not implemented")
 }

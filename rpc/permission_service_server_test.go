@@ -36,23 +36,23 @@ var _ = Describe("PermissionServiceServer", func() {
 		It("returns true if they have been assigned a role with a permission with a name "+
 			"matching the permission name and a resource pattern that matches the resourceID of the query", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
 
-			permission1 := &perm_go.Permission{
+			permission1 := &protos.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			permission2 := &perm_go.Permission{
+			permission2 := &protos.Permission{
 				Name:            "some-other-permission",
 				ResourcePattern: "some-other-resource-ID",
 			}
 
-			_, err := roleServiceServer.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
-				Permissions: []*perm_go.Permission{
+				Permissions: []*protos.Permission{
 					permission1,
 					permission2,
 				},
@@ -60,14 +60,14 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleServiceServer.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasPermission(ctx, &perm_go.HasPermissionRequest{
+			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
 				PermissionName: "some-other-permission",
 				ResourceId:     "some-other-resource-ID",
@@ -79,23 +79,23 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("returns false if they mismatch the permission name and resourceID", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
 
-			permission1 := &perm_go.Permission{
+			permission1 := &protos.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			permission2 := &perm_go.Permission{
+			permission2 := &protos.Permission{
 				Name:            "some-other-permission",
 				ResourcePattern: "some-other-resource-ID",
 			}
 
-			_, err := roleServiceServer.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
-				Permissions: []*perm_go.Permission{
+				Permissions: []*protos.Permission{
 					permission1,
 					permission2,
 				},
@@ -103,14 +103,14 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleServiceServer.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasPermission(ctx, &perm_go.HasPermissionRequest{
+			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
 				PermissionName: "some-permission",
 				ResourceId:     "some-other-resource-ID",
@@ -122,26 +122,26 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("returns false if they have not been assigned the role", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
 
-			permission := &perm_go.Permission{
+			permission := &protos.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
 
-			_, err := roleServiceServer.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
-				Permissions: []*perm_go.Permission{
+				Permissions: []*protos.Permission{
 					permission,
 				},
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasPermission(ctx, &perm_go.HasPermissionRequest{
+			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
 				PermissionName: "some-permission",
 				ResourceId:     "some-resource-ID",
@@ -153,26 +153,26 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("returns false if they have no permissions", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
 
-			_, err := roleServiceServer.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name:        roleName,
-				Permissions: []*perm_go.Permission{},
+				Permissions: []*protos.Permission{},
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleServiceServer.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasPermission(ctx, &perm_go.HasPermissionRequest{
+			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
 				PermissionName: "some-permission",
 				ResourceId:     "some-resource-ID",

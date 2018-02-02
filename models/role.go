@@ -8,8 +8,8 @@ type Role struct {
 	Name RoleName
 }
 
-func (r *Role) ToProto() *perm_go.Role {
-	return &perm_go.Role{
+func (r *Role) ToProto() *protos.Role {
+	return &protos.Role{
 		Name: string(r.Name),
 	}
 }

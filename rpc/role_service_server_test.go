@@ -32,7 +32,7 @@ var _ = Describe("RoleServiceServer", func() {
 
 	Describe("#CreateRole", func() {
 		It("succeeds if no role with that name exists", func() {
-			req := &perm_go.CreateRoleRequest{
+			req := &protos.CreateRoleRequest{
 				Name: "test-role",
 			}
 			res, err := subject.CreateRole(ctx, req)
@@ -42,7 +42,7 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("fails if a role with that name already exists", func() {
-			req := &perm_go.CreateRoleRequest{
+			req := &protos.CreateRoleRequest{
 				Name: "test-role",
 			}
 			_, err := subject.CreateRole(ctx, req)
@@ -59,13 +59,13 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#GetRole", func() {
 		It("returns the role if a match exists", func() {
 			name := "test"
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			req := &perm_go.GetRoleRequest{
+			req := &protos.GetRoleRequest{
 				Name: name,
 			}
 			res, err := subject.GetRole(ctx, req)
@@ -79,7 +79,7 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("returns an error if no match exists", func() {
-			res, err := subject.GetRole(ctx, &perm_go.GetRoleRequest{
+			res, err := subject.GetRole(ctx, &protos.GetRoleRequest{
 				Name: "does-not-exist",
 			})
 
@@ -91,20 +91,20 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
 			name := "test-role"
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.DeleteRole(ctx, &perm_go.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			_, err = subject.GetRole(ctx, &perm_go.GetRoleRequest{
+			_, err = subject.GetRole(ctx, &protos.GetRoleRequest{
 				Name: name,
 			})
 
@@ -112,7 +112,7 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("fails if the role does not exist", func() {
-			res, err := subject.DeleteRole(ctx, &perm_go.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: "test-role",
 			})
 
@@ -123,25 +123,25 @@ var _ = Describe("RoleServiceServer", func() {
 		It("deletes any role assignments for the role", func() {
 			name := "test-role"
 
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor-id",
 				Issuer: "issuer",
 			}
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			hasRoleRes, err := subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			hasRoleRes, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
@@ -150,14 +150,14 @@ var _ = Describe("RoleServiceServer", func() {
 			Expect(hasRoleRes).NotTo(BeNil())
 			Expect(hasRoleRes.GetHasRole()).To(BeTrue())
 
-			res, err := subject.DeleteRole(ctx, &perm_go.DeleteRoleRequest{
+			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			hasRoleRes, err = subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			hasRoleRes, err = subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
@@ -171,17 +171,17 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#AssignRole", func() {
 		It("succeeds if the role exists", func() {
 			name := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			req := &perm_go.AssignRoleRequest{
+			req := &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			}
@@ -193,17 +193,17 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("fails if the user has already been assigned the role", func() {
 			name := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			req := &perm_go.AssignRoleRequest{
+			req := &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			}
@@ -218,11 +218,11 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("fails if the role does not exist", func() {
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			res, err := subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: "does-not-exist",
 			})
@@ -235,24 +235,24 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#UnassignRole", func() {
 		It("removes role binding if the user has that role", func() {
 			name := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor-id",
 				Issuer: "fake-issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			req := &perm_go.UnassignRoleRequest{
+			req := &protos.UnassignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			}
@@ -264,17 +264,17 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("fails if the user is not assigned to the role", func() {
 			name := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			req := &perm_go.UnassignRoleRequest{
+			req := &protos.UnassignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			}
@@ -286,11 +286,11 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("fails if the role does not exist", func() {
 			name := "fake-role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			req := &perm_go.UnassignRoleRequest{
+			req := &protos.UnassignRoleRequest{
 				Actor:    actor,
 				RoleName: name,
 			}
@@ -304,24 +304,24 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#HasRole", func() {
 		It("returns true if the actor has the role", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -333,28 +333,28 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("returns false if only an actor with the same name but different issuer is assigned", func() {
 			roleName := "role"
-			actor1 := &perm_go.Actor{
+			actor1 := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer1",
 			}
-			actor2 := &perm_go.Actor{
+			actor2 := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer2",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor1,
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor2,
 				RoleName: roleName,
 			})
@@ -366,17 +366,17 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("returns false if the actor is not assigned", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -388,11 +388,11 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("returns false if the role does not exist", func() {
 			roleName := "role"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.HasRole(ctx, &perm_go.HasRoleRequest{
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
@@ -407,38 +407,38 @@ var _ = Describe("RoleServiceServer", func() {
 		It("returns all the roles that the actor has been assigned to", func() {
 			role1 := "role1"
 			role2 := "role2"
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
 
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: role1,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: role1,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err = subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: role2,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.AssignRole(ctx, &perm_go.AssignRoleRequest{
+			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: role2,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.ListActorRoles(ctx, &perm_go.ListActorRolesRequest{
+			res, err := subject.ListActorRoles(ctx, &protos.ListActorRolesRequest{
 				Actor: actor,
 			})
 
@@ -456,11 +456,11 @@ var _ = Describe("RoleServiceServer", func() {
 		})
 
 		It("returns an empty list if the actor has not been assigned to any roles", func() {
-			actor := &perm_go.Actor{
+			actor := &protos.Actor{
 				ID:     "actor",
 				Issuer: "issuer",
 			}
-			res, err := subject.ListActorRoles(ctx, &perm_go.ListActorRolesRequest{
+			res, err := subject.ListActorRoles(ctx, &protos.ListActorRolesRequest{
 				Actor: actor,
 			})
 
@@ -473,18 +473,18 @@ var _ = Describe("RoleServiceServer", func() {
 	Describe("#ListRolePermissions", func() {
 		It("returns all the permissions that the role was created with", func() {
 			roleName := "role1"
-			permission1 := &perm_go.Permission{
+			permission1 := &protos.Permission{
 				Name:            "permission-1",
 				ResourcePattern: "resource-pattern-1",
 			}
-			permission2 := &perm_go.Permission{
+			permission2 := &protos.Permission{
 				Name:            "permission-2",
 				ResourcePattern: "resource-pattern-2",
 			}
 
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
-				Permissions: []*perm_go.Permission{
+				Permissions: []*protos.Permission{
 					permission1,
 					permission2,
 				},
@@ -492,14 +492,14 @@ var _ = Describe("RoleServiceServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.ListRolePermissions(ctx, &perm_go.ListRolePermissionsRequest{
+			res, err := subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
 				RoleName: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			var permissions []perm_go.Permission
+			var permissions []protos.Permission
 			for _, p := range res.GetPermissions() {
 				permissions = append(permissions, *p)
 			}
@@ -511,13 +511,13 @@ var _ = Describe("RoleServiceServer", func() {
 
 		It("returns an empty list if the actor has not been assigned to any roles", func() {
 			roleName := "role1"
-			_, err := subject.CreateRole(ctx, &perm_go.CreateRoleRequest{
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 			})
 
 			Expect(err).NotTo(HaveOccurred())
 
-			res, err := subject.ListRolePermissions(ctx, &perm_go.ListRolePermissionsRequest{
+			res, err := subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
 				RoleName: roleName,
 			})
 			Expect(err).NotTo(HaveOccurred())

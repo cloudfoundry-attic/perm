@@ -16,8 +16,8 @@ type Permission struct {
 	ResourcePattern PermissionResourcePattern
 }
 
-func (p *Permission) ToProto() *perm_go.Permission {
-	return &perm_go.Permission{
+func (p *Permission) ToProto() *protos.Permission {
+	return &protos.Permission{
 		Name:            string(p.Name),
 		ResourcePattern: string(p.ResourcePattern),
 	}

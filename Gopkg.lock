@@ -9,9 +9,9 @@
 
 [[projects]]
   name = "code.cloudfoundry.org/perm-go"
-  packages = ["."]
-  revision = "39fd1f4d01a44698151084d90bf25858be65006b"
-  version = "v0.0.1"
+  packages = [".","perm-gofakes"]
+  revision = "845cb508d224a80d70268d6ddb4315b74731712f"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/DATA-DOG/go-sqlmock"
@@ -46,14 +46,14 @@
 [[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["gogoproto","proto","protoc-gen-gogo/descriptor"]
-  revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
-  version = "v0.5"
+  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
+  version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
-  revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -141,9 +141,9 @@
 
 [[projects]]
   name = "google.golang.org/grpc"
-  packages = [".","balancer","codes","connectivity","credentials","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","resolver","stats","status","tap","transport"]
-  revision = "f7bf885db0b7479a537ec317c6e48ce53145f3db"
-  version = "v1.7.0"
+  packages = [".","balancer","balancer/base","balancer/roundrobin","codes","connectivity","credentials","encoding","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","stats","status","tap","transport"]
+  revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
+  version = "v1.9.2"
 
 [[projects]]
   branch = "v2"
@@ -154,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3dd829545d09ec73eeda24c5b3a739a8b4687e954211f5b3f89c8d478239c3e1"
+  inputs-digest = "6866256350ce48b74547cdd038033eecaec7a15b63c08cb280212eca0c50cd3d"
   solver-name = "gps-cdcl"
   solver-version = 1

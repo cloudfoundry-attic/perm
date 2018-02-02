@@ -103,10 +103,10 @@ func (cmd ServeCommand) Execute([]string) error {
 	store := db.NewDataService(conn)
 
 	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
-	perm_go.RegisterRoleServiceServer(grpcServer, roleServiceServer)
+	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 
 	permissionServiceServer := rpc.NewPermissionServiceServer(logger, store)
-	perm_go.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
+	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
 
 	logger.Debug(messages.Starting, listeningLogData)
 
