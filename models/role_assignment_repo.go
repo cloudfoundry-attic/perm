@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-type RoleAssignmentService interface {
+type RoleAssignmentRepo interface {
 	AssignRole(
 		ctx context.Context,
 		logger lager.Logger,

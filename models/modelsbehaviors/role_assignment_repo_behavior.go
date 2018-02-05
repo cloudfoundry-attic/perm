@@ -13,13 +13,13 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeARoleAssignmentService(
-	subjectCreator func() models.RoleAssignmentService,
+func BehavesLikeARoleAssignmentRepo(
+	subjectCreator func() models.RoleAssignmentRepo,
 	roleServiceCreator func() models.RoleService,
 	actorRepoCreator func() models.ActorRepo,
 ) {
 	var (
-		subject models.RoleAssignmentService
+		subject models.RoleAssignmentRepo
 
 		roleService models.RoleService
 		actorRepo   models.ActorRepo

@@ -99,6 +99,6 @@ var _ = Describe("DataService", func() {
 
 	BehavesLikeARoleService(func() models.RoleService { return store })
 	BehavesLikeAnActorRepo(func() models.ActorRepo { return store })
-	BehavesLikeARoleAssignmentService(func() models.RoleAssignmentService { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store })
-	BehavesLikeAPermissionRepo(func() models.PermissionRepo { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store }, func() models.RoleAssignmentService { return store })
+	BehavesLikeARoleAssignmentRepo(func() models.RoleAssignmentRepo { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store })
+	BehavesLikeAPermissionRepo(func() models.PermissionRepo { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store }, func() models.RoleAssignmentRepo { return store })
 })

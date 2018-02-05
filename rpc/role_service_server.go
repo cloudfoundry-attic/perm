@@ -12,19 +12,19 @@ import (
 type RoleServiceServer struct {
 	logger lager.Logger
 
-	roleService           models.RoleService
-	roleAssignmentService models.RoleAssignmentService
+	roleService        models.RoleService
+	roleAssignmentRepo models.RoleAssignmentRepo
 }
 
 func NewRoleServiceServer(
 	logger lager.Logger,
 	roleService models.RoleService,
-	roleAssignmentService models.RoleAssignmentService,
+	roleAssignmentRepo models.RoleAssignmentRepo,
 ) *RoleServiceServer {
 	return &RoleServiceServer{
-		logger:                logger,
-		roleService:           roleService,
-		roleAssignmentService: roleAssignmentService,
+		logger:             logger,
+		roleService:        roleService,
+		roleAssignmentRepo: roleAssignmentRepo,
 	}
 }
 
@@ -110,7 +110,7 @@ func (s *RoleServiceServer) AssignRole(
 	})
 	logger.Debug(messages.Starting)
 
-	err := s.roleAssignmentService.AssignRole(ctx, logger, roleName, domainID, issuer)
+	err := s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -139,7 +139,7 @@ func (s *RoleServiceServer) UnassignRole(
 	})
 	logger.Debug(messages.Starting)
 
-	err := s.roleAssignmentService.UnassignRole(ctx, logger, roleName, domainID, issuer)
+	err := s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -174,7 +174,7 @@ func (s *RoleServiceServer) HasRole(
 		},
 	}
 
-	found, err := s.roleAssignmentService.HasRole(ctx, logger, query)
+	found, err := s.roleAssignmentRepo.HasRole(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
 			return &protos.HasRoleResponse{HasRole: false}, nil
@@ -201,7 +201,7 @@ func (s *RoleServiceServer) ListActorRoles(
 	logger.Debug(messages.Starting)
 
 	actorQuery := models.ActorQuery{DomainID: domainID, Issuer: issuer}
-	roles, err := s.roleAssignmentService.ListActorRoles(ctx, logger, actorQuery)
+	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, actorQuery)
 	if err != nil {
 		if err == models.ErrActorNotFound {
 			roles = []*models.Role{}
