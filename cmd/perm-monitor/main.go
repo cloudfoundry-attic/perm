@@ -1,4 +1,4 @@
-package main // import "code.cloudfoundry.org/perm/cmd/perm-monitor"
+package main
 
 import (
 	"net"

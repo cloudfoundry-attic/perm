@@ -1,4 +1,4 @@
-package messages // import "code.cloudfoundry.org/perm/messages"
+package messages
 
 // `Err` messages are for states that are expected as part of the normal control flow,
 // e.g., a query returned no results.
