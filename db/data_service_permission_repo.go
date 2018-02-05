@@ -5,12 +5,13 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 )
 
 func (s *DataService) HasPermission(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.HasPermissionQuery,
+	query repos.HasPermissionQuery,
 ) (bool, error) {
 	return hasPermission(ctx, logger.Session("data-service"), s.conn, query)
 }
@@ -18,7 +19,7 @@ func (s *DataService) HasPermission(
 func (s *DataService) ListResourcePatterns(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.ListResourcePatternsQuery,
+	query repos.ListResourcePatternsQuery,
 ) ([]models.PermissionResourcePattern, error) {
 	return listResourcePatterns(ctx, logger.Session("data-service"), s.conn, query)
 }

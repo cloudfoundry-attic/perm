@@ -1,24 +1,25 @@
-package models
+package repos
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/models"
 )
 
 type RoleRepo interface {
 	CreateRole(
 		ctx context.Context,
 		logger lager.Logger,
-		name RoleName,
-		permissions ...*Permission,
-	) (*Role, error)
+		name models.RoleName,
+		permissions ...*models.Permission,
+	) (*models.Role, error)
 
 	FindRole(
 		context.Context,
 		lager.Logger,
 		RoleQuery,
-	) (*Role, error)
+	) (*models.Role, error)
 
 	DeleteRole(
 		context.Context,
@@ -30,9 +31,9 @@ type RoleRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		query RoleQuery,
-	) ([]*Permission, error)
+	) ([]*models.Permission, error)
 }
 
 type RoleQuery struct {
-	Name RoleName
+	Name models.RoleName
 }

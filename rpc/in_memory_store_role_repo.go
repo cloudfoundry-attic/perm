@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 )
 
 func (s *InMemoryStore) CreateRole(
@@ -30,7 +31,7 @@ func (s *InMemoryStore) CreateRole(
 func (s *InMemoryStore) FindRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) (*models.Role, error) {
 	name := query.Name
 	role, exists := s.roles[name]
@@ -45,7 +46,7 @@ func (s *InMemoryStore) FindRole(
 func (s *InMemoryStore) DeleteRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) error {
 	name := query.Name
 
@@ -152,7 +153,7 @@ func (s *InMemoryStore) UnassignRole(
 func (s *InMemoryStore) HasRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.RoleAssignmentQuery,
+	query repos.RoleAssignmentQuery,
 ) (bool, error) {
 	actor := models.Actor{
 		DomainID: query.ActorQuery.DomainID,
@@ -186,7 +187,7 @@ func (s *InMemoryStore) HasRole(
 func (s *InMemoryStore) ListActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.ActorQuery,
+	query repos.ActorQuery,
 ) ([]*models.Role, error) {
 	actor := models.Actor(query)
 
@@ -232,7 +233,7 @@ func (s *InMemoryStore) CreateActor(
 func (s *InMemoryStore) FindActor(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.ActorQuery,
+	query repos.ActorQuery,
 ) (*models.Actor, error) {
 	actor := models.Actor(query)
 
@@ -246,7 +247,7 @@ func (s *InMemoryStore) FindActor(
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) ([]*models.Permission, error) {
 	roleName := query.Name
 

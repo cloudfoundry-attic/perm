@@ -7,19 +7,20 @@ import (
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 )
 
 type RoleServiceServer struct {
 	logger lager.Logger
 
-	roleRepo           models.RoleRepo
-	roleAssignmentRepo models.RoleAssignmentRepo
+	roleRepo           repos.RoleRepo
+	roleAssignmentRepo repos.RoleAssignmentRepo
 }
 
 func NewRoleServiceServer(
 	logger lager.Logger,
-	roleRepo models.RoleRepo,
-	roleAssignmentRepo models.RoleAssignmentRepo,
+	roleRepo repos.RoleRepo,
+	roleAssignmentRepo repos.RoleAssignmentRepo,
 ) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:             logger,
@@ -64,7 +65,7 @@ func (s *RoleServiceServer) GetRole(
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
 
-	role, err := s.roleRepo.FindRole(ctx, logger, models.RoleQuery{Name: name})
+	role, err := s.roleRepo.FindRole(ctx, logger, repos.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -85,7 +86,7 @@ func (s *RoleServiceServer) DeleteRole(
 	})
 	logger.Debug(messages.Starting)
 
-	err := s.roleRepo.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
+	err := s.roleRepo.DeleteRole(ctx, logger, repos.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -164,12 +165,12 @@ func (s *RoleServiceServer) HasRole(
 	})
 	logger.Debug(messages.Starting)
 
-	query := models.RoleAssignmentQuery{
-		ActorQuery: models.ActorQuery{
+	query := repos.RoleAssignmentQuery{
+		ActorQuery: repos.ActorQuery{
 			DomainID: domainID,
 			Issuer:   issuer,
 		},
-		RoleQuery: models.RoleQuery{
+		RoleQuery: repos.RoleQuery{
 			Name: roleName,
 		},
 	}
@@ -200,7 +201,7 @@ func (s *RoleServiceServer) ListActorRoles(
 	})
 	logger.Debug(messages.Starting)
 
-	actorQuery := models.ActorQuery{DomainID: domainID, Issuer: issuer}
+	actorQuery := repos.ActorQuery{DomainID: domainID, Issuer: issuer}
 	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, actorQuery)
 	if err != nil {
 		if err == models.ErrActorNotFound {
@@ -232,7 +233,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	})
 	logger.Debug(messages.Starting)
 
-	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, models.RoleQuery{Name: roleName})
+	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, repos.RoleQuery{Name: roleName})
 	if err != nil {
 		if err == models.ErrRoleNotFound {
 			permissions = []*models.Permission{}

@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	. "code.cloudfoundry.org/perm/db"
+	"code.cloudfoundry.org/perm/repos"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,8 +19,7 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
-	"code.cloudfoundry.org/perm/models"
-	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
+	. "code.cloudfoundry.org/perm/repos/reposbehaviors"
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
@@ -97,8 +97,8 @@ var _ = Describe("DataService", func() {
 		mySQLRunner.DropTestDB()
 	})
 
-	BehavesLikeARoleRepo(func() models.RoleRepo { return store })
-	BehavesLikeAnActorRepo(func() models.ActorRepo { return store })
-	BehavesLikeARoleAssignmentRepo(func() models.RoleAssignmentRepo { return store }, func() models.RoleRepo { return store }, func() models.ActorRepo { return store })
-	BehavesLikeAPermissionRepo(func() models.PermissionRepo { return store }, func() models.RoleRepo { return store }, func() models.ActorRepo { return store }, func() models.RoleAssignmentRepo { return store })
+	BehavesLikeARoleRepo(func() repos.RoleRepo { return store })
+	BehavesLikeAnActorRepo(func() repos.ActorRepo { return store })
+	BehavesLikeARoleAssignmentRepo(func() repos.RoleAssignmentRepo { return store }, func() repos.RoleRepo { return store }, func() repos.ActorRepo { return store })
+	BehavesLikeAPermissionRepo(func() repos.PermissionRepo { return store }, func() repos.RoleRepo { return store }, func() repos.ActorRepo { return store }, func() repos.RoleAssignmentRepo { return store })
 })

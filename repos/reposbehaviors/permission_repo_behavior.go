@@ -1,10 +1,11 @@
-package modelsbehaviors_test
+package reposbehaviors_test
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -14,17 +15,17 @@ import (
 )
 
 func BehavesLikeAPermissionRepo(
-	subjectCreator func() models.PermissionRepo,
-	roleRepoCreator func() models.RoleRepo,
-	actorRepoCreator func() models.ActorRepo,
-	roleAssignmentRepoCreator func() models.RoleAssignmentRepo,
+	subjectCreator func() repos.PermissionRepo,
+	roleRepoCreator func() repos.RoleRepo,
+	actorRepoCreator func() repos.ActorRepo,
+	roleAssignmentRepoCreator func() repos.RoleAssignmentRepo,
 ) {
 	var (
-		subject models.PermissionRepo
+		subject repos.PermissionRepo
 
-		roleRepo           models.RoleRepo
-		actorRepo          models.ActorRepo
-		roleAssignmentRepo models.RoleAssignmentRepo
+		roleRepo           repos.RoleRepo
+		actorRepo          repos.ActorRepo
+		roleAssignmentRepo repos.RoleAssignmentRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -63,17 +64,17 @@ func BehavesLikeAPermissionRepo(
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			permissionQuery := models.PermissionQuery{
+			permissionQuery := repos.PermissionQuery{
 				PermissionName: "some-permission",
 				ResourceID:     "some-resource-ID",
 			}
 
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
 
-			query := models.HasPermissionQuery{
+			query := repos.HasPermissionQuery{
 				PermissionQuery: permissionQuery,
 				ActorQuery:      actorQuery,
 			}
@@ -99,17 +100,17 @@ func BehavesLikeAPermissionRepo(
 			_, err = actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			permissionQuery := models.PermissionQuery{
+			permissionQuery := repos.PermissionQuery{
 				PermissionName: "some-permission",
 				ResourceID:     "some-resource-ID",
 			}
 
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
 
-			query := models.HasPermissionQuery{
+			query := repos.HasPermissionQuery{
 				PermissionQuery: permissionQuery,
 				ActorQuery:      actorQuery,
 			}
@@ -127,17 +128,17 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			permissionQuery := models.PermissionQuery{
+			permissionQuery := repos.PermissionQuery{
 				PermissionName: "some-permission",
 				ResourceID:     "some-resource-ID",
 			}
 
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
 
-			query := models.HasPermissionQuery{
+			query := repos.HasPermissionQuery{
 				PermissionQuery: permissionQuery,
 				ActorQuery:      actorQuery,
 			}
@@ -185,11 +186,11 @@ func BehavesLikeAPermissionRepo(
 			_, err = roleRepo.CreateRole(ctx, logger, models.RoleName("not-assigned-to-this-role"), permission4)
 			Expect(err).NotTo(HaveOccurred())
 
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.ListResourcePatternsQuery{
+			query := repos.ListResourcePatternsQuery{
 				ActorQuery:     actorQuery,
 				PermissionName: permissionName,
 			}
@@ -232,11 +233,11 @@ func BehavesLikeAPermissionRepo(
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName2, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.ListResourcePatternsQuery{
+			query := repos.ListResourcePatternsQuery{
 				ActorQuery:     actorQuery,
 				PermissionName: permissionName,
 			}
@@ -250,12 +251,12 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("returns empty if the actor is not assigned to any roles with that permission", func() {
-			actorQuery := models.ActorQuery{
+			actorQuery := repos.ActorQuery{
 				DomainID: "fake-actor",
 				Issuer:   "fake-issuer",
 			}
 			permissionName := models.PermissionName("fake-permission-name")
-			query := models.ListResourcePatternsQuery{
+			query := repos.ListResourcePatternsQuery{
 				ActorQuery:     actorQuery,
 				PermissionName: permissionName,
 			}

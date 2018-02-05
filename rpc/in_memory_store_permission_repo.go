@@ -5,12 +5,13 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 )
 
 func (s *InMemoryStore) HasPermission(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.HasPermissionQuery,
+	query repos.HasPermissionQuery,
 ) (bool, error) {
 	actor := models.Actor{
 		DomainID: query.ActorQuery.DomainID,
@@ -44,7 +45,7 @@ func (s *InMemoryStore) HasPermission(
 func (s *InMemoryStore) ListResourcePatterns(
 	ctx context.Context,
 	logger lager.Logger,
-	query models.ListResourcePatternsQuery,
+	query repos.ListResourcePatternsQuery,
 ) ([]models.PermissionResourcePattern, error) {
 	actor := models.Actor{
 		DomainID: query.ActorQuery.DomainID,
@@ -84,7 +85,7 @@ func (s *InMemoryStore) ListResourcePatterns(
 	return resourcePatterns, nil
 }
 
-func hasPermission(permission *models.Permission, query models.HasPermissionQuery) bool {
+func hasPermission(permission *models.Permission, query repos.HasPermissionQuery) bool {
 	namesMatch := permission.Name == query.PermissionQuery.PermissionName
 	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourceID)
 

@@ -1,19 +1,20 @@
-package models
+package repos
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/models"
 )
 
 type PermissionDefinitionQuery struct {
-	Name PermissionDefinitionName
+	Name models.PermissionDefinitionName
 }
 
 type ResourceID string
 
 type PermissionQuery struct {
-	PermissionName PermissionName
+	PermissionName models.PermissionName
 	ResourceID     ResourceID
 }
 
@@ -24,7 +25,7 @@ type HasPermissionQuery struct {
 
 type ListResourcePatternsQuery struct {
 	ActorQuery     ActorQuery
-	PermissionName PermissionName
+	PermissionName models.PermissionName
 }
 
 //go:generate counterfeiter . PermissionRepo
@@ -40,5 +41,5 @@ type PermissionRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		query ListResourcePatternsQuery,
-	) ([]PermissionResourcePattern, error)
+	) ([]models.PermissionResourcePattern, error)
 }

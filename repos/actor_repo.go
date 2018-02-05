@@ -1,27 +1,28 @@
-package models
+package repos
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/models"
 )
 
 type ActorQuery struct {
-	DomainID ActorDomainID
-	Issuer   ActorIssuer
+	DomainID models.ActorDomainID
+	Issuer   models.ActorIssuer
 }
 
 type ActorRepo interface {
 	CreateActor(
 		ctx context.Context,
 		logger lager.Logger,
-		domainID ActorDomainID,
-		issuer ActorIssuer,
-	) (*Actor, error)
+		domainID models.ActorDomainID,
+		issuer models.ActorIssuer,
+	) (*models.Actor, error)
 
 	FindActor(
 		ctx context.Context,
 		logger lager.Logger,
 		query ActorQuery,
-	) (*Actor, error)
+	) (*models.Actor, error)
 }

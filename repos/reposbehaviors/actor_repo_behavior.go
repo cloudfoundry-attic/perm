@@ -1,4 +1,4 @@
-package modelsbehaviors_test
+package reposbehaviors_test
 
 import (
 	"context"
@@ -7,14 +7,15 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeAnActorRepo(actorRepoCreator func() models.ActorRepo) {
+func BehavesLikeAnActorRepo(actorRepoCreator func() repos.ActorRepo) {
 	var (
-		subject models.ActorRepo
+		subject repos.ActorRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -47,7 +48,7 @@ func BehavesLikeAnActorRepo(actorRepoCreator func() models.ActorRepo) {
 			Expect(actor.Issuer).To(Equal(issuer))
 
 			expectedActor := actor
-			actor, err = subject.FindActor(ctx, logger, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+			actor, err = subject.FindActor(ctx, logger, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actor).To(Equal(expectedActor))
@@ -78,7 +79,7 @@ func BehavesLikeAnActorRepo(actorRepoCreator func() models.ActorRepo) {
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := subject.FindActor(ctx, logger, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+			_, err := subject.FindActor(ctx, logger, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 
 			Expect(err).To(Equal(models.ErrActorNotFound))
 		})

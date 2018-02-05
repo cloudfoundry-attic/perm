@@ -3,8 +3,8 @@ package rpc_test
 import (
 	. "code.cloudfoundry.org/perm/rpc"
 
-	"code.cloudfoundry.org/perm/models"
-	. "code.cloudfoundry.org/perm/models/modelsbehaviors"
+	"code.cloudfoundry.org/perm/repos"
+	. "code.cloudfoundry.org/perm/repos/reposbehaviors"
 	. "github.com/onsi/ginkgo"
 )
 
@@ -16,17 +16,17 @@ var _ = Describe("InMemoryStore", func() {
 		store = NewInMemoryStore()
 	})
 
-	BehavesLikeARoleRepo(func() models.RoleRepo { return store })
-	BehavesLikeAnActorRepo(func() models.ActorRepo { return store })
+	BehavesLikeARoleRepo(func() repos.RoleRepo { return store })
+	BehavesLikeAnActorRepo(func() repos.ActorRepo { return store })
 	BehavesLikeARoleAssignmentRepo(
-		func() models.RoleAssignmentRepo { return store },
-		func() models.RoleRepo { return store },
-		func() models.ActorRepo { return store },
+		func() repos.RoleAssignmentRepo { return store },
+		func() repos.RoleRepo { return store },
+		func() repos.ActorRepo { return store },
 	)
 	BehavesLikeAPermissionRepo(
-		func() models.PermissionRepo { return store },
-		func() models.RoleRepo { return store },
-		func() models.ActorRepo { return store },
-		func() models.RoleAssignmentRepo { return store },
+		func() repos.PermissionRepo { return store },
+		func() repos.RoleRepo { return store },
+		func() repos.ActorRepo { return store },
+		func() repos.RoleAssignmentRepo { return store },
 	)
 })

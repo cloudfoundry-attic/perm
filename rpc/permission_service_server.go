@@ -7,17 +7,18 @@ import (
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 )
 
 type PermissionServiceServer struct {
 	logger lager.Logger
 
-	permissionRepo models.PermissionRepo
+	permissionRepo repos.PermissionRepo
 }
 
 func NewPermissionServiceServer(
 	logger lager.Logger,
-	permissionRepo models.PermissionRepo,
+	permissionRepo repos.PermissionRepo,
 ) *PermissionServiceServer {
 	return &PermissionServiceServer{
 		logger:         logger,
@@ -34,7 +35,7 @@ func (s *PermissionServiceServer) HasPermission(
 	issuer := models.ActorIssuer(pActor.GetIssuer())
 
 	permissionName := models.PermissionName(req.GetPermissionName())
-	resourceID := models.ResourceID(req.GetResourceId())
+	resourceID := repos.ResourceID(req.GetResourceId())
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
 		"actor.id":              domainID,
@@ -44,12 +45,12 @@ func (s *PermissionServiceServer) HasPermission(
 	})
 	logger.Debug(messages.Starting)
 
-	query := models.HasPermissionQuery{
-		ActorQuery: models.ActorQuery{
+	query := repos.HasPermissionQuery{
+		ActorQuery: repos.ActorQuery{
 			DomainID: domainID,
 			Issuer:   issuer,
 		},
-		PermissionQuery: models.PermissionQuery{
+		PermissionQuery: repos.PermissionQuery{
 			PermissionName: permissionName,
 			ResourceID:     resourceID,
 		},
@@ -87,9 +88,9 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 
 	logger.Debug(messages.Starting)
 
-	query := models.ListResourcePatternsQuery{
+	query := repos.ListResourcePatternsQuery{
 		PermissionName: models.PermissionName(req.PermissionName),
-		ActorQuery: models.ActorQuery{
+		ActorQuery: repos.ActorQuery{
 			DomainID: models.ActorDomainID(req.Actor.ID),
 			Issuer:   models.ActorIssuer(req.Actor.Issuer),
 		},

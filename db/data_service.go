@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
@@ -43,7 +44,7 @@ func createRoleAndAssignPermissions(
 		}
 
 		var p *permissionDefinition
-		query := models.PermissionDefinitionQuery{
+		query := repos.PermissionDefinitionQuery{
 			Name: permissionDefinitionName,
 		}
 		p, err = findPermissionDefinition(ctx, logger, conn, &query)
@@ -109,7 +110,7 @@ func findRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) (*role, error) {
 	logger = logger.Session("find-role")
 
@@ -148,7 +149,7 @@ func deleteRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) error {
 	logger = logger.Session("delete-role")
 	result, err := squirrel.Delete("role").
@@ -230,7 +231,7 @@ func findActor(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.ActorQuery,
+	query repos.ActorQuery,
 ) (*actor, error) {
 	logger = logger.Session("find-actor")
 
@@ -281,7 +282,7 @@ func assignRole(
 ) error {
 	logger = logger.Session("assign-role")
 
-	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
+	role, err := findRole(ctx, logger, conn, repos.RoleQuery{Name: roleName})
 	if err != nil {
 		return err
 	}
@@ -291,7 +292,7 @@ func assignRole(
 		return err
 	}
 
-	actor, err := findActor(ctx, logger, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actor, err := findActor(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err != nil {
 		return err
 	}
@@ -342,12 +343,12 @@ func unassignRole(ctx context.Context,
 ) error {
 	logger = logger.Session("unassign-role")
 
-	role, err := findRole(ctx, logger, conn, models.RoleQuery{Name: roleName})
+	role, err := findRole(ctx, logger, conn, repos.RoleQuery{Name: roleName})
 	if err != nil {
 		return err
 	}
 
-	actor, err := findActor(ctx, logger, conn, models.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actor, err := findActor(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err != nil {
 		return err
 	}
@@ -402,7 +403,7 @@ func hasRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.RoleAssignmentQuery,
+	query repos.RoleAssignmentQuery,
 ) (bool, error) {
 	logger = logger.Session("has-role")
 
@@ -452,7 +453,7 @@ func listActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.ActorQuery,
+	query repos.ActorQuery,
 ) ([]*role, error) {
 	logger = logger.Session("list-actor-roles")
 
@@ -514,7 +515,7 @@ func listRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.RoleQuery,
+	query repos.RoleQuery,
 ) ([]*permission, error) {
 	logger = logger.Session("list-role-permissions")
 
@@ -574,7 +575,7 @@ func findPermissionDefinition(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query *models.PermissionDefinitionQuery,
+	query *repos.PermissionDefinitionQuery,
 ) (*permissionDefinition, error) {
 	logger = logger.Session("find-permission-definition")
 
@@ -667,7 +668,7 @@ func hasPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.HasPermissionQuery,
+	query repos.HasPermissionQuery,
 ) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
 		"actor.issuer":          query.ActorQuery.Issuer,
@@ -756,7 +757,7 @@ func listResourcePatterns(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query models.ListResourcePatternsQuery,
+	query repos.ListResourcePatternsQuery,
 ) ([]models.PermissionResourcePattern, error) {
 	permissionName := query.PermissionName
 	issuer := query.ActorQuery.Issuer

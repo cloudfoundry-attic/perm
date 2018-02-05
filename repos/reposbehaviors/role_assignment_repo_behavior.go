@@ -1,10 +1,11 @@
-package modelsbehaviors_test
+package reposbehaviors_test
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/repos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -14,15 +15,15 @@ import (
 )
 
 func BehavesLikeARoleAssignmentRepo(
-	subjectCreator func() models.RoleAssignmentRepo,
-	roleRepoCreator func() models.RoleRepo,
-	actorRepoCreator func() models.ActorRepo,
+	subjectCreator func() repos.RoleAssignmentRepo,
+	roleRepoCreator func() repos.RoleRepo,
+	actorRepoCreator func() repos.ActorRepo,
 ) {
 	var (
-		subject models.RoleAssignmentRepo
+		subject repos.RoleAssignmentRepo
 
-		roleRepo  models.RoleRepo
-		actorRepo models.ActorRepo
+		roleRepo  repos.RoleRepo
+		actorRepo repos.ActorRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -60,12 +61,12 @@ func BehavesLikeARoleAssignmentRepo(
 
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -116,12 +117,12 @@ func BehavesLikeARoleAssignmentRepo(
 			err = subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -176,12 +177,12 @@ func BehavesLikeARoleAssignmentRepo(
 			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -201,12 +202,12 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -223,12 +224,12 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -244,12 +245,12 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := models.RoleQuery{Name: roleName}
-			actorQuery := models.ActorQuery{
+			roleQuery := repos.RoleQuery{Name: roleName}
+			actorQuery := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
-			query := models.RoleAssignmentQuery{
+			query := repos.RoleAssignmentQuery{
 				RoleQuery:  roleQuery,
 				ActorQuery: actorQuery,
 			}
@@ -282,7 +283,7 @@ func BehavesLikeARoleAssignmentRepo(
 			err = subject.AssignRole(ctx, logger, roleName2, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			query := models.ActorQuery{
+			query := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
@@ -302,7 +303,7 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			query := models.ActorQuery{
+			query := repos.ActorQuery{
 				DomainID: domainID,
 				Issuer:   issuer,
 			}

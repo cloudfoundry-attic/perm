@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/repos/reposfakes"
 	"code.cloudfoundry.org/perm/rpc"
 
 	"errors"
 
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm/models/modelsfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -257,7 +257,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		})
 
 		It("returns a relevant error if the query fails", func() {
-			permissionRepo := new(modelsfakes.FakePermissionRepo)
+			permissionRepo := new(reposfakes.FakePermissionRepo)
 			subject := rpc.NewPermissionServiceServer(logger, permissionRepo)
 
 			testErr := errors.New("test-error")
