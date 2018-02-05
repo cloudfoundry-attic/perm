@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("RoleServiceServer", func() {
+var _ = Describe("RoleRepoServer", func() {
 	var (
 		subject *rpc.RoleServiceServer
 		logger  *lagertest.TestLogger

@@ -97,8 +97,8 @@ var _ = Describe("DataService", func() {
 		mySQLRunner.DropTestDB()
 	})
 
-	BehavesLikeARoleService(func() models.RoleService { return store })
+	BehavesLikeARoleRepo(func() models.RoleRepo { return store })
 	BehavesLikeAnActorRepo(func() models.ActorRepo { return store })
-	BehavesLikeARoleAssignmentRepo(func() models.RoleAssignmentRepo { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store })
-	BehavesLikeAPermissionRepo(func() models.PermissionRepo { return store }, func() models.RoleService { return store }, func() models.ActorRepo { return store }, func() models.RoleAssignmentRepo { return store })
+	BehavesLikeARoleAssignmentRepo(func() models.RoleAssignmentRepo { return store }, func() models.RoleRepo { return store }, func() models.ActorRepo { return store })
+	BehavesLikeAPermissionRepo(func() models.PermissionRepo { return store }, func() models.RoleRepo { return store }, func() models.ActorRepo { return store }, func() models.RoleAssignmentRepo { return store })
 })

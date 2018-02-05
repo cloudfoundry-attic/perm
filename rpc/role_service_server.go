@@ -12,18 +12,18 @@ import (
 type RoleServiceServer struct {
 	logger lager.Logger
 
-	roleService        models.RoleService
+	roleRepo           models.RoleRepo
 	roleAssignmentRepo models.RoleAssignmentRepo
 }
 
 func NewRoleServiceServer(
 	logger lager.Logger,
-	roleService models.RoleService,
+	roleRepo models.RoleRepo,
 	roleAssignmentRepo models.RoleAssignmentRepo,
 ) *RoleServiceServer {
 	return &RoleServiceServer{
 		logger:             logger,
-		roleService:        roleService,
+		roleRepo:           roleRepo,
 		roleAssignmentRepo: roleAssignmentRepo,
 	}
 }
@@ -44,7 +44,7 @@ func (s *RoleServiceServer) CreateRole(
 	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
 	logger.Debug(messages.Starting)
 
-	role, err := s.roleService.CreateRole(ctx, logger, name, permissions...)
+	role, err := s.roleRepo.CreateRole(ctx, logger, name, permissions...)
 
 	if err != nil {
 		return nil, togRPCError(err)
@@ -64,7 +64,7 @@ func (s *RoleServiceServer) GetRole(
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
 
-	role, err := s.roleService.FindRole(ctx, logger, models.RoleQuery{Name: name})
+	role, err := s.roleRepo.FindRole(ctx, logger, models.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -85,7 +85,7 @@ func (s *RoleServiceServer) DeleteRole(
 	})
 	logger.Debug(messages.Starting)
 
-	err := s.roleService.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
+	err := s.roleRepo.DeleteRole(ctx, logger, models.RoleQuery{Name: name})
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -232,7 +232,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	})
 	logger.Debug(messages.Starting)
 
-	permissions, err := s.roleService.ListRolePermissions(ctx, logger, models.RoleQuery{Name: roleName})
+	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, models.RoleQuery{Name: roleName})
 	if err != nil {
 		if err == models.ErrRoleNotFound {
 			permissions = []*models.Permission{}

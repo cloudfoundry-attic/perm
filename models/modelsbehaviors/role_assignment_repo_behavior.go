@@ -15,14 +15,14 @@ import (
 
 func BehavesLikeARoleAssignmentRepo(
 	subjectCreator func() models.RoleAssignmentRepo,
-	roleServiceCreator func() models.RoleService,
+	roleRepoCreator func() models.RoleRepo,
 	actorRepoCreator func() models.ActorRepo,
 ) {
 	var (
 		subject models.RoleAssignmentRepo
 
-		roleService models.RoleService
-		actorRepo   models.ActorRepo
+		roleRepo  models.RoleRepo
+		actorRepo models.ActorRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -37,7 +37,7 @@ func BehavesLikeARoleAssignmentRepo(
 
 		subject = subjectCreator()
 
-		roleService = roleServiceCreator()
+		roleRepo = roleRepoCreator()
 		actorRepo = actorRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
@@ -53,7 +53,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -79,7 +79,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -107,7 +107,7 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleService.CreateRole(ctx, logger, roleName)
+			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -135,7 +135,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
@@ -157,7 +157,7 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleService.CreateRole(ctx, logger, roleName)
+			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
@@ -170,7 +170,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -198,7 +198,7 @@ func BehavesLikeARoleAssignmentRepo(
 			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = roleService.CreateRole(ctx, logger, roleName)
+			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleQuery := models.RoleQuery{Name: roleName}
@@ -241,7 +241,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleQuery := models.RoleQuery{Name: roleName}
@@ -265,15 +265,15 @@ func BehavesLikeARoleAssignmentRepo(
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
 			roleName1 := models.RoleName(uuid.NewV4().String())
-			role1, err := roleService.CreateRole(ctx, logger, roleName1)
+			role1, err := roleRepo.CreateRole(ctx, logger, roleName1)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := models.RoleName(uuid.NewV4().String())
-			role2, err := roleService.CreateRole(ctx, logger, roleName2)
+			role2, err := roleRepo.CreateRole(ctx, logger, roleName2)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName3 := models.RoleName(uuid.NewV4().String())
-			role3, err := roleService.CreateRole(ctx, logger, roleName3)
+			role3, err := roleRepo.CreateRole(ctx, logger, roleName3)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName1, domainID, issuer)
@@ -299,7 +299,7 @@ func BehavesLikeARoleAssignmentRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := models.ActorQuery{

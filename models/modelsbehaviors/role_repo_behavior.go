@@ -12,9 +12,9 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeARoleService(subjectCreator func() models.RoleService) {
+func BehavesLikeARoleRepo(subjectCreator func() models.RoleRepo) {
 	var (
-		subject models.RoleService
+		subject models.RoleRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger

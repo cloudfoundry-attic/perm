@@ -15,14 +15,14 @@ import (
 
 func BehavesLikeAPermissionRepo(
 	subjectCreator func() models.PermissionRepo,
-	roleServiceCreator func() models.RoleService,
+	roleRepoCreator func() models.RoleRepo,
 	actorRepoCreator func() models.ActorRepo,
 	roleAssignmentRepoCreator func() models.RoleAssignmentRepo,
 ) {
 	var (
 		subject models.PermissionRepo
 
-		roleService        models.RoleService
+		roleRepo           models.RoleRepo
 		actorRepo          models.ActorRepo
 		roleAssignmentRepo models.RoleAssignmentRepo
 
@@ -35,7 +35,7 @@ func BehavesLikeAPermissionRepo(
 	BeforeEach(func() {
 		subject = subjectCreator()
 
-		roleService = roleServiceCreator()
+		roleRepo = roleRepoCreator()
 		actorRepo = actorRepoCreator()
 		roleAssignmentRepo = roleAssignmentRepoCreator()
 
@@ -57,7 +57,7 @@ func BehavesLikeAPermissionRepo(
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			_, err := roleService.CreateRole(ctx, logger, roleName, permission)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -93,7 +93,7 @@ func BehavesLikeAPermissionRepo(
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			_, err := roleService.CreateRole(ctx, logger, roleName, permission)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = actorRepo.CreateActor(ctx, logger, domainID, issuer)
@@ -124,7 +124,7 @@ func BehavesLikeAPermissionRepo(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := roleService.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := models.PermissionQuery{
@@ -171,7 +171,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern3,
 			}
 
-			_, err := roleService.CreateRole(ctx, logger, roleName, permission1, permission2, permission3)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2, permission3)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
@@ -182,7 +182,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: models.PermissionResourcePattern("should-not-have-this-resource-pattern"),
 			}
 
-			_, err = roleService.CreateRole(ctx, logger, models.RoleName("not-assigned-to-this-role"), permission4)
+			_, err = roleRepo.CreateRole(ctx, logger, models.RoleName("not-assigned-to-this-role"), permission4)
 			Expect(err).NotTo(HaveOccurred())
 
 			actorQuery := models.ActorQuery{
@@ -214,7 +214,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern,
 			}
 
-			_, err := roleService.CreateRole(ctx, logger, roleName1, permission1)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName1, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName1, domainID, issuer)
@@ -226,7 +226,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern,
 			}
 
-			_, err = roleService.CreateRole(ctx, logger, roleName2, permission2)
+			_, err = roleRepo.CreateRole(ctx, logger, roleName2, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName2, domainID, issuer)
