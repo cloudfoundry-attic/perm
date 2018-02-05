@@ -7,11 +7,6 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-type ActorQuery struct {
-	DomainID models.ActorDomainID
-	Issuer   models.ActorIssuer
-}
-
 type ActorRepo interface {
 	CreateActor(
 		ctx context.Context,

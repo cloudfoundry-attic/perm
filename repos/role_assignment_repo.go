@@ -36,8 +36,3 @@ type RoleAssignmentRepo interface {
 		query ActorQuery,
 	) ([]*models.Role, error)
 }
-
-type RoleAssignmentQuery struct {
-	RoleQuery  RoleQuery
-	ActorQuery ActorQuery
-}

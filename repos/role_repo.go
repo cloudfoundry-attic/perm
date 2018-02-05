@@ -33,7 +33,3 @@ type RoleRepo interface {
 		query RoleQuery,
 	) ([]*models.Permission, error)
 }
-
-type RoleQuery struct {
-	Name models.RoleName
-}

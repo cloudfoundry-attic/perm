@@ -7,17 +7,6 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-type PermissionDefinitionQuery struct {
-	Name models.PermissionDefinitionName
-}
-
-type ResourceID string
-
-type PermissionQuery struct {
-	PermissionName models.PermissionName
-	ResourceID     ResourceID
-}
-
 type HasPermissionQuery struct {
 	PermissionQuery PermissionQuery
 	ActorQuery      ActorQuery
