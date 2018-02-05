@@ -12,16 +12,16 @@ import (
 type PermissionServiceServer struct {
 	logger lager.Logger
 
-	permissionService models.PermissionService
+	permissionRepo models.PermissionRepo
 }
 
 func NewPermissionServiceServer(
 	logger lager.Logger,
-	permissionService models.PermissionService,
+	permissionRepo models.PermissionRepo,
 ) *PermissionServiceServer {
 	return &PermissionServiceServer{
-		logger:            logger,
-		permissionService: permissionService,
+		logger:         logger,
+		permissionRepo: permissionRepo,
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *PermissionServiceServer) HasPermission(
 		},
 	}
 
-	found, err := s.permissionService.HasPermission(ctx, logger, query)
+	found, err := s.permissionRepo.HasPermission(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
 			return &protos.HasPermissionResponse{HasPermission: false}, nil
@@ -95,7 +95,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 		},
 	}
 
-	resourcePatterns, err := s.permissionService.ListResourcePatterns(ctx, logger, query)
+	resourcePatterns, err := s.permissionRepo.ListResourcePatterns(ctx, logger, query)
 	if err != nil {
 		return nil, togRPCError(err)
 	}

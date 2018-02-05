@@ -23,8 +23,8 @@ var _ = Describe("InMemoryStore", func() {
 		func() models.RoleService { return store },
 		func() models.ActorService { return store },
 	)
-	BehavesLikeAPermissionService(
-		func() models.PermissionService { return store },
+	BehavesLikeAPermissionRepo(
+		func() models.PermissionRepo { return store },
 		func() models.RoleService { return store },
 		func() models.ActorService { return store },
 		func() models.RoleAssignmentService { return store },

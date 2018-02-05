@@ -9,7 +9,7 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
-type FakePermissionService struct {
+type FakePermissionRepo struct {
 	HasPermissionStub        func(ctx context.Context, logger lager.Logger, query models.HasPermissionQuery) (bool, error)
 	hasPermissionMutex       sync.RWMutex
 	hasPermissionArgsForCall []struct {
@@ -44,7 +44,7 @@ type FakePermissionService struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePermissionService) HasPermission(ctx context.Context, logger lager.Logger, query models.HasPermissionQuery) (bool, error) {
+func (fake *FakePermissionRepo) HasPermission(ctx context.Context, logger lager.Logger, query models.HasPermissionQuery) (bool, error) {
 	fake.hasPermissionMutex.Lock()
 	ret, specificReturn := fake.hasPermissionReturnsOnCall[len(fake.hasPermissionArgsForCall)]
 	fake.hasPermissionArgsForCall = append(fake.hasPermissionArgsForCall, struct {
@@ -63,19 +63,19 @@ func (fake *FakePermissionService) HasPermission(ctx context.Context, logger lag
 	return fake.hasPermissionReturns.result1, fake.hasPermissionReturns.result2
 }
 
-func (fake *FakePermissionService) HasPermissionCallCount() int {
+func (fake *FakePermissionRepo) HasPermissionCallCount() int {
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
 	return len(fake.hasPermissionArgsForCall)
 }
 
-func (fake *FakePermissionService) HasPermissionArgsForCall(i int) (context.Context, lager.Logger, models.HasPermissionQuery) {
+func (fake *FakePermissionRepo) HasPermissionArgsForCall(i int) (context.Context, lager.Logger, models.HasPermissionQuery) {
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
 	return fake.hasPermissionArgsForCall[i].ctx, fake.hasPermissionArgsForCall[i].logger, fake.hasPermissionArgsForCall[i].query
 }
 
-func (fake *FakePermissionService) HasPermissionReturns(result1 bool, result2 error) {
+func (fake *FakePermissionRepo) HasPermissionReturns(result1 bool, result2 error) {
 	fake.HasPermissionStub = nil
 	fake.hasPermissionReturns = struct {
 		result1 bool
@@ -83,7 +83,7 @@ func (fake *FakePermissionService) HasPermissionReturns(result1 bool, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakePermissionService) HasPermissionReturnsOnCall(i int, result1 bool, result2 error) {
+func (fake *FakePermissionRepo) HasPermissionReturnsOnCall(i int, result1 bool, result2 error) {
 	fake.HasPermissionStub = nil
 	if fake.hasPermissionReturnsOnCall == nil {
 		fake.hasPermissionReturnsOnCall = make(map[int]struct {
@@ -97,7 +97,7 @@ func (fake *FakePermissionService) HasPermissionReturnsOnCall(i int, result1 boo
 	}{result1, result2}
 }
 
-func (fake *FakePermissionService) ListResourcePatterns(ctx context.Context, logger lager.Logger, query models.ListResourcePatternsQuery) ([]models.PermissionResourcePattern, error) {
+func (fake *FakePermissionRepo) ListResourcePatterns(ctx context.Context, logger lager.Logger, query models.ListResourcePatternsQuery) ([]models.PermissionResourcePattern, error) {
 	fake.listResourcePatternsMutex.Lock()
 	ret, specificReturn := fake.listResourcePatternsReturnsOnCall[len(fake.listResourcePatternsArgsForCall)]
 	fake.listResourcePatternsArgsForCall = append(fake.listResourcePatternsArgsForCall, struct {
@@ -116,19 +116,19 @@ func (fake *FakePermissionService) ListResourcePatterns(ctx context.Context, log
 	return fake.listResourcePatternsReturns.result1, fake.listResourcePatternsReturns.result2
 }
 
-func (fake *FakePermissionService) ListResourcePatternsCallCount() int {
+func (fake *FakePermissionRepo) ListResourcePatternsCallCount() int {
 	fake.listResourcePatternsMutex.RLock()
 	defer fake.listResourcePatternsMutex.RUnlock()
 	return len(fake.listResourcePatternsArgsForCall)
 }
 
-func (fake *FakePermissionService) ListResourcePatternsArgsForCall(i int) (context.Context, lager.Logger, models.ListResourcePatternsQuery) {
+func (fake *FakePermissionRepo) ListResourcePatternsArgsForCall(i int) (context.Context, lager.Logger, models.ListResourcePatternsQuery) {
 	fake.listResourcePatternsMutex.RLock()
 	defer fake.listResourcePatternsMutex.RUnlock()
 	return fake.listResourcePatternsArgsForCall[i].ctx, fake.listResourcePatternsArgsForCall[i].logger, fake.listResourcePatternsArgsForCall[i].query
 }
 
-func (fake *FakePermissionService) ListResourcePatternsReturns(result1 []models.PermissionResourcePattern, result2 error) {
+func (fake *FakePermissionRepo) ListResourcePatternsReturns(result1 []models.PermissionResourcePattern, result2 error) {
 	fake.ListResourcePatternsStub = nil
 	fake.listResourcePatternsReturns = struct {
 		result1 []models.PermissionResourcePattern
@@ -136,7 +136,7 @@ func (fake *FakePermissionService) ListResourcePatternsReturns(result1 []models.
 	}{result1, result2}
 }
 
-func (fake *FakePermissionService) ListResourcePatternsReturnsOnCall(i int, result1 []models.PermissionResourcePattern, result2 error) {
+func (fake *FakePermissionRepo) ListResourcePatternsReturnsOnCall(i int, result1 []models.PermissionResourcePattern, result2 error) {
 	fake.ListResourcePatternsStub = nil
 	if fake.listResourcePatternsReturnsOnCall == nil {
 		fake.listResourcePatternsReturnsOnCall = make(map[int]struct {
@@ -150,7 +150,7 @@ func (fake *FakePermissionService) ListResourcePatternsReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakePermissionService) Invocations() map[string][][]interface{} {
+func (fake *FakePermissionRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.hasPermissionMutex.RLock()
@@ -164,7 +164,7 @@ func (fake *FakePermissionService) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakePermissionService) recordInvocation(key string, args []interface{}) {
+func (fake *FakePermissionRepo) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -176,4 +176,4 @@ func (fake *FakePermissionService) recordInvocation(key string, args []interface
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ models.PermissionService = new(FakePermissionService)
+var _ models.PermissionRepo = new(FakePermissionRepo)

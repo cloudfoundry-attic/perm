@@ -27,9 +27,9 @@ type ListResourcePatternsQuery struct {
 	PermissionName PermissionName
 }
 
-//go:generate counterfeiter . PermissionService
+//go:generate counterfeiter . PermissionRepo
 
-type PermissionService interface {
+type PermissionRepo interface {
 	HasPermission(
 		ctx context.Context,
 		logger lager.Logger,

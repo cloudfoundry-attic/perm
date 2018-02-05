@@ -257,12 +257,12 @@ var _ = Describe("PermissionServiceServer", func() {
 		})
 
 		It("returns a relevant error if the query fails", func() {
-			permissionService := new(modelsfakes.FakePermissionService)
-			subject := rpc.NewPermissionServiceServer(logger, permissionService)
+			permissionRepo := new(modelsfakes.FakePermissionRepo)
+			subject := rpc.NewPermissionServiceServer(logger, permissionRepo)
 
 			testErr := errors.New("test-error")
 
-			permissionService.ListResourcePatternsReturns(nil, testErr)
+			permissionRepo.ListResourcePatternsReturns(nil, testErr)
 
 			req := &protos.ListResourcePatternsRequest{
 				Actor: &protos.Actor{
