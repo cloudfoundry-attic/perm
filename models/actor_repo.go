@@ -11,7 +11,7 @@ type ActorQuery struct {
 	Issuer   ActorIssuer
 }
 
-type ActorService interface {
+type ActorRepo interface {
 	CreateActor(
 		ctx context.Context,
 		logger lager.Logger,

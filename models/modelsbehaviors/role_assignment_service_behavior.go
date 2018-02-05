@@ -16,13 +16,13 @@ import (
 func BehavesLikeARoleAssignmentService(
 	subjectCreator func() models.RoleAssignmentService,
 	roleServiceCreator func() models.RoleService,
-	actorServiceCreator func() models.ActorService,
+	actorRepoCreator func() models.ActorRepo,
 ) {
 	var (
 		subject models.RoleAssignmentService
 
-		roleService  models.RoleService
-		actorService models.ActorService
+		roleService models.RoleService
+		actorRepo   models.ActorRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -38,7 +38,7 @@ func BehavesLikeARoleAssignmentService(
 		subject = subjectCreator()
 
 		roleService = roleServiceCreator()
-		actorService = actorServiceCreator()
+		actorRepo = actorRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
@@ -104,7 +104,7 @@ func BehavesLikeARoleAssignmentService(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleService.CreateRole(ctx, logger, roleName)
@@ -154,7 +154,7 @@ func BehavesLikeARoleAssignmentService(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleService.CreateRole(ctx, logger, roleName)
@@ -195,7 +195,7 @@ func BehavesLikeARoleAssignmentService(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleService.CreateRole(ctx, logger, roleName)
@@ -220,7 +220,7 @@ func BehavesLikeARoleAssignmentService(
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
 
-			_, err := actorService.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleQuery := models.RoleQuery{Name: roleName}

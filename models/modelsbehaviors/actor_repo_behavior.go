@@ -12,9 +12,9 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BehavesLikeAnActorService(actorServiceCreator func() models.ActorService) {
+func BehavesLikeAnActorRepo(actorRepoCreator func() models.ActorRepo) {
 	var (
-		subject models.ActorService
+		subject models.ActorRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -23,7 +23,7 @@ func BehavesLikeAnActorService(actorServiceCreator func() models.ActorService) {
 	)
 
 	BeforeEach(func() {
-		subject = actorServiceCreator()
+		subject = actorRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
