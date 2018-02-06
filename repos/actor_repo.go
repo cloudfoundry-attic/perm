@@ -14,10 +14,4 @@ type ActorRepo interface {
 		domainID models.ActorDomainID,
 		issuer models.ActorIssuer,
 	) (*models.Actor, error)
-
-	FindActor(
-		ctx context.Context,
-		logger lager.Logger,
-		query ActorQuery,
-	) (*models.Actor, error)
 }

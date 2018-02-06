@@ -47,11 +47,10 @@ func BehavesLikeAnActorRepo(actorRepoCreator func() repos.ActorRepo) {
 			Expect(actor.DomainID).To(Equal(domainID))
 			Expect(actor.Issuer).To(Equal(issuer))
 
-			expectedActor := actor
-			actor, err = subject.FindActor(ctx, logger, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
+			_, err = subject.CreateActor(ctx, logger, domainID, issuer)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actor).To(Equal(expectedActor))
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(models.ErrActorAlreadyExists))
 		})
 
 		It("fails if an actor with the domain ID/issuer combo already exists", func() {
@@ -71,17 +70,6 @@ func BehavesLikeAnActorRepo(actorRepoCreator func() repos.ActorRepo) {
 			uniqueIssuer := models.ActorIssuer(uuid.NewV4().String())
 			_, err = subject.CreateActor(ctx, logger, domainID, uniqueIssuer)
 			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Describe("#FindActor", func() {
-		It("fails if the actor does not exist", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
-
-			_, err := subject.FindActor(ctx, logger, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
-
-			Expect(err).To(Equal(models.ErrActorNotFound))
 		})
 	})
 }

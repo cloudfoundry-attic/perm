@@ -5,7 +5,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/repos"
 )
 
 func (s *DataService) CreateActor(
@@ -15,19 +14,6 @@ func (s *DataService) CreateActor(
 	issuer models.ActorIssuer,
 ) (*models.Actor, error) {
 	actor, err := createActor(ctx, logger.Session("data-service"), s.conn, domainID, issuer)
-	if err != nil {
-		return nil, err
-	}
-
-	return actor.Actor, nil
-}
-
-func (s *DataService) FindActor(
-	ctx context.Context,
-	logger lager.Logger,
-	query repos.ActorQuery,
-) (*models.Actor, error) {
-	actor, err := findActor(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}

@@ -230,20 +230,6 @@ func (s *InMemoryStore) CreateActor(
 	return &actor, nil
 }
 
-func (s *InMemoryStore) FindActor(
-	ctx context.Context,
-	logger lager.Logger,
-	query repos.ActorQuery,
-) (*models.Actor, error) {
-	actor := models.Actor(query)
-
-	if _, exists := s.assignments[actor]; !exists {
-		return nil, models.ErrActorNotFound
-	}
-
-	return &actor, nil
-}
-
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
