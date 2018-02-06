@@ -133,7 +133,9 @@ func (s *InMemoryStore) UnassignRole(
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		return models.ErrActorNotFound
+		err := models.ErrRoleAssignmentNotFound
+		logger.Error(messages.ErrRoleAssignmentNotFound, err)
+		return err
 	}
 
 	for i, assignment := range assignments {
@@ -169,7 +171,7 @@ func (s *InMemoryStore) HasRole(
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		return false, models.ErrActorNotFound
+		return false, nil
 	}
 
 	var found bool
@@ -191,12 +193,12 @@ func (s *InMemoryStore) ListActorRoles(
 ) ([]*models.Role, error) {
 	actor := models.Actor(query)
 
+	var roles []*models.Role
+
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		return nil, models.ErrActorNotFound
+		return roles, nil
 	}
-
-	var roles []*models.Role
 
 	for _, name := range assignments {
 		role, found := s.roles[name]

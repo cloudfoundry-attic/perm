@@ -177,7 +177,7 @@ func (s *RoleServiceServer) HasRole(
 
 	found, err := s.roleAssignmentRepo.HasRole(ctx, logger, query)
 	if err != nil {
-		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
+		if err == models.ErrRoleNotFound {
 			return &protos.HasRoleResponse{HasRole: false}, nil
 		}
 
@@ -204,11 +204,7 @@ func (s *RoleServiceServer) ListActorRoles(
 	actorQuery := repos.ActorQuery{DomainID: domainID, Issuer: issuer}
 	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, actorQuery)
 	if err != nil {
-		if err == models.ErrActorNotFound {
-			roles = []*models.Role{}
-		} else {
-			return nil, togRPCError(err)
-		}
+		return nil, togRPCError(err)
 	}
 
 	var pRoles []*protos.Role

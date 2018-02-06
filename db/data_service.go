@@ -349,7 +349,9 @@ func unassignRole(ctx context.Context,
 	}
 
 	actor, err := findActor(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
-	if err != nil {
+	if err == models.ErrActorNotFound {
+		return models.ErrRoleAssignmentNotFound
+	} else if err != nil {
 		return err
 	}
 
@@ -408,7 +410,9 @@ func hasRole(
 	logger = logger.Session("has-role")
 
 	actor, err := findActor(ctx, logger, conn, query.ActorQuery)
-	if err != nil {
+	if err == models.ErrActorNotFound {
+		return false, nil
+	} else if err != nil {
 		return false, err
 	}
 
@@ -458,7 +462,9 @@ func listActorRoles(
 	logger = logger.Session("list-actor-roles")
 
 	actor, err := findActor(ctx, logger, conn, query)
-	if err != nil {
+	if err == models.ErrActorNotFound {
+		return []*role{}, nil
+	} else if err != nil {
 		return nil, err
 	}
 

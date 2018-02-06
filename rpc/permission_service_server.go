@@ -58,7 +58,7 @@ func (s *PermissionServiceServer) HasPermission(
 
 	found, err := s.permissionRepo.HasPermission(ctx, logger, query)
 	if err != nil {
-		if err == models.ErrRoleNotFound || err == models.ErrActorNotFound {
+		if err == models.ErrRoleNotFound {
 			return &protos.HasPermissionResponse{HasPermission: false}, nil
 		}
 
