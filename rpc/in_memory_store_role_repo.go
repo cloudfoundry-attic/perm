@@ -31,9 +31,9 @@ func (s *InMemoryStore) CreateRole(
 func (s *InMemoryStore) FindRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleQuery,
+	query repos.FindRoleQuery,
 ) (*models.Role, error) {
-	name := query.Name
+	name := query.RoleName
 	role, exists := s.roles[name]
 
 	if !exists {
@@ -46,26 +46,24 @@ func (s *InMemoryStore) FindRole(
 func (s *InMemoryStore) DeleteRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleQuery,
+	roleName models.RoleName,
 ) error {
-	name := query.Name
-
-	if _, exists := s.roles[name]; !exists {
+	if _, exists := s.roles[roleName]; !exists {
 		return models.ErrRoleNotFound
 	}
 
-	delete(s.roles, name)
+	delete(s.roles, roleName)
 
 	// "Cascade"
 	// Remove role assignments for role
 	for actor, assignments := range s.assignments {
 		for i, roleName := range assignments {
-			if roleName == name {
+			if roleName == roleName {
 				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
 				assignmentData := lager.Data{
 					"actor.id":     actor.DomainID,
 					"actor.issuer": actor.Issuer,
-					"role.name":    name,
+					"role.name":    roleName,
 				}
 				logger.Debug(messages.Success, assignmentData)
 				break
@@ -74,7 +72,7 @@ func (s *InMemoryStore) DeleteRole(
 	}
 	// "Cascade"
 	// Remove permissions for role
-	s.permissions[name] = []*models.Permission{}
+	s.permissions[roleName] = []*models.Permission{}
 
 	logger.Debug(messages.Success)
 
@@ -155,21 +153,16 @@ func (s *InMemoryStore) UnassignRole(
 func (s *InMemoryStore) HasRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleAssignmentQuery,
+	query repos.HasRoleQuery,
 ) (bool, error) {
-	actor := models.Actor{
-		DomainID: query.ActorQuery.DomainID,
-		Issuer:   query.ActorQuery.Issuer,
-	}
-
-	roleName := query.RoleQuery.Name
+	roleName := query.RoleName
 
 	_, ok := s.roles[roleName]
 	if !ok {
 		return false, models.ErrRoleNotFound
 	}
 
-	assignments, ok := s.assignments[actor]
+	assignments, ok := s.assignments[query.Actor]
 	if !ok {
 		return false, nil
 	}
@@ -189,9 +182,9 @@ func (s *InMemoryStore) HasRole(
 func (s *InMemoryStore) ListActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.ActorQuery,
+	query repos.ListActorRolesQuery,
 ) ([]*models.Role, error) {
-	actor := models.Actor(query)
+	actor := query.Actor
 
 	var roles []*models.Role
 
@@ -235,11 +228,9 @@ func (s *InMemoryStore) CreateActor(
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleQuery,
+	query repos.ListRolePermissionsQuery,
 ) ([]*models.Permission, error) {
-	roleName := query.Name
-
-	permissions, exists := s.permissions[roleName]
+	permissions, exists := s.permissions[query.RoleName]
 	if !exists {
 		return nil, models.ErrRoleNotFound
 	}

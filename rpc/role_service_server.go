@@ -65,7 +65,10 @@ func (s *RoleServiceServer) GetRole(
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(messages.Starting)
 
-	role, err := s.roleRepo.FindRole(ctx, logger, repos.RoleQuery{Name: name})
+	query := repos.FindRoleQuery{
+		RoleName: name,
+	}
+	role, err := s.roleRepo.FindRole(ctx, logger, query)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -86,7 +89,7 @@ func (s *RoleServiceServer) DeleteRole(
 	})
 	logger.Debug(messages.Starting)
 
-	err := s.roleRepo.DeleteRole(ctx, logger, repos.RoleQuery{Name: name})
+	err := s.roleRepo.DeleteRole(ctx, logger, name)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -155,24 +158,21 @@ func (s *RoleServiceServer) HasRole(
 ) (*protos.HasRoleResponse, error) {
 	roleName := models.RoleName(req.GetRoleName())
 	pActor := req.GetActor()
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
+	actor := models.Actor{
+		DomainID: models.ActorDomainID(pActor.GetID()),
+		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	}
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":     domainID,
-		"actor.issuer": issuer,
+		"actor.id":     actor.DomainID,
+		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
 	})
 	logger.Debug(messages.Starting)
 
-	query := repos.RoleAssignmentQuery{
-		ActorQuery: repos.ActorQuery{
-			DomainID: domainID,
-			Issuer:   issuer,
-		},
-		RoleQuery: repos.RoleQuery{
-			Name: roleName,
-		},
+	query := repos.HasRoleQuery{
+		Actor:    actor,
+		RoleName: roleName,
 	}
 
 	found, err := s.roleAssignmentRepo.HasRole(ctx, logger, query)
@@ -193,16 +193,18 @@ func (s *RoleServiceServer) ListActorRoles(
 	req *protos.ListActorRolesRequest,
 ) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
+	actor := models.Actor{
+		DomainID: models.ActorDomainID(pActor.GetID()),
+		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	}
 	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
-		"actor.id":     domainID,
-		"actor.issuer": issuer,
+		"actor.id":     actor.DomainID,
+		"actor.issuer": actor.Issuer,
 	})
 	logger.Debug(messages.Starting)
 
-	actorQuery := repos.ActorQuery{DomainID: domainID, Issuer: issuer}
-	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, actorQuery)
+	query := repos.ListActorRolesQuery{Actor: actor}
+	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, query)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -229,7 +231,10 @@ func (s *RoleServiceServer) ListRolePermissions(
 	})
 	logger.Debug(messages.Starting)
 
-	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, repos.RoleQuery{Name: roleName})
+	query := repos.ListRolePermissionsQuery{
+		RoleName: roleName,
+	}
+	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, query)
 	if err != nil {
 		if err == models.ErrRoleNotFound {
 			permissions = []*models.Permission{}

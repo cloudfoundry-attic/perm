@@ -13,17 +13,14 @@ func (s *InMemoryStore) HasPermission(
 	logger lager.Logger,
 	query repos.HasPermissionQuery,
 ) (bool, error) {
-	actor := models.Actor{
-		DomainID: query.ActorQuery.DomainID,
-		Issuer:   query.ActorQuery.Issuer,
-	}
-
-	assignments, ok := s.assignments[actor]
+	assignments, ok := s.assignments[query.Actor]
 	if !ok {
 		return false, nil
 	}
 
 	var permissions []*models.Permission
+	permissionName := query.PermissionName
+
 	for _, roleName := range assignments {
 		p, ok := s.permissions[roleName]
 		if !ok {
@@ -33,8 +30,10 @@ func (s *InMemoryStore) HasPermission(
 		permissions = append(permissions, p...)
 	}
 
+	resourcePattern := query.ResourcePattern
+
 	for _, permission := range permissions {
-		if hasPermission(permission, query) {
+		if permission.Name == permissionName && permission.ResourcePattern == resourcePattern {
 			return true, nil
 		}
 	}
@@ -47,15 +46,9 @@ func (s *InMemoryStore) ListResourcePatterns(
 	logger lager.Logger,
 	query repos.ListResourcePatternsQuery,
 ) ([]models.PermissionResourcePattern, error) {
-	actor := models.Actor{
-		DomainID: query.ActorQuery.DomainID,
-		Issuer:   query.ActorQuery.Issuer,
-	}
-	permissionName := query.PermissionDefinitionQuery.Name
-
 	var resourcePatterns []models.PermissionResourcePattern
 
-	assignments, ok := s.assignments[actor]
+	assignments, ok := s.assignments[query.Actor]
 	if !ok {
 		return resourcePatterns, nil
 	}
@@ -71,6 +64,7 @@ func (s *InMemoryStore) ListResourcePatterns(
 	}
 
 	patternMap := make(map[models.PermissionResourcePattern]interface{})
+	permissionName := query.PermissionName
 
 	for _, permission := range permissions {
 		if permission.Name == permissionName {
@@ -83,11 +77,4 @@ func (s *InMemoryStore) ListResourcePatterns(
 	}
 
 	return resourcePatterns, nil
-}
-
-func hasPermission(permission *models.Permission, query repos.HasPermissionQuery) bool {
-	namesMatch := permission.Name == query.PermissionQuery.PermissionName
-	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourcePattern)
-
-	return namesMatch && resourcesMatch
 }

@@ -44,7 +44,7 @@ func (s *DataService) CreateRole(
 func (s *DataService) FindRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleQuery,
+	query repos.FindRoleQuery,
 ) (*models.Role, error) {
 	role, err := findRole(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
@@ -53,11 +53,19 @@ func (s *DataService) FindRole(
 	return role.Role, nil
 }
 
-func (s *DataService) DeleteRole(ctx context.Context, logger lager.Logger, query repos.RoleQuery) error {
-	return deleteRole(ctx, logger.Session("data-service"), s.conn, query)
+func (s *DataService) DeleteRole(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName models.RoleName,
+) error {
+	return deleteRole(ctx, logger.Session("data-service"), s.conn, roleName)
 }
 
-func (s *DataService) ListRolePermissions(ctx context.Context, logger lager.Logger, query repos.RoleQuery) ([]*models.Permission, error) {
+func (s *DataService) ListRolePermissions(
+	ctx context.Context,
+	logger lager.Logger,
+	query repos.ListRolePermissionsQuery,
+) ([]*models.Permission, error) {
 	p, err := listRolePermissions(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err

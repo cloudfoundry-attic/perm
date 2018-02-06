@@ -31,29 +31,25 @@ func (s *PermissionServiceServer) HasPermission(
 	req *protos.HasPermissionRequest,
 ) (*protos.HasPermissionResponse, error) {
 	pActor := req.GetActor()
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
-
+	actor := models.Actor{
+		DomainID: models.ActorDomainID(pActor.GetID()),
+		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	}
 	permissionName := models.PermissionName(req.GetPermissionName())
 	resourcePattern := models.PermissionResourcePattern(req.GetResourceId())
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":                   domainID,
-		"actor.issuer":               issuer,
+		"actor.id":                   actor.DomainID,
+		"actor.issuer":               actor.Issuer,
 		"permission.name":            permissionName,
 		"permission.resourcePattern": resourcePattern,
 	})
 	logger.Debug(messages.Starting)
 
 	query := repos.HasPermissionQuery{
-		ActorQuery: repos.ActorQuery{
-			DomainID: domainID,
-			Issuer:   issuer,
-		},
-		PermissionQuery: repos.PermissionQuery{
-			PermissionName:  permissionName,
-			ResourcePattern: resourcePattern,
-		},
+		Actor:           actor,
+		PermissionName:  permissionName,
+		ResourcePattern: resourcePattern,
 	}
 
 	found, err := s.permissionRepo.HasPermission(ctx, logger, query)
@@ -74,28 +70,24 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	req *protos.ListResourcePatternsRequest,
 ) (*protos.ListResourcePatternsResponse, error) {
 	pActor := req.GetActor()
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
-
+	actor := models.Actor{
+		DomainID: models.ActorDomainID(pActor.GetID()),
+		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	}
 	permissionName := models.PermissionName(req.GetPermissionName())
 
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.id":        domainID,
-			"actor.issuer":    issuer,
+			"actor.id":        actor.DomainID,
+			"actor.issuer":    actor.Issuer,
 			"permission.name": permissionName,
 		})
 
 	logger.Debug(messages.Starting)
 
 	query := repos.ListResourcePatternsQuery{
-		ActorQuery: repos.ActorQuery{
-			DomainID: models.ActorDomainID(req.Actor.ID),
-			Issuer:   models.ActorIssuer(req.Actor.Issuer),
-		},
-		PermissionDefinitionQuery: repos.PermissionDefinitionQuery{
-			Name: models.PermissionName(req.PermissionName),
-		},
+		Actor:          actor,
+		PermissionName: permissionName,
 	}
 
 	resourcePatterns, err := s.permissionRepo.ListResourcePatterns(ctx, logger, query)

@@ -44,12 +44,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 			Expect(role).NotTo(BeNil())
 			Expect(role.Name).To(Equal(name))
-
-			expectedRole := role
-			role, err = subject.FindRole(ctx, logger, repos.RoleQuery{Name: name})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(role).To(Equal(expectedRole))
 		})
 
 		It("fails if a role with the name already exists", func() {
@@ -59,7 +53,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = subject.CreateRole(ctx, logger, name)
-
 			Expect(err).To(Equal(models.ErrRoleAlreadyExists))
 		})
 	})
@@ -68,7 +61,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		It("fails if the role does not exist", func() {
 			name := models.RoleName(uuid.NewV4().String())
 
-			role, err := subject.FindRole(ctx, logger, repos.RoleQuery{Name: name})
+			role, err := subject.FindRole(ctx, logger, repos.FindRoleQuery{RoleName: name})
 
 			Expect(role).To(BeNil())
 			Expect(err).To(Equal(models.ErrRoleNotFound))
@@ -82,10 +75,10 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 			_, err := subject.CreateRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.DeleteRole(ctx, logger, repos.RoleQuery{Name: name})
+			err = subject.DeleteRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
 
-			role, err := subject.FindRole(ctx, logger, repos.RoleQuery{Name: name})
+			role, err := subject.FindRole(ctx, logger, repos.FindRoleQuery{RoleName: name})
 
 			Expect(role).To(BeNil())
 			Expect(err).To(Equal(models.ErrRoleNotFound))
@@ -94,7 +87,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		It("fails if the role does not exist", func() {
 			name := models.RoleName(uuid.NewV4().String())
 
-			err := subject.DeleteRole(ctx, logger, repos.RoleQuery{Name: name})
+			err := subject.DeleteRole(ctx, logger, name)
 
 			Expect(err).To(Equal(models.ErrRoleNotFound))
 		})
@@ -109,8 +102,8 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 			_, err := subject.CreateRole(ctx, logger, roleName, permission1, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
-			query := repos.RoleQuery{
-				Name: roleName,
+			query := repos.ListRolePermissionsQuery{
+				RoleName: roleName,
 			}
 
 			permissions, err := subject.ListRolePermissions(ctx, logger, query)
@@ -122,8 +115,8 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the actor does not exist", func() {
-			query := repos.RoleQuery{
-				Name: "foobar",
+			query := repos.ListRolePermissionsQuery{
+				RoleName: "foobar",
 			}
 			_, err := subject.ListRolePermissions(ctx, logger, query)
 			Expect(err).To(MatchError(models.ErrRoleNotFound))

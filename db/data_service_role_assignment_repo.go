@@ -67,7 +67,7 @@ func (s *DataService) UnassignRole(
 func (s *DataService) HasRole(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.RoleAssignmentQuery,
+	query repos.HasRoleQuery,
 ) (bool, error) {
 	return hasRole(ctx, logger.Session("data-service"), s.conn, query)
 }
@@ -75,7 +75,7 @@ func (s *DataService) HasRole(
 func (s *DataService) ListActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
-	query repos.ActorQuery,
+	query repos.ListActorRolesQuery,
 ) ([]*models.Role, error) {
 	r, err := listActorRoles(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {

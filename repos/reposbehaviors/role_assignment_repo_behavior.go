@@ -29,13 +29,9 @@ func BehavesLikeARoleAssignmentRepo(
 		logger *lagertest.TestLogger
 
 		cancelFunc context.CancelFunc
-
-		roleName models.RoleName
 	)
 
 	BeforeEach(func() {
-		roleName = models.RoleName(uuid.NewV4().String())
-
 		subject = subjectCreator()
 
 		roleRepo = roleRepoCreator()
@@ -51,24 +47,22 @@ func BehavesLikeARoleAssignmentRepo(
 
 	Describe("#AssignRole", func() {
 		It("saves the role assignment, saving the actor if it does not exist", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			yes, err := subject.HasRole(ctx, logger, query)
 
@@ -77,23 +71,27 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 
 		It("fails if the role assignment already exists", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).To(Equal(models.ErrRoleAssignmentAlreadyExists))
 		})
 
 		It("fails if the role does not exist", func() {
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			err := subject.AssignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).To(Equal(models.ErrRoleNotFound))
@@ -102,29 +100,27 @@ func BehavesLikeARoleAssignmentRepo(
 
 	Describe("#UnassignRole", func() {
 		It("removes the role assignment", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
-			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.UnassignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			yes, err := subject.HasRole(ctx, logger, query)
 
@@ -135,6 +131,7 @@ func BehavesLikeARoleAssignmentRepo(
 		It("fails if the role does not exist", func() {
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			err := subject.UnassignRole(ctx, logger, roleName, domainID, issuer)
 			Expect(err).To(Equal(models.ErrRoleNotFound))
@@ -143,6 +140,7 @@ func BehavesLikeARoleAssignmentRepo(
 		It("fails if the actor does not exist", func() {
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
@@ -154,6 +152,7 @@ func BehavesLikeARoleAssignmentRepo(
 		It("fails if the role assignment does not exist", func() {
 			domainID := models.ActorDomainID(uuid.NewV4().String())
 			issuer := models.ActorIssuer(uuid.NewV4().String())
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
 			Expect(err).NotTo(HaveOccurred())
@@ -168,23 +167,21 @@ func BehavesLikeARoleAssignmentRepo(
 
 	Describe("#HasRole", func() {
 		It("returns true if they have been assigned the role", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			yes, err := subject.HasRole(ctx, logger, query)
 
@@ -193,23 +190,21 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
-			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			yes, err := subject.HasRole(ctx, logger, query)
 
@@ -218,20 +213,18 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 
 		It("returns false if the actor does not exist", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			hasRole, err := subject.HasRole(ctx, logger, query)
 
@@ -240,31 +233,32 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 
 		It("fails if the role does not exist", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
-			_, err := actorRepo.CreateActor(ctx, logger, domainID, issuer)
+			_, err := actorRepo.CreateActor(ctx, logger, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			roleQuery := repos.RoleQuery{Name: roleName}
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			query := repos.RoleAssignmentQuery{
-				RoleQuery:  roleQuery,
-				ActorQuery: actorQuery,
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
 			}
 			_, err = subject.HasRole(ctx, logger, query)
 
+			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(models.ErrRoleNotFound))
 		})
 	})
 
 	Describe("#ListActorRoles", func() {
 		It("returns a list of all roles that the actor has been assigned to", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
 
 			roleName1 := models.RoleName(uuid.NewV4().String())
 			role1, err := roleRepo.CreateRole(ctx, logger, roleName1)
@@ -278,15 +272,14 @@ func BehavesLikeARoleAssignmentRepo(
 			role3, err := roleRepo.CreateRole(ctx, logger, roleName3)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName1, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName1, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.AssignRole(ctx, logger, roleName2, domainID, issuer)
+			err = subject.AssignRole(ctx, logger, roleName2, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			query := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
+			query := repos.ListActorRolesQuery{
+				Actor: actor,
 			}
 			roles, err := subject.ListActorRoles(ctx, logger, query)
 
@@ -298,15 +291,17 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 
 		It("returns an empty list if the actor does not exist", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			roleName := models.RoleName(uuid.NewV4().String())
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			query := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
+			query := repos.ListActorRolesQuery{
+				Actor: actor,
 			}
 			roles, err := subject.ListActorRoles(ctx, logger, query)
 

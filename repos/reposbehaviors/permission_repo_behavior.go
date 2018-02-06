@@ -51,32 +51,25 @@ func BehavesLikeAPermissionRepo(
 	Describe("#HasPermission", func() {
 		It("returns true if they have been assigned to a role that has the permission", func() {
 			roleName := models.RoleName(uuid.NewV4().String())
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
-
-			permission := &models.Permission{
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			permission := models.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission)
+
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
-
-			permissionQuery := repos.PermissionQuery{
-				PermissionName:  "some-permission",
-				ResourcePattern: "some-resource-ID",
-			}
-
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
 
 			query := repos.HasPermissionQuery{
-				PermissionQuery: permissionQuery,
-				ActorQuery:      actorQuery,
+				Actor:           actor,
+				PermissionName:  permission.Name,
+				ResourcePattern: permission.ResourcePattern,
 			}
 
 			yes, err := subject.HasPermission(ctx, logger, query)
@@ -87,32 +80,25 @@ func BehavesLikeAPermissionRepo(
 
 		It("returns false if they have not been assigned the role", func() {
 			roleName := models.RoleName(uuid.NewV4().String())
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
-
-			permission := &models.Permission{
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
+			permission := models.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission)
+
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = actorRepo.CreateActor(ctx, logger, domainID, issuer)
+			_, err = actorRepo.CreateActor(ctx, logger, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
-
-			permissionQuery := repos.PermissionQuery{
-				PermissionName:  "some-permission",
-				ResourcePattern: "some-resource-ID",
-			}
-
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
 
 			query := repos.HasPermissionQuery{
-				PermissionQuery: permissionQuery,
-				ActorQuery:      actorQuery,
+				Actor:           actor,
+				PermissionName:  permission.Name,
+				ResourcePattern: permission.ResourcePattern,
 			}
 			yes, err := subject.HasPermission(ctx, logger, query)
 
@@ -122,25 +108,23 @@ func BehavesLikeAPermissionRepo(
 
 		It("return false if the actor does not exist", func() {
 			roleName := models.RoleName(uuid.NewV4().String())
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			permissionQuery := repos.PermissionQuery{
-				PermissionName:  "some-permission",
+			permission := models.Permission{
+				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
 
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-
 			query := repos.HasPermissionQuery{
-				PermissionQuery: permissionQuery,
-				ActorQuery:      actorQuery,
+				Actor:           actor,
+				PermissionName:  permission.Name,
+				ResourcePattern: permission.ResourcePattern,
 			}
 			yes, err := subject.HasPermission(ctx, logger, query)
 
@@ -152,8 +136,10 @@ func BehavesLikeAPermissionRepo(
 	Describe("#ListResourcePatterns", func() {
 		It("returns the list of resource patterns for which the actor has that permission", func() {
 			roleName := models.RoleName(uuid.NewV4().String())
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
 			permissionName := models.PermissionName(uuid.NewV4().String())
 			resourcePattern1 := models.PermissionResourcePattern(uuid.NewV4().String())
 			resourcePattern2 := models.PermissionResourcePattern(uuid.NewV4().String())
@@ -175,7 +161,7 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2, permission3)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
+			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			permission4 := &models.Permission{
@@ -186,16 +172,9 @@ func BehavesLikeAPermissionRepo(
 			_, err = roleRepo.CreateRole(ctx, logger, models.RoleName("not-assigned-to-this-role"), permission4)
 			Expect(err).NotTo(HaveOccurred())
 
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
-				Name: permissionName,
-			}
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:                actorQuery,
-				PermissionDefinitionQuery: permissionDefinitionQuery,
+				Actor:          actor,
+				PermissionName: permissionName,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -208,8 +187,10 @@ func BehavesLikeAPermissionRepo(
 
 		It("de-dupes the results if the user has access to the same resource pattern through multiple roles/permissions", func() {
 			roleName1 := models.RoleName(uuid.NewV4().String())
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
+			}
 			permissionName := models.PermissionName(uuid.NewV4().String())
 			resourcePattern := models.PermissionResourcePattern(uuid.NewV4().String())
 
@@ -221,7 +202,7 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName1, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName1, domainID, issuer)
+			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName1, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := models.RoleName(uuid.NewV4().String())
@@ -233,19 +214,12 @@ func BehavesLikeAPermissionRepo(
 			_, err = roleRepo.CreateRole(ctx, logger, roleName2, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName2, domainID, issuer)
+			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName2, actor.DomainID, actor.Issuer)
 			Expect(err).NotTo(HaveOccurred())
 
-			actorQuery := repos.ActorQuery{
-				DomainID: domainID,
-				Issuer:   issuer,
-			}
-			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
-				Name: permissionName,
-			}
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:                actorQuery,
-				PermissionDefinitionQuery: permissionDefinitionQuery,
+				Actor:          actor,
+				PermissionName: permissionName,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -257,17 +231,14 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("returns empty if the actor is not assigned to any roles with that permission", func() {
-			actorQuery := repos.ActorQuery{
-				DomainID: "fake-actor",
-				Issuer:   "fake-issuer",
+			actor := models.Actor{
+				DomainID: models.ActorDomainID(uuid.NewV4().String()),
+				Issuer:   models.ActorIssuer(uuid.NewV4().String()),
 			}
-			permissionName := models.PermissionName("fake-permission-name")
-			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
-				Name: permissionName,
-			}
+			permissionName := models.PermissionName(uuid.NewV4().String())
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:                actorQuery,
-				PermissionDefinitionQuery: permissionDefinitionQuery,
+				Actor:          actor,
+				PermissionName: permissionName,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)

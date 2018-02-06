@@ -8,13 +8,14 @@ import (
 )
 
 type HasPermissionQuery struct {
-	ActorQuery      ActorQuery
-	PermissionQuery PermissionQuery
+	Actor           models.Actor
+	PermissionName  models.PermissionName
+	ResourcePattern models.PermissionResourcePattern
 }
 
 type ListResourcePatternsQuery struct {
-	ActorQuery                ActorQuery
-	PermissionDefinitionQuery PermissionDefinitionQuery
+	Actor          models.Actor
+	PermissionName models.PermissionName
 }
 
 //go:generate counterfeiter . PermissionRepo

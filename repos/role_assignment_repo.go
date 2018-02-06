@@ -7,6 +7,15 @@ import (
 	"code.cloudfoundry.org/perm/models"
 )
 
+type ListActorRolesQuery struct {
+	Actor models.Actor
+}
+
+type HasRoleQuery struct {
+	Actor    models.Actor
+	RoleName models.RoleName
+}
+
 type RoleAssignmentRepo interface {
 	AssignRole(
 		ctx context.Context,
@@ -27,12 +36,12 @@ type RoleAssignmentRepo interface {
 	HasRole(
 		ctx context.Context,
 		logger lager.Logger,
-		query RoleAssignmentQuery,
+		query HasRoleQuery,
 	) (bool, error)
 
 	ListActorRoles(
 		ctx context.Context,
 		logger lager.Logger,
-		query ActorQuery,
+		query ListActorRolesQuery,
 	) ([]*models.Role, error)
 }
