@@ -51,7 +51,7 @@ func (s *InMemoryStore) ListResourcePatterns(
 		DomainID: query.ActorQuery.DomainID,
 		Issuer:   query.ActorQuery.Issuer,
 	}
-	permissionName := query.PermissionName
+	permissionName := query.PermissionDefinitionQuery.Name
 
 	var resourcePatterns []models.PermissionResourcePattern
 

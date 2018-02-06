@@ -37,7 +37,7 @@ func createRoleAndAssignPermissions(
 	}
 
 	for _, permission := range permissions {
-		permissionDefinitionName := models.PermissionDefinitionName(permission.Name)
+		permissionDefinitionName := models.PermissionName(permission.Name)
 		_, err = createPermissionDefinition(ctx, logger, conn, permissionDefinitionName)
 		if err != nil && err != models.ErrPermissionDefinitionAlreadyExists {
 			return nil, err
@@ -531,7 +531,7 @@ func createPermissionDefinition(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	name models.PermissionDefinitionName,
+	name models.PermissionName,
 ) (*permissionDefinition, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
@@ -581,7 +581,7 @@ func findPermissionDefinition(
 
 	var (
 		permissionDefinitionID id
-		name                   models.PermissionDefinitionName
+		name                   models.PermissionName
 	)
 
 	err := squirrel.Select("id", "name").
@@ -759,7 +759,7 @@ func listResourcePatterns(
 	conn squirrel.BaseRunner,
 	query repos.ListResourcePatternsQuery,
 ) ([]models.PermissionResourcePattern, error) {
-	permissionName := query.PermissionName
+	permissionName := query.PermissionDefinitionQuery.Name
 	issuer := query.ActorQuery.Issuer
 	domainID := query.ActorQuery.DomainID
 

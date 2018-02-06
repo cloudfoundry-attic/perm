@@ -190,9 +190,12 @@ func BehavesLikeAPermissionRepo(
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
+			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
+				Name: permissionName,
+			}
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:     actorQuery,
-				PermissionName: permissionName,
+				ActorQuery:                actorQuery,
+				PermissionDefinitionQuery: permissionDefinitionQuery,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -237,9 +240,12 @@ func BehavesLikeAPermissionRepo(
 				DomainID: domainID,
 				Issuer:   issuer,
 			}
+			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
+				Name: permissionName,
+			}
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:     actorQuery,
-				PermissionName: permissionName,
+				ActorQuery:                actorQuery,
+				PermissionDefinitionQuery: permissionDefinitionQuery,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -256,9 +262,12 @@ func BehavesLikeAPermissionRepo(
 				Issuer:   "fake-issuer",
 			}
 			permissionName := models.PermissionName("fake-permission-name")
+			permissionDefinitionQuery := repos.PermissionDefinitionQuery{
+				Name: permissionName,
+			}
 			query := repos.ListResourcePatternsQuery{
-				ActorQuery:     actorQuery,
-				PermissionName: permissionName,
+				ActorQuery:                actorQuery,
+				PermissionDefinitionQuery: permissionDefinitionQuery,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)

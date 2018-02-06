@@ -89,10 +89,12 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	logger.Debug(messages.Starting)
 
 	query := repos.ListResourcePatternsQuery{
-		PermissionName: models.PermissionName(req.PermissionName),
 		ActorQuery: repos.ActorQuery{
 			DomainID: models.ActorDomainID(req.Actor.ID),
 			Issuer:   models.ActorIssuer(req.Actor.Issuer),
+		},
+		PermissionDefinitionQuery: repos.PermissionDefinitionQuery{
+			Name: models.PermissionName(req.PermissionName),
 		},
 	}
 

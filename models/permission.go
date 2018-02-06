@@ -2,13 +2,12 @@ package models
 
 import "code.cloudfoundry.org/perm-go"
 
-type PermissionDefinitionName string
+type PermissionName string
 
 type PermissionDefinition struct {
-	Name PermissionDefinitionName
+	Name PermissionName
 }
 
-type PermissionName string
 type PermissionResourcePattern string
 
 type Permission struct {
