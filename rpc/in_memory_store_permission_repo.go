@@ -87,7 +87,7 @@ func (s *InMemoryStore) ListResourcePatterns(
 
 func hasPermission(permission *models.Permission, query repos.HasPermissionQuery) bool {
 	namesMatch := permission.Name == query.PermissionQuery.PermissionName
-	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourceID)
+	resourcesMatch := string(permission.ResourcePattern) == string(query.PermissionQuery.ResourcePattern)
 
 	return namesMatch && resourcesMatch
 }

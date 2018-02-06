@@ -35,13 +35,13 @@ func (s *PermissionServiceServer) HasPermission(
 	issuer := models.ActorIssuer(pActor.GetIssuer())
 
 	permissionName := models.PermissionName(req.GetPermissionName())
-	resourceID := repos.ResourceID(req.GetResourceId())
+	resourcePattern := models.PermissionResourcePattern(req.GetResourceId())
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":              domainID,
-		"actor.issuer":          issuer,
-		"permission.name":       permissionName,
-		"permission.resourceID": resourceID,
+		"actor.id":                   domainID,
+		"actor.issuer":               issuer,
+		"permission.name":            permissionName,
+		"permission.resourcePattern": resourcePattern,
 	})
 	logger.Debug(messages.Starting)
 
@@ -51,8 +51,8 @@ func (s *PermissionServiceServer) HasPermission(
 			Issuer:   issuer,
 		},
 		PermissionQuery: repos.PermissionQuery{
-			PermissionName: permissionName,
-			ResourceID:     resourceID,
+			PermissionName:  permissionName,
+			ResourcePattern: resourcePattern,
 		},
 	}
 

@@ -8,8 +8,8 @@ import (
 )
 
 type HasPermissionQuery struct {
-	PermissionQuery PermissionQuery
 	ActorQuery      ActorQuery
+	PermissionQuery PermissionQuery
 }
 
 type ListResourcePatternsQuery struct {

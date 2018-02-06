@@ -65,8 +65,8 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := repos.PermissionQuery{
-				PermissionName: "some-permission",
-				ResourceID:     "some-resource-ID",
+				PermissionName:  "some-permission",
+				ResourcePattern: "some-resource-ID",
 			}
 
 			actorQuery := repos.ActorQuery{
@@ -101,8 +101,8 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := repos.PermissionQuery{
-				PermissionName: "some-permission",
-				ResourceID:     "some-resource-ID",
+				PermissionName:  "some-permission",
+				ResourcePattern: "some-resource-ID",
 			}
 
 			actorQuery := repos.ActorQuery{
@@ -129,8 +129,8 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionQuery := repos.PermissionQuery{
-				PermissionName: "some-permission",
-				ResourceID:     "some-resource-ID",
+				PermissionName:  "some-permission",
+				ResourcePattern: "some-resource-ID",
 			}
 
 			actorQuery := repos.ActorQuery{

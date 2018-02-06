@@ -671,10 +671,10 @@ func hasPermission(
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
-		"actor.issuer":          query.ActorQuery.Issuer,
-		"actor.domainID":        query.ActorQuery.DomainID,
-		"permission.name":       query.PermissionQuery.PermissionName,
-		"permission.resourceID": query.PermissionQuery.ResourceID,
+		"actor.issuer":               query.ActorQuery.Issuer,
+		"actor.domainID":             query.ActorQuery.DomainID,
+		"permission.name":            query.PermissionQuery.PermissionName,
+		"permission.resourcePattern": query.PermissionQuery.ResourcePattern,
 	})
 
 	var count int
@@ -688,7 +688,7 @@ func hasPermission(
 			"a.issuer":           query.ActorQuery.Issuer,
 			"a.domain_id":        query.ActorQuery.DomainID,
 			"pd.name":            query.PermissionQuery.PermissionName,
-			"p.resource_pattern": query.PermissionQuery.ResourceID,
+			"p.resource_pattern": query.PermissionQuery.ResourcePattern,
 		}).
 		RunWith(conn).
 		ScanContext(ctx, &count)
