@@ -227,12 +227,12 @@ func createActor(
 	}
 }
 
-func findActor(
+func findActorID(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ActorQuery,
-) (*actor, error) {
+) (id, error) {
 	logger = logger.Session("find-actor")
 
 	sQuery := squirrel.Eq{}
@@ -244,31 +244,23 @@ func findActor(
 	}
 
 	var (
-		actorID  id
-		domainID models.ActorDomainID
-		issuer   models.ActorIssuer
+		actorID id
 	)
-	err := squirrel.Select("id", "domain_id", "issuer").
+	err := squirrel.Select("id").
 		From("actor").
 		Where(sQuery).
 		RunWith(conn).
-		ScanContext(ctx, &actorID, &domainID, &issuer)
+		ScanContext(ctx, &actorID)
 
 	switch err {
 	case nil:
-		return &actor{
-			ID: actorID,
-			Actor: &models.Actor{
-				DomainID: domainID,
-				Issuer:   issuer,
-			},
-		}, nil
+		return actorID, nil
 	case sql.ErrNoRows:
 		logger.Debug(messages.ErrActorNotFound)
-		return nil, models.ErrActorNotFound
+		return actorID, models.ErrActorNotFound
 	default:
 		logger.Error(messages.FailedToFindActor, err)
-		return nil, err
+		return actorID, err
 	}
 }
 
@@ -292,12 +284,12 @@ func assignRole(
 		return err
 	}
 
-	actor, err := findActor(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actorID, err := findActorID(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err != nil {
 		return err
 	}
 
-	return createRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+	return createRoleAssignment(ctx, logger, conn, role.ID, actorID)
 }
 
 func createRoleAssignment(
@@ -348,14 +340,14 @@ func unassignRole(ctx context.Context,
 		return err
 	}
 
-	actor, err := findActor(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
+	actorID, err := findActorID(ctx, logger, conn, repos.ActorQuery{DomainID: domainID, Issuer: issuer})
 	if err == models.ErrActorNotFound {
 		return models.ErrRoleAssignmentNotFound
 	} else if err != nil {
 		return err
 	}
 
-	return deleteRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+	return deleteRoleAssignment(ctx, logger, conn, role.ID, actorID)
 }
 
 func deleteRoleAssignment(
@@ -409,7 +401,7 @@ func hasRole(
 ) (bool, error) {
 	logger = logger.Session("has-role")
 
-	actor, err := findActor(ctx, logger, conn, query.ActorQuery)
+	actorID, err := findActorID(ctx, logger, conn, query.ActorQuery)
 	if err == models.ErrActorNotFound {
 		return false, nil
 	} else if err != nil {
@@ -421,7 +413,7 @@ func hasRole(
 		return false, err
 	}
 
-	return findRoleAssignment(ctx, logger, conn, role.ID, actor.ID)
+	return findRoleAssignment(ctx, logger, conn, role.ID, actorID)
 }
 
 func findRoleAssignment(
@@ -461,14 +453,14 @@ func listActorRoles(
 ) ([]*role, error) {
 	logger = logger.Session("list-actor-roles")
 
-	actor, err := findActor(ctx, logger, conn, query)
+	actorID, err := findActorID(ctx, logger, conn, query)
 	if err == models.ErrActorNotFound {
 		return []*role{}, nil
 	} else if err != nil {
 		return nil, err
 	}
 
-	return findActorRoleAssignments(ctx, logger, conn, actor.ID)
+	return findActorRoleAssignments(ctx, logger, conn, actorID)
 }
 
 func findActorRoleAssignments(
