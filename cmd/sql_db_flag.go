@@ -18,7 +18,7 @@ import (
 type SQLFlag struct {
 	DB     DBFlag        `group:"DB" namespace:"db"`
 	TLS    SQLTLSFlag    `group:"TLS" namespace:"tls"`
-	Tuning SQLTuningFlag `group:"tuning" namespace:"tuning"`
+	Tuning SQLTuningFlag `group:"Tuning" namespace:"tuning"`
 }
 
 type DBFlag struct {

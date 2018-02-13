@@ -7,6 +7,8 @@ import (
 
 	"context"
 
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/db"
@@ -18,17 +20,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 )
 
 type ServeCommand struct {
-	Logger LagerFlag
-
-	Hostname       string  `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
-	Port           int     `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
-	TLSCertificate string  `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
-	TLSKey         string  `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	SQL            SQLFlag `group:"SQL" namespace:"sql"`
+	Logger            LagerFlag
+	Hostname          string        `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
+	Port              int           `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+	MaxConnectionIdle time.Duration `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
+	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
+	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
+	SQL               SQLFlag       `group:"SQL" namespace:"sql"`
 }
 
 func (cmd ServeCommand) Execute([]string) error {
@@ -41,15 +44,22 @@ func (cmd ServeCommand) Execute([]string) error {
 	port := cmd.Port
 	lis, err := net.Listen("tcp", net.JoinHostPort(hostname, strconv.Itoa(port)))
 
+	maxConnectionIdle := cmd.MaxConnectionIdle
+
 	listeningLogData := lager.Data{
-		"protocol": "tcp",
-		"hostname": hostname,
-		"port":     port,
+		"protocol":          "tcp",
+		"hostname":          hostname,
+		"port":              port,
+		"maxConnectionIdle": maxConnectionIdle.String(),
 	}
 	if err != nil {
 		logger.Error(messages.FailedToListen, err, listeningLogData)
 		return err
 	}
+
+	keepaliveParams := grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionIdle: maxConnectionIdle,
+	})
 
 	tlsCreds, err := credentials.NewServerTLSFromFile(cmd.TLSCertificate, cmd.TLSKey)
 	if err != nil {
@@ -71,6 +81,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
 
 	serverOpts := []grpc.ServerOption{
+		keepaliveParams,
 		grpc.Creds(tlsCreds),
 		streamInterceptor,
 		unaryInterceptor,
