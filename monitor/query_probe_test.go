@@ -57,7 +57,7 @@ var _ = Describe("QueryProbe", func() {
 			Expect(createRoleRequest.GetName()).To(Equal("system.query-probe.foobar"))
 			permissions := createRoleRequest.GetPermissions()
 			Expect(permissions).To(HaveLen(1))
-			Expect(permissions[0].GetName()).To(Equal("system.query-probe.assigned-permission.name.foobar"))
+			Expect(permissions[0].GetName()).To(Equal("system.query-probe.assigned-permission.name"))
 			Expect(permissions[0].GetResourcePattern()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
 
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
@@ -167,13 +167,13 @@ var _ = Describe("QueryProbe", func() {
 			_, hasPositivePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(0)
 			Expect(hasPositivePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.assigned-permission.name.foobar"))
+			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.assigned-permission.name"))
 			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
 
 			_, hasNegativePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(1)
 			Expect(hasNegativePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
 			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.unassigned-permission.name.foobar"))
+			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.unassigned-permission.name"))
 			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.query-probe.unassigned-permission.resource-id.foobar"))
 		})
 

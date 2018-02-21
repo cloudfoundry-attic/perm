@@ -48,7 +48,7 @@ func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, u
 	roleName := QueryProbeRoleName + "." + uniqueSuffix
 
 	assignedPermission := &protos.Permission{
-		Name:            QueryProbeAssignedPermissionName + "." + uniqueSuffix,
+		Name:            QueryProbeAssignedPermissionName,
 		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
@@ -207,7 +207,7 @@ func (p *QueryProbe) runAssignedPermission(
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	assignedPermission := &protos.Permission{
-		Name:            QueryProbeAssignedPermissionName + "." + uniqueSuffix,
+		Name:            QueryProbeAssignedPermissionName,
 		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
@@ -250,7 +250,7 @@ func (p *QueryProbe) runUnassignedPermission(
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	unassignedPermission := &protos.Permission{
-		Name:            QueryProbeUnassignedPermissionName + "." + uniqueSuffix,
+		Name:            QueryProbeUnassignedPermissionName,
 		ResourcePattern: QueryProbeUnassignedPermissionResourceID + "." + uniqueSuffix,
 	}
 

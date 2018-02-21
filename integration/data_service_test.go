@@ -37,26 +37,26 @@ var _ = Describe("DataService", func() {
 		driver := sqlx.DBDriverNameMySQL
 		hostname := "localhost"
 
-		username := os.Getenv("PERM_TEST_MYSQL_USERNAME")
-		if username == "" {
+		username, found := os.LookupEnv("PERM_TEST_MYSQL_USERNAME")
+		if !found {
 			username = "root"
 		}
 
-		password := os.Getenv("PERM_TEST_MYSQL_PASSWORD")
-		if password == "" {
+		password, found := os.LookupEnv("PERM_TEST_MYSQL_PASSWORD")
+		if !found {
 			password = "password"
 		}
 
-		p := os.Getenv("PERM_TEST_MYSQL_PORT")
-		if p == "" {
+		p, found := os.LookupEnv("PERM_TEST_MYSQL_PORT")
+		if !found {
 			p = "3306"
 		}
 
 		port, err := strconv.Atoi(p)
 		Expect(err).NotTo(HaveOccurred())
 
-		schema := os.Getenv("PERM_TEST_MYSQL_SCHEMA_NAME")
-		if schema == "" {
+		schema, found := os.LookupEnv("PERM_TEST_MYSQL_SCHEMA_NAME")
+		if !found {
 			uuid := uuid.NewV4()
 			schema = fmt.Sprintf("perm_test_%s", strings.Replace(uuid.String(), "-", "_", -1))
 		}
