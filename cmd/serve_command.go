@@ -12,6 +12,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/db"
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/rpc"
 	"code.cloudfoundry.org/perm/sqlx"
@@ -35,8 +36,11 @@ type ServeCommand struct {
 }
 
 func (cmd ServeCommand) Execute([]string) error {
+	//TODO Figure out version dynamically
+	version := logging.Version("0.0.0")
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
+	securityLogger := logging.NewCEFLogger("cloud_foundry", "perm", version)
 
 	ctx := context.Background()
 
@@ -113,10 +117,11 @@ func (cmd ServeCommand) Execute([]string) error {
 	logger = logger.Session("grpc-server")
 	store := db.NewDataService(conn)
 
-	roleServiceServer := rpc.NewRoleServiceServer(logger, store, store)
+	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store, store)
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 
-	permissionServiceServer := rpc.NewPermissionServiceServer(logger, store)
+	// TODO
+	permissionServiceServer := rpc.NewPermissionServiceServer(logger, nil, store)
 	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
 
 	logger.Debug(messages.Starting, listeningLogData)

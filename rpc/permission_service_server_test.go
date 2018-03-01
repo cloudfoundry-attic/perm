@@ -10,6 +10,8 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/logging"
+	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -21,6 +23,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		subject           *rpc.PermissionServiceServer
 		roleServiceServer *rpc.RoleServiceServer
 		logger            *lagertest.TestLogger
+		securityLogger    *rpcfakes.FakeSecurityLogger
 
 		inMemoryStore *rpc.InMemoryStore
 
@@ -29,12 +32,13 @@ var _ = Describe("PermissionServiceServer", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("perm-test")
+		securityLogger = new(rpcfakes.FakeSecurityLogger)
 		inMemoryStore = rpc.NewInMemoryStore()
 
 		ctx = context.Background()
 
-		roleServiceServer = rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
-		subject = rpc.NewPermissionServiceServer(logger, inMemoryStore)
+		roleServiceServer = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore, inMemoryStore)
+		subject = rpc.NewPermissionServiceServer(logger, securityLogger, inMemoryStore)
 	})
 
 	Describe("#HasPermission", func() {
@@ -186,6 +190,25 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
 		})
+
+		It("logs a security event", func() {
+			actor := &protos.Actor{
+				ID:     "actor",
+				Issuer: "issuer",
+			}
+
+			_, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
+				Actor:          actor,
+				PermissionName: "some-permission",
+				ResourceId:     "some-resource-ID",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal(logging.SecurityLoggerSignature("HasPermission")))
+			Expect(name).To(Equal(logging.SecurityLoggerName("Permission check")))
+		})
 	})
 
 	Describe("#ListResourcePatterns", func() {
@@ -258,7 +281,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("returns a relevant error if the query fails", func() {
 			permissionRepo := new(reposfakes.FakePermissionRepo)
-			subject := rpc.NewPermissionServiceServer(logger, permissionRepo)
+			subject := rpc.NewPermissionServiceServer(logger, securityLogger, permissionRepo)
 
 			testErr := errors.New("test-error")
 
@@ -278,4 +301,5 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).To(Equal(status.Errorf(codes.Unknown, "test-error")))
 		})
 	})
+
 })

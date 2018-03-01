@@ -7,14 +7,17 @@ import (
 	"code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/logging"
+	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("RoleRepoServer", func() {
 	var (
-		subject *rpc.RoleServiceServer
-		logger  *lagertest.TestLogger
+		subject        *rpc.RoleServiceServer
+		logger         *lagertest.TestLogger
+		securityLogger *rpcfakes.FakeSecurityLogger
 
 		inMemoryStore *rpc.InMemoryStore
 
@@ -23,18 +26,24 @@ var _ = Describe("RoleRepoServer", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("perm-test")
+		securityLogger = new(rpcfakes.FakeSecurityLogger)
 		inMemoryStore = rpc.NewInMemoryStore()
 
 		ctx = context.Background()
 
-		subject = rpc.NewRoleServiceServer(logger, inMemoryStore, inMemoryStore)
+		subject = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore, inMemoryStore)
 	})
 
 	Describe("#CreateRole", func() {
-		It("succeeds if no role with that name exists", func() {
-			req := &protos.CreateRoleRequest{
+		var req *protos.CreateRoleRequest
+
+		BeforeEach(func() {
+			req = &protos.CreateRoleRequest{
 				Name: "test-role",
 			}
+		})
+
+		It("succeeds if no role with that name exists", func() {
 			res, err := subject.CreateRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -42,9 +51,6 @@ var _ = Describe("RoleRepoServer", func() {
 		})
 
 		It("fails if a role with that name already exists", func() {
-			req := &protos.CreateRoleRequest{
-				Name: "test-role",
-			}
 			_, err := subject.CreateRole(ctx, req)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -53,6 +59,16 @@ var _ = Describe("RoleRepoServer", func() {
 
 			Expect(res).To(BeNil())
 			Expect(err).To(HaveOccurred())
+		})
+
+		It("logs a security event", func() {
+			_, err := subject.CreateRole(ctx, req)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal(logging.SecurityLoggerSignature("CreateRole")))
+			Expect(name).To(Equal(logging.SecurityLoggerName("Role creation")))
 		})
 	})
 
@@ -166,6 +182,17 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(hasRoleRes).NotTo(BeNil())
 			Expect(hasRoleRes.GetHasRole()).To(BeFalse())
 		})
+		It("logs a security event", func() {
+			req := &protos.DeleteRoleRequest{
+				Name: "test-role",
+			}
+			subject.DeleteRole(ctx, req)
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal(logging.SecurityLoggerSignature("DeleteRole")))
+			Expect(name).To(Equal(logging.SecurityLoggerName("Role deletion")))
+		})
 	})
 
 	Describe("#AssignRole", func() {
@@ -229,6 +256,22 @@ var _ = Describe("RoleRepoServer", func() {
 
 			Expect(res).To(BeNil())
 			Expect(err).To(HaveOccurred())
+		})
+		It("logs a security event", func() {
+			actor := &protos.Actor{
+				ID:     "actor-id",
+				Issuer: "fake-issuer",
+			}
+			req := &protos.AssignRoleRequest{
+				Actor:    actor,
+				RoleName: "role",
+			}
+			subject.AssignRole(ctx, req)
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal(logging.SecurityLoggerSignature("AssignRole")))
+			Expect(name).To(Equal(logging.SecurityLoggerName("Role assignment")))
 		})
 	})
 
@@ -298,6 +341,23 @@ var _ = Describe("RoleRepoServer", func() {
 
 			Expect(err).To(HaveOccurred())
 			Expect(res).To(BeNil())
+		})
+
+		It("logs a security event", func() {
+			actor := &protos.Actor{
+				ID:     "actor-id",
+				Issuer: "fake-issuer",
+			}
+			req := &protos.UnassignRoleRequest{
+				Actor:    actor,
+				RoleName: "role",
+			}
+			subject.UnassignRole(ctx, req)
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal(logging.SecurityLoggerSignature("UnassignRole")))
+			Expect(name).To(Equal(logging.SecurityLoggerName("Role unassignment")))
 		})
 	})
 

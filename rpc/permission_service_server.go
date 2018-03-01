@@ -11,17 +11,19 @@ import (
 )
 
 type PermissionServiceServer struct {
-	logger lager.Logger
-
+	logger         lager.Logger
+	securityLogger SecurityLogger
 	permissionRepo repos.PermissionRepo
 }
 
 func NewPermissionServiceServer(
 	logger lager.Logger,
+	securityLogger SecurityLogger,
 	permissionRepo repos.PermissionRepo,
 ) *PermissionServiceServer {
 	return &PermissionServiceServer{
 		logger:         logger,
+		securityLogger: securityLogger,
 		permissionRepo: permissionRepo,
 	}
 }
@@ -38,6 +40,7 @@ func (s *PermissionServiceServer) HasPermission(
 	permissionName := models.PermissionName(req.GetPermissionName())
 	resourcePattern := models.PermissionResourcePattern(req.GetResourceId())
 
+	s.securityLogger.Log("HasPermission", "Permission check")
 	logger := s.logger.Session("has-role").WithData(lager.Data{
 		"actor.id":                   actor.DomainID,
 		"actor.issuer":               actor.Issuer,

@@ -84,3 +84,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/codahale/hdrhistogram"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/xoebus/ceflog"
