@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd/contextx"
 	"code.cloudfoundry.org/perm/db"
+	"code.cloudfoundry.org/perm/ioutilx"
 	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/rpc"
@@ -62,7 +63,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
 
-	securityLogFile, err := os.OpenFile(cmd.AuditFilePath, os.O_APPEND, 0600)
+	securityLogFile, err := ioutilx.OpenLogFile(cmd.AuditFilePath)
 	if err != nil {
 		return err
 	}
