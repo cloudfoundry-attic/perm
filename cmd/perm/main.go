@@ -5,6 +5,7 @@ import (
 
 	"code.cloudfoundry.org/perm/cmd"
 
+	"fmt"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -24,14 +25,12 @@ func main() {
 	parser.CommandHandler = func(command flags.Commander, args []string) error {
 		if command == nil {
 			parser.WriteHelp(os.Stderr)
-			os.Exit(1)
+			return fmt.Errorf("no command provided\n")
 		}
 
 		err := command.Execute(args)
-
-		// go-flags prints the error itself, but we should already be logging it
 		if err != nil {
-			os.Exit(1)
+			return err
 		}
 		return nil
 	}
