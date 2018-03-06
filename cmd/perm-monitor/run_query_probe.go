@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	QueryProbeTickDuration = 1 * time.Second
+	QueryProbeTickDuration = 100 * time.Millisecond
 	QueryProbeTimeout      = QueryProbeTickDuration
 
 	QueryProbeMinResponseTime = 1 * time.Nanosecond
