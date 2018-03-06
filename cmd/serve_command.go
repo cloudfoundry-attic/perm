@@ -11,6 +11,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/cmd/contextx"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/messages"
@@ -22,7 +23,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
+	"os"
 )
 
 type ServeCommand struct {
@@ -33,6 +36,24 @@ type ServeCommand struct {
 	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
 	SQL               SQLFlag       `group:"SQL" namespace:"sql"`
+	AuditFilePath     string        `long:"audit-file-path" default:"/var/vcap/sys/log/perm/audit.log"`
+}
+
+type StatsHandler struct{}
+
+func (s *StatsHandler) TagRPC(ctx context.Context, st *stats.RPCTagInfo) context.Context {
+	return contextx.WithReceiptTime(ctx, time.Now())
+}
+
+func (s *StatsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
+
+}
+
+func (s *StatsHandler) TagConn(ctx context.Context, connTagInfo *stats.ConnTagInfo) context.Context {
+	return ctx
+}
+
+func (s *StatsHandler) HandleConn(ctx context.Context, st stats.ConnStats) {
 }
 
 func (cmd ServeCommand) Execute([]string) error {
@@ -40,19 +61,31 @@ func (cmd ServeCommand) Execute([]string) error {
 	version := logging.Version("0.0.0")
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
-	securityLogger := logging.NewCEFLogger("cloud_foundry", "perm", version)
+
+	securityLogFile, err := os.OpenFile(cmd.AuditFilePath, os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+	defer securityLogFile.Close()
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+
+	securityLogger := logging.NewCEFLogger(securityLogFile, "cloud_foundry", "perm", version, logging.Hostname(hostname), cmd.Port)
 
 	ctx := context.Background()
 
-	hostname := cmd.Hostname
+	listenInterface := cmd.Hostname
 	port := cmd.Port
-	lis, err := net.Listen("tcp", net.JoinHostPort(hostname, strconv.Itoa(port)))
+	lis, err := net.Listen("tcp", net.JoinHostPort(listenInterface, strconv.Itoa(port)))
 
 	maxConnectionIdle := cmd.MaxConnectionIdle
 
 	listeningLogData := lager.Data{
 		"protocol":          "tcp",
-		"hostname":          hostname,
+		"hostname":          listenInterface,
 		"port":              port,
 		"maxConnectionIdle": maxConnectionIdle.String(),
 	}
@@ -78,6 +111,7 @@ func (cmd ServeCommand) Execute([]string) error {
 			return grpcErr
 		}),
 	}
+
 	streamMiddleware := grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))
 	unaryMiddleware := grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))
 
@@ -86,6 +120,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	serverOpts := []grpc.ServerOption{
 		keepaliveParams,
+		grpc.StatsHandler(&StatsHandler{}),
 		grpc.Creds(tlsCreds),
 		streamInterceptor,
 		unaryInterceptor,
@@ -121,7 +156,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	protos.RegisterRoleServiceServer(grpcServer, roleServiceServer)
 
 	// TODO
-	permissionServiceServer := rpc.NewPermissionServiceServer(logger, nil, store)
+	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, store)
 	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
 
 	logger.Debug(messages.Starting, listeningLogData)

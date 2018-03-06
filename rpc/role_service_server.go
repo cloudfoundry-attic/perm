@@ -45,7 +45,7 @@ func (s *RoleServiceServer) CreateRole(
 		})
 	}
 
-	s.securityLogger.Log("CreateRole", "Role creation")
+	s.securityLogger.Log(ctx, "CreateRole", "Role creation")
 	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
 	logger.Debug(messages.Starting)
 
@@ -88,7 +88,7 @@ func (s *RoleServiceServer) DeleteRole(
 	req *protos.DeleteRoleRequest,
 ) (*protos.DeleteRoleResponse, error) {
 	name := models.RoleName(req.GetName())
-	s.securityLogger.Log("DeleteRole", "Role deletion")
+	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion")
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
 	})
@@ -112,7 +112,7 @@ func (s *RoleServiceServer) AssignRole(
 
 	domainID := models.ActorDomainID(pActor.GetID())
 	issuer := models.ActorIssuer(pActor.GetIssuer())
-	s.securityLogger.Log("AssignRole", "Role assignment")
+	s.securityLogger.Log(ctx, "AssignRole", "Role assignment")
 	logger := s.logger.Session("assign-role").WithData(lager.Data{
 		"actor.id":     domainID,
 		"actor.issuer": issuer,
@@ -142,7 +142,7 @@ func (s *RoleServiceServer) UnassignRole(
 		DomainID: domainID,
 		Issuer:   issuer,
 	}
-	s.securityLogger.Log("UnassignRole", "Role unassignment")
+	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment")
 	logger := s.logger.Session("unassign-role").WithData(lager.Data{
 		"actor.id":     actor.DomainID,
 		"actor.issuer": actor.Issuer,

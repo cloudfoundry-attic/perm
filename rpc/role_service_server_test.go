@@ -7,7 +7,6 @@ import (
 	"code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,9 +65,9 @@ var _ = Describe("RoleRepoServer", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			signature, name := securityLogger.LogArgsForCall(0)
-			Expect(signature).To(Equal(logging.SecurityLoggerSignature("CreateRole")))
-			Expect(name).To(Equal(logging.SecurityLoggerName("Role creation")))
+			_, signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("CreateRole"))
+			Expect(name).To(Equal("Role creation"))
 		})
 	})
 
@@ -189,9 +188,9 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.DeleteRole(ctx, req)
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			signature, name := securityLogger.LogArgsForCall(0)
-			Expect(signature).To(Equal(logging.SecurityLoggerSignature("DeleteRole")))
-			Expect(name).To(Equal(logging.SecurityLoggerName("Role deletion")))
+			_, signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("DeleteRole"))
+			Expect(name).To(Equal("Role deletion"))
 		})
 	})
 
@@ -269,9 +268,9 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.AssignRole(ctx, req)
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			signature, name := securityLogger.LogArgsForCall(0)
-			Expect(signature).To(Equal(logging.SecurityLoggerSignature("AssignRole")))
-			Expect(name).To(Equal(logging.SecurityLoggerName("Role assignment")))
+			_, signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("AssignRole"))
+			Expect(name).To(Equal("Role assignment"))
 		})
 	})
 
@@ -355,9 +354,9 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.UnassignRole(ctx, req)
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			signature, name := securityLogger.LogArgsForCall(0)
-			Expect(signature).To(Equal(logging.SecurityLoggerSignature("UnassignRole")))
-			Expect(name).To(Equal(logging.SecurityLoggerName("Role unassignment")))
+			_, signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("UnassignRole"))
+			Expect(name).To(Equal("Role unassignment"))
 		})
 	})
 

@@ -1,8 +1,8 @@
 package rpc
 
-import "code.cloudfoundry.org/perm/logging"
+import "context"
 
 //go:generate counterfeiter . SecurityLogger
 type SecurityLogger interface {
-	Log(signature logging.SecurityLoggerSignature, name logging.SecurityLoggerName)
+	Log(ctx context.Context, signature, name string)
 }

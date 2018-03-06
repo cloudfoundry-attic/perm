@@ -167,7 +167,7 @@
   branch = "master"
   name = "github.com/xoebus/ceflog"
   packages = ["."]
-  revision = "37bb44b7d2133e17d3c4cb15977d1c821fa6e3dc"
+  revision = "9cb6ad8a040b1eed3dccccf637a6902cb36ed58f"
 
 [[projects]]
   branch = "master"
@@ -275,6 +275,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd9e7acfe3a08824b0d7608caf71012f803ccc48c8b6cbdeab5c9a5c4cd4b7e6"
+  inputs-digest = "7f2323b26870e19d00de007fd0b6bdd3d9c7703481aac59a685b6a6f5e76315f"
   solver-name = "gps-cdcl"
   solver-version = 1

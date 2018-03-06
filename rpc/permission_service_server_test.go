@@ -10,7 +10,6 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,29 +35,31 @@ var _ = Describe("PermissionServiceServer", func() {
 		inMemoryStore = rpc.NewInMemoryStore()
 
 		ctx = context.Background()
-
 		roleServiceServer = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore, inMemoryStore)
 		subject = rpc.NewPermissionServiceServer(logger, securityLogger, inMemoryStore)
 	})
 
 	Describe("#HasPermission", func() {
-		It("returns true if they have been assigned a role with a permission with a name "+
-			"matching the permission name and a resource pattern that matches the resourceID of the query", func() {
-			roleName := "role"
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
+		var (
+			roleName                 string
+			actor                    *protos.Actor
+			permission1, permission2 *protos.Permission
+		)
 
-			permission1 := &protos.Permission{
+		BeforeEach(func() {
+			roleName = "role"
+			actor = &protos.Actor{ID: "actor", Issuer: "issuer"}
+			permission1 = &protos.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
 			}
-			permission2 := &protos.Permission{
+			permission2 = &protos.Permission{
 				Name:            "some-other-permission",
 				ResourcePattern: "some-other-resource-ID",
 			}
+		})
 
+		It("returns true when there is a matching permission name and resourceID", func() {
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 				Permissions: []*protos.Permission{
@@ -66,14 +67,12 @@ var _ = Describe("PermissionServiceServer", func() {
 					permission2,
 				},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
@@ -81,27 +80,11 @@ var _ = Describe("PermissionServiceServer", func() {
 				PermissionName: "some-other-permission",
 				ResourceId:     "some-other-resource-ID",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeTrue())
 		})
 
-		It("returns false if they mismatch the permission name and resourceID", func() {
-			roleName := "role"
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
-
-			permission1 := &protos.Permission{
-				Name:            "some-permission",
-				ResourcePattern: "some-resource-ID",
-			}
-			permission2 := &protos.Permission{
-				Name:            "some-other-permission",
-				ResourcePattern: "some-other-resource-ID",
-			}
-
+		It("returns false when mismatch the permission name and resourceID", func() {
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 				Permissions: []*protos.Permission{
@@ -109,14 +92,12 @@ var _ = Describe("PermissionServiceServer", func() {
 					permission2,
 				},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
@@ -124,30 +105,17 @@ var _ = Describe("PermissionServiceServer", func() {
 				PermissionName: "some-permission",
 				ResourceId:     "some-other-resource-ID",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			roleName := "role"
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
-
-			permission := &protos.Permission{
-				Name:            "some-permission",
-				ResourcePattern: "some-resource-ID",
-			}
-
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 				Permissions: []*protos.Permission{
-					permission,
+					permission1,
 				},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
@@ -155,30 +123,21 @@ var _ = Describe("PermissionServiceServer", func() {
 				PermissionName: "some-permission",
 				ResourceId:     "some-resource-ID",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
 		})
 
 		It("returns false if they have no permissions", func() {
-			roleName := "role"
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
-
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name:        roleName,
 				Permissions: []*protos.Permission{},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: roleName,
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
@@ -186,17 +145,11 @@ var _ = Describe("PermissionServiceServer", func() {
 				PermissionName: "some-permission",
 				ResourceId:     "some-resource-ID",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
 		})
 
 		It("logs a security event", func() {
-			actor := &protos.Actor{
-				ID:     "actor",
-				Issuer: "issuer",
-			}
-
 			_, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
 				PermissionName: "some-permission",
@@ -205,9 +158,9 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			signature, name := securityLogger.LogArgsForCall(0)
-			Expect(signature).To(Equal(logging.SecurityLoggerSignature("HasPermission")))
-			Expect(name).To(Equal(logging.SecurityLoggerName("Permission check")))
+			_, signature, name := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("HasPermission"))
+			Expect(name).To(Equal("Permission check"))
 		})
 	})
 
@@ -221,42 +174,35 @@ var _ = Describe("PermissionServiceServer", func() {
 				Name:        "r1",
 				Permissions: []*protos.Permission{p1, p2},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name:        "r2",
 				Permissions: []*protos.Permission{p3},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			actor := &protos.Actor{
 				Issuer: "test-issuer",
 				ID:     "fancy-id",
 			}
-
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: "r1",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
 				RoleName: "r2",
 			})
-
 			Expect(err).NotTo(HaveOccurred())
 
 			request := &protos.ListResourcePatternsRequest{
 				Actor:          actor,
 				PermissionName: "test-permission-name",
 			}
-
 			response, err := subject.ListResourcePatterns(ctx, request)
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response).NotTo(BeNil())
 			Expect(response.ResourcePatterns).To(HaveLen(2))
@@ -273,7 +219,6 @@ var _ = Describe("PermissionServiceServer", func() {
 			}
 
 			response, err := subject.ListResourcePatterns(ctx, req)
-
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response).NotTo(BeNil())
 			Expect(response.ResourcePatterns).To(BeEmpty())
@@ -282,9 +227,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		It("returns a relevant error if the query fails", func() {
 			permissionRepo := new(reposfakes.FakePermissionRepo)
 			subject := rpc.NewPermissionServiceServer(logger, securityLogger, permissionRepo)
-
 			testErr := errors.New("test-error")
-
 			permissionRepo.ListResourcePatternsReturns(nil, testErr)
 
 			req := &protos.ListResourcePatternsRequest{
@@ -294,9 +237,7 @@ var _ = Describe("PermissionServiceServer", func() {
 				},
 				PermissionName: "p12",
 			}
-
 			_, err := subject.ListResourcePatterns(ctx, req)
-
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(status.Errorf(codes.Unknown, "test-error")))
 		})

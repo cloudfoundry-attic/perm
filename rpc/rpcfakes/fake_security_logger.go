@@ -2,33 +2,35 @@
 package rpcfakes
 
 import (
+	"context"
 	"sync"
 
-	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc"
 )
 
 type FakeSecurityLogger struct {
-	LogStub        func(signature logging.SecurityLoggerSignature, name logging.SecurityLoggerName)
+	LogStub        func(ctx context.Context, signature, name string)
 	logMutex       sync.RWMutex
 	logArgsForCall []struct {
-		signature logging.SecurityLoggerSignature
-		name      logging.SecurityLoggerName
+		ctx       context.Context
+		signature string
+		name      string
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSecurityLogger) Log(signature logging.SecurityLoggerSignature, name logging.SecurityLoggerName) {
+func (fake *FakeSecurityLogger) Log(ctx context.Context, signature string, name string) {
 	fake.logMutex.Lock()
 	fake.logArgsForCall = append(fake.logArgsForCall, struct {
-		signature logging.SecurityLoggerSignature
-		name      logging.SecurityLoggerName
-	}{signature, name})
-	fake.recordInvocation("Log", []interface{}{signature, name})
+		ctx       context.Context
+		signature string
+		name      string
+	}{ctx, signature, name})
+	fake.recordInvocation("Log", []interface{}{ctx, signature, name})
 	fake.logMutex.Unlock()
 	if fake.LogStub != nil {
-		fake.LogStub(signature, name)
+		fake.LogStub(ctx, signature, name)
 	}
 }
 
@@ -38,10 +40,10 @@ func (fake *FakeSecurityLogger) LogCallCount() int {
 	return len(fake.logArgsForCall)
 }
 
-func (fake *FakeSecurityLogger) LogArgsForCall(i int) (logging.SecurityLoggerSignature, logging.SecurityLoggerName) {
+func (fake *FakeSecurityLogger) LogArgsForCall(i int) (context.Context, string, string) {
 	fake.logMutex.RLock()
 	defer fake.logMutex.RUnlock()
-	return fake.logArgsForCall[i].signature, fake.logArgsForCall[i].name
+	return fake.logArgsForCall[i].ctx, fake.logArgsForCall[i].signature, fake.logArgsForCall[i].name
 }
 
 func (fake *FakeSecurityLogger) Invocations() map[string][][]interface{} {
