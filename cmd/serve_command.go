@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
+	"io/ioutil"
 	"os"
 )
 
@@ -37,7 +38,7 @@ type ServeCommand struct {
 	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
 	SQL               SQLFlag       `group:"SQL" namespace:"sql"`
-	AuditFilePath     string        `long:"audit-file-path" default:"/var/vcap/sys/log/perm/audit.log"`
+	AuditFilePath     string        `long:"audit-file-path" default:""`
 }
 
 type StatsHandler struct{}
@@ -63,18 +64,23 @@ func (cmd ServeCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
 
-	securityLogFile, err := ioutilx.OpenLogFile(cmd.AuditFilePath)
-	if err != nil {
-		return err
+	var auditSink = ioutil.Discard
+	if cmd.AuditFilePath != "" {
+		securityLogFile, err := ioutilx.OpenLogFile(cmd.AuditFilePath)
+		if err != nil {
+			return err
+		}
+
+		defer securityLogFile.Close()
+		auditSink = securityLogFile
 	}
-	defer securityLogFile.Close()
 
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
 	}
 
-	securityLogger := logging.NewCEFLogger(securityLogFile, "cloud_foundry", "perm", version, logging.Hostname(hostname), cmd.Port)
+	securityLogger := logging.NewCEFLogger(auditSink, "cloud_foundry", "perm", version, logging.Hostname(hostname), cmd.Port)
 
 	ctx := context.Background()
 
