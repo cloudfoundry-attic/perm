@@ -19,6 +19,8 @@ import (
 
 	"sync"
 
+	"time"
+
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd"
 	"code.cloudfoundry.org/perm/messages"
@@ -31,6 +33,10 @@ type options struct {
 	StatsD statsDOptions `group:"StatsD" namespace:"statsd"`
 
 	Logger cmd.LagerFlag
+
+	QueryProbe probeOptions `group:"Query probe" namespace:"query-probe"`
+
+	AdminProbe probeOptions `group:"Admin probe" namespace:"admin-probe"`
 }
 
 type permOptions struct {
@@ -42,6 +48,11 @@ type permOptions struct {
 type statsDOptions struct {
 	Hostname string `long:"hostname" description:"Hostname used to connect to StatsD server" required:"true"`
 	Port     int    `long:"port" description:"Port used to connect to StatsD server" required:"true"`
+}
+
+type probeOptions struct {
+	Interval time.Duration `long:"interval" description:"Frequency with which the probe is issued" default:"5s"`
+	Timeout  time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
 }
 
 func main() {
@@ -125,8 +136,6 @@ func main() {
 
 	queryProbeHistogram := monitor.NewThreadSafeHistogram(
 		QueryProbeHistogramWindow,
-		QueryProbeMinResponseTime,
-		QueryProbeMaxResponseTime,
 		3,
 	)
 	statter := &monitor.Statter{
@@ -137,8 +146,8 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statter)
-	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statter)
+	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statter, parserOpts.AdminProbe.Interval, parserOpts.AdminProbe.Timeout)
+	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statter, parserOpts.QueryProbe.Interval, parserOpts.AdminProbe.Timeout)
 
 	wg.Wait()
 	os.Exit(0)

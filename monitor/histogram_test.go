@@ -1,8 +1,6 @@
 package monitor_test
 
 import (
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -15,7 +13,7 @@ var _ = Describe("ThreadSafeHistogram", func() {
 	)
 
 	BeforeEach(func() {
-		subject = NewThreadSafeHistogram(5, 1*time.Nanosecond, 1*time.Second, 5)
+		subject = NewThreadSafeHistogram(5, 5)
 	})
 
 	Describe("#Max", func() {

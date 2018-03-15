@@ -10,24 +10,20 @@ import (
 	"code.cloudfoundry.org/perm/monitor"
 )
 
-const (
-	AdminProbeTickDuration = 30 * time.Second
-	AdminProbeTimeout      = 3 * time.Second
-)
-
 func RunAdminProbe(
 	ctx context.Context,
 	logger lager.Logger,
 	wg *sync.WaitGroup,
 	probe *monitor.AdminProbe,
 	statter *monitor.Statter,
+	probeInterval, probeTimeout time.Duration,
 ) {
 	defer wg.Done()
 
 	var err error
 
-	for range time.NewTicker(AdminProbeTickDuration).C {
-		err = cmd.RunAdminProbe(ctx, logger, probe, AdminProbeTimeout)
+	for range time.NewTicker(probeInterval).C {
+		err = cmd.RunAdminProbe(ctx, logger, probe, probeTimeout)
 		if err != nil {
 			statter.SendFailedAdminProbe(logger.Session("metrics"))
 		} else {

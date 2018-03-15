@@ -1,9 +1,9 @@
 package monitor
 
 import (
-	"time"
-
 	"sync"
+
+	"time"
 
 	"github.com/codahale/hdrhistogram"
 )
@@ -13,8 +13,8 @@ type ThreadSafeHistogram struct {
 	histogram *hdrhistogram.WindowedHistogram
 }
 
-func NewThreadSafeHistogram(windowSize int, minValue, maxValue time.Duration, sigfigs int) *ThreadSafeHistogram {
-	h := hdrhistogram.NewWindowed(windowSize, int64(minValue), int64(maxValue), sigfigs)
+func NewThreadSafeHistogram(windowSize int, sigfigs int) *ThreadSafeHistogram {
+	h := hdrhistogram.NewWindowed(windowSize, 0, int64(time.Minute*10), sigfigs)
 
 	return &ThreadSafeHistogram{
 		rw:        &sync.RWMutex{},

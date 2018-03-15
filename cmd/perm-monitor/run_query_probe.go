@@ -11,12 +11,6 @@ import (
 )
 
 const (
-	QueryProbeTickDuration = 100 * time.Millisecond
-	QueryProbeTimeout      = QueryProbeTickDuration
-
-	QueryProbeMinResponseTime = 1 * time.Nanosecond
-	QueryProbeMaxResponseTime = QueryProbeTimeout
-
 	QueryProbeHistogramWindow      = 5 // Minutes
 	QueryProbeHistogramRefreshTime = 1 * time.Minute
 )
@@ -26,6 +20,7 @@ func RunQueryProbe(ctx context.Context,
 	wg *sync.WaitGroup,
 	probe *monitor.QueryProbe,
 	statter *monitor.Statter,
+	probeInterval, probeTimeout time.Duration,
 ) {
 	defer wg.Done()
 
@@ -42,8 +37,8 @@ func RunQueryProbe(ctx context.Context,
 	go func() {
 		defer innerWG.Done()
 
-		for range time.NewTicker(QueryProbeTickDuration).C {
-			correct, durations, err := cmd.RunQueryProbe(ctx, logger, probe, QueryProbeTimeout)
+		for range time.NewTicker(probeInterval).C {
+			correct, durations, err := cmd.RunQueryProbe(ctx, logger, probe, probeTimeout)
 
 			if err != nil {
 				statter.SendFailedQueryProbe(logger.Session("metrics"))
