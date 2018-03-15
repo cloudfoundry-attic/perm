@@ -792,7 +792,7 @@ func listResourcePatterns(
 	for rows.Next() {
 		var resourcePattern models.PermissionResourcePattern
 
-		err := rows.Scan(&resourcePattern)
+		err = rows.Scan(&resourcePattern)
 		if err != nil {
 			logger.Error(messages.FailedToScanRow, err)
 			return nil, err
