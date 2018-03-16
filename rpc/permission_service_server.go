@@ -6,6 +6,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
@@ -40,8 +41,13 @@ func (s *PermissionServiceServer) HasPermission(
 	}
 	permissionName := models.PermissionName(req.GetPermissionName())
 	resourcePattern := models.PermissionResourcePattern(req.GetResourceId())
+	extensions := []logging.CustomExtension{
+		{Key: "userID", Value: pActor.GetID()},
+		{Key: "permission", Value: string(permissionName)},
+		{Key: "resourceID", Value: string(resourcePattern)},
+	}
 
-	s.securityLogger.Log(ctx, "HasPermission", "Permission check")
+	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
 		"actor.id":                   actor.DomainID,

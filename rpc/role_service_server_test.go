@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/rpc"
 
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -62,12 +63,14 @@ var _ = Describe("RoleRepoServer", func() {
 
 		It("logs a security event", func() {
 			_, err := subject.CreateRole(ctx, req)
+			expectedExtensions := []logging.CustomExtension{{Key: "roleName", Value: "test-role"}}
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			_, signature, name := securityLogger.LogArgsForCall(0)
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
 			Expect(signature).To(Equal("CreateRole"))
 			Expect(name).To(Equal("Role creation"))
+			Expect(extensions).To(Equal(expectedExtensions))
 		})
 	})
 
@@ -181,16 +184,19 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(hasRoleRes).NotTo(BeNil())
 			Expect(hasRoleRes.GetHasRole()).To(BeFalse())
 		})
+
 		It("logs a security event", func() {
 			req := &protos.DeleteRoleRequest{
 				Name: "test-role",
 			}
+			expectedExtensions := []logging.CustomExtension{{Key: "roleName", Value: "test-role"}}
 			subject.DeleteRole(ctx, req)
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			_, signature, name := securityLogger.LogArgsForCall(0)
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
 			Expect(signature).To(Equal("DeleteRole"))
 			Expect(name).To(Equal("Role deletion"))
+			Expect(extensions).To(Equal(expectedExtensions))
 		})
 	})
 
@@ -256,6 +262,7 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(res).To(BeNil())
 			Expect(err).To(HaveOccurred())
 		})
+
 		It("logs a security event", func() {
 			actor := &protos.Actor{
 				ID:     "actor-id",
@@ -266,11 +273,16 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.AssignRole(ctx, req)
+			expectedExtensions := []logging.CustomExtension{
+				{Key: "roleName", Value: "role"},
+				{Key: "userID", Value: "actor-id"},
+			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			_, signature, name := securityLogger.LogArgsForCall(0)
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
 			Expect(signature).To(Equal("AssignRole"))
 			Expect(name).To(Equal("Role assignment"))
+			Expect(extensions).To(Equal(expectedExtensions))
 		})
 	})
 
@@ -352,11 +364,16 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.UnassignRole(ctx, req)
+			expectedExtensions := []logging.CustomExtension{
+				{Key: "roleName", Value: "role"},
+				{Key: "userID", Value: "actor-id"},
+			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			_, signature, name := securityLogger.LogArgsForCall(0)
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
 			Expect(signature).To(Equal("UnassignRole"))
 			Expect(name).To(Equal("Role unassignment"))
+			Expect(extensions).To(Equal(expectedExtensions))
 		})
 	})
 

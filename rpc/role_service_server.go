@@ -5,6 +5,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
@@ -44,8 +45,8 @@ func (s *RoleServiceServer) CreateRole(
 			ResourcePattern: models.PermissionResourcePattern(p.GetResourcePattern()),
 		})
 	}
-
-	s.securityLogger.Log(ctx, "CreateRole", "Role creation")
+	logExtensions := logging.CustomExtension{Key: "roleName", Value: string(name)}
+	s.securityLogger.Log(ctx, "CreateRole", "Role creation", logExtensions)
 	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
 	logger.Debug(messages.Starting)
 
@@ -88,7 +89,8 @@ func (s *RoleServiceServer) DeleteRole(
 	req *protos.DeleteRoleRequest,
 ) (*protos.DeleteRoleResponse, error) {
 	name := models.RoleName(req.GetName())
-	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion")
+	logExtensions := logging.CustomExtension{Key: "roleName", Value: string(name)}
+	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion", logExtensions)
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
 	})
@@ -112,7 +114,12 @@ func (s *RoleServiceServer) AssignRole(
 
 	domainID := models.ActorDomainID(pActor.GetID())
 	issuer := models.ActorIssuer(pActor.GetIssuer())
-	s.securityLogger.Log(ctx, "AssignRole", "Role assignment")
+	logExtensions := []logging.CustomExtension{
+		{Key: "roleName", Value: string(roleName)},
+		{Key: "userID", Value: pActor.ID},
+	}
+
+	s.securityLogger.Log(ctx, "AssignRole", "Role assignment", logExtensions...)
 	logger := s.logger.Session("assign-role").WithData(lager.Data{
 		"actor.id":     domainID,
 		"actor.issuer": issuer,
@@ -142,7 +149,11 @@ func (s *RoleServiceServer) UnassignRole(
 		DomainID: domainID,
 		Issuer:   issuer,
 	}
-	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment")
+	logExtensions := []logging.CustomExtension{
+		{Key: "roleName", Value: string(roleName)},
+		{Key: "userID", Value: pActor.ID},
+	}
+	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment", logExtensions...)
 	logger := s.logger.Session("unassign-role").WithData(lager.Data{
 		"actor.id":     actor.DomainID,
 		"actor.issuer": actor.Issuer,

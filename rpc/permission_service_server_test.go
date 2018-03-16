@@ -10,6 +10,7 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -156,11 +157,17 @@ var _ = Describe("PermissionServiceServer", func() {
 				ResourceId:     "some-resource-ID",
 			})
 			Expect(err).NotTo(HaveOccurred())
+			expectedExtensions := []logging.CustomExtension{
+				{Key: "userID", Value: "actor"},
+				{Key: "permission", Value: "some-permission"},
+				{Key: "resourceID", Value: "some-resource-ID"},
+			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
-			_, signature, name := securityLogger.LogArgsForCall(0)
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
 			Expect(signature).To(Equal("HasPermission"))
 			Expect(name).To(Equal("Permission check"))
+			Expect(extensions).To(Equal(expectedExtensions))
 		})
 	})
 

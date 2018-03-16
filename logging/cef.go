@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"bytes"
 	"code.cloudfoundry.org/perm/cmd/contextx"
 	"context"
 	"fmt"
@@ -31,7 +32,7 @@ func NewCEFLogger(writer io.Writer, vendor Vendor, product Product, version Vers
 	}
 }
 
-func (l *CEFLogger) Log(ctx context.Context, signature string, name string) {
+func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args ...CustomExtension) {
 	peer, ok := peer.FromContext(ctx)
 
 	var srcAddr net.IP
@@ -55,5 +56,29 @@ func (l *CEFLogger) Log(ctx context.Context, signature string, name string) {
 	if rt, ok := contextx.ReceiptTimeFromContext(ctx); ok {
 		extension = append(extension, ceflog.Pair{Key: "rt", Value: fmt.Sprintf("\"%s\"", rt.Format(CEFTimeFormat))})
 	}
+
+	counter := 1
+	invalidFound := false
+	var msgBuffer bytes.Buffer
+	for _, ce := range args {
+		if ce.Key == "" || ce.Value == "" && invalidFound == false {
+			msgBuffer.WriteString("ERROR:invalid-custom-extension;")
+			invalidFound = true
+		} else {
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%dLabel", counter), Value: fmt.Sprintf("%s", ce.Key)})
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%d", counter), Value: fmt.Sprintf("%s", ce.Value)})
+			counter++
+			if counter > 6 {
+				msgBuffer.WriteString("ERROR:too-many-custom-extensions;")
+				break
+			}
+		}
+	}
+	extension = append(extension, ceflog.Pair{Key: "msg", Value: msgBuffer.String()})
 	l.logger.LogEvent(signature, name, 0, extension)
+}
+
+type CustomExtension struct {
+	Key   string
+	Value string
 }

@@ -5,32 +5,35 @@ import (
 	"context"
 	"sync"
 
+	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/rpc"
 )
 
 type FakeSecurityLogger struct {
-	LogStub        func(ctx context.Context, signature, name string)
+	LogStub        func(ctx context.Context, signature, name string, args ...logging.CustomExtension)
 	logMutex       sync.RWMutex
 	logArgsForCall []struct {
 		ctx       context.Context
 		signature string
 		name      string
+		args      []logging.CustomExtension
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSecurityLogger) Log(ctx context.Context, signature string, name string) {
+func (fake *FakeSecurityLogger) Log(ctx context.Context, signature string, name string, args ...logging.CustomExtension) {
 	fake.logMutex.Lock()
 	fake.logArgsForCall = append(fake.logArgsForCall, struct {
 		ctx       context.Context
 		signature string
 		name      string
-	}{ctx, signature, name})
-	fake.recordInvocation("Log", []interface{}{ctx, signature, name})
+		args      []logging.CustomExtension
+	}{ctx, signature, name, args})
+	fake.recordInvocation("Log", []interface{}{ctx, signature, name, args})
 	fake.logMutex.Unlock()
 	if fake.LogStub != nil {
-		fake.LogStub(ctx, signature, name)
+		fake.LogStub(ctx, signature, name, args...)
 	}
 }
 
@@ -40,10 +43,10 @@ func (fake *FakeSecurityLogger) LogCallCount() int {
 	return len(fake.logArgsForCall)
 }
 
-func (fake *FakeSecurityLogger) LogArgsForCall(i int) (context.Context, string, string) {
+func (fake *FakeSecurityLogger) LogArgsForCall(i int) (context.Context, string, string, []logging.CustomExtension) {
 	fake.logMutex.RLock()
 	defer fake.logMutex.RUnlock()
-	return fake.logArgsForCall[i].ctx, fake.logArgsForCall[i].signature, fake.logArgsForCall[i].name
+	return fake.logArgsForCall[i].ctx, fake.logArgsForCall[i].signature, fake.logArgsForCall[i].name, fake.logArgsForCall[i].args
 }
 
 func (fake *FakeSecurityLogger) Invocations() map[string][][]interface{} {
