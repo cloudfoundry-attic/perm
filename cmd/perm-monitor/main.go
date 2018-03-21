@@ -23,7 +23,7 @@ import (
 
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd"
-	"code.cloudfoundry.org/perm/monitor"
+	"code.cloudfoundry.org/perm/pkg/monitor"
 )
 
 type options struct {

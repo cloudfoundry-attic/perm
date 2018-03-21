@@ -1,10 +1,10 @@
 package monitor_test
 
 import (
-	. "code.cloudfoundry.org/perm/monitor"
+	. "code.cloudfoundry.org/perm/pkg/monitor"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/monitor/monitorfakes"
+	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -7,7 +7,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd"
-	"code.cloudfoundry.org/perm/monitor"
+	"code.cloudfoundry.org/perm/pkg/monitor"
 )
 
 const (

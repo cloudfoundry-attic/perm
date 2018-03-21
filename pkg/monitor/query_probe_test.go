@@ -2,7 +2,7 @@ package monitor_test
 
 import (
 	permgofakes "code.cloudfoundry.org/perm-go/perm-gofakes"
-	. "code.cloudfoundry.org/perm/monitor"
+	. "code.cloudfoundry.org/perm/pkg/monitor"
 
 	"context"
 

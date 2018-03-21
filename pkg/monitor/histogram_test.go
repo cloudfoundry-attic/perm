@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "code.cloudfoundry.org/perm/monitor"
+	. "code.cloudfoundry.org/perm/pkg/monitor"
 )
 
 var _ = Describe("ThreadSafeHistogram", func() {
