@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/db"
+	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
 )

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"code.cloudfoundry.org/perm/db/migrations"
+	"code.cloudfoundry.org/perm/pkg/api/db/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 

@@ -1,7 +1,7 @@
 package integration_test
 
 import (
-	. "code.cloudfoundry.org/perm/db"
+	. "code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 
 	. "github.com/onsi/ginkgo"
