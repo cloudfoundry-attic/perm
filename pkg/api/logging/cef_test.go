@@ -4,13 +4,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"code.cloudfoundry.org/perm/cmd/contextx"
-	. "code.cloudfoundry.org/perm/logging"
 	"context"
-	"github.com/onsi/gomega/gbytes"
-	"google.golang.org/grpc/peer"
 	"net"
 	"time"
+
+	"code.cloudfoundry.org/perm/cmd/contextx"
+	. "code.cloudfoundry.org/perm/pkg/api/logging"
+	"github.com/onsi/gomega/gbytes"
+	"google.golang.org/grpc/peer"
 )
 
 var _ = Describe("Logging", func() {

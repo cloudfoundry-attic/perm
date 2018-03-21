@@ -1,8 +1,9 @@
 package rpc
 
 import (
-	"code.cloudfoundry.org/perm/logging"
 	"context"
+
+	"code.cloudfoundry.org/perm/pkg/api/logging"
 )
 
 //go:generate counterfeiter . SecurityLogger
