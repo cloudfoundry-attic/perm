@@ -1,6 +1,6 @@
 package models
 
-import "code.cloudfoundry.org/perm/errdefs"
+import "code.cloudfoundry.org/perm/pkg/api/errdefs"
 
 var (
 	ErrRoleNotFound      = errdefs.NewErrNotFound("role")
