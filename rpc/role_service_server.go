@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/logging"
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/repos"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 )
 
 type RoleServiceServer struct {

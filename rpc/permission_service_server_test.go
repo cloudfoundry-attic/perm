@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/repos/reposfakes"
+	"code.cloudfoundry.org/perm/pkg/api/repos/reposfakes"
 	"code.cloudfoundry.org/perm/rpc"
 
 	"errors"

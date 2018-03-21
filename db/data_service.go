@@ -6,8 +6,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	"code.cloudfoundry.org/perm/repos"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
 	"github.com/satori/go.uuid"

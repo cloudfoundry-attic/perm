@@ -2,7 +2,7 @@ package integration_test
 
 import (
 	. "code.cloudfoundry.org/perm/db"
-	"code.cloudfoundry.org/perm/repos"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,8 +19,8 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
+	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	. "code.cloudfoundry.org/perm/repos/reposbehaviors"
 )
 
 var _ = Describe("DataService", func() {

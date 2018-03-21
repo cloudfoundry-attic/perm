@@ -7,7 +7,7 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/models"
-	"code.cloudfoundry.org/perm/repos"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
