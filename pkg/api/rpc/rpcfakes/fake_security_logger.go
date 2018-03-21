@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/rpc"
+	"code.cloudfoundry.org/perm/pkg/api/rpc"
 )
 
 type FakeSecurityLogger struct {

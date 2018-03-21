@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/rpc"
+	"code.cloudfoundry.org/perm/pkg/api/rpc"
 
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/rpc/rpcfakes"
+	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

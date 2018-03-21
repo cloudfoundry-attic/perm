@@ -1,7 +1,7 @@
 package rpc_test
 
 import (
-	. "code.cloudfoundry.org/perm/rpc"
+	. "code.cloudfoundry.org/perm/pkg/api/rpc"
 
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
