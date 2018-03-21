@@ -74,6 +74,15 @@ var _ = Describe("Logging", func() {
 				Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
 			})
 
+			It("does not append a msg= when no error is present", func() {
+				p := &peer.Peer{}
+				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+				ctx := peer.NewContext(context.Background(), p)
+				securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+
+				Consistently(logOutput).ShouldNot(gbytes.Say("msg="))
+			})
+
 			Context("when the extension provided is invalid", func() {
 				var invalidExtension CustomExtension
 				var validExtension CustomExtension

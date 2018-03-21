@@ -74,7 +74,9 @@ func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args
 			}
 		}
 	}
-	extension = append(extension, ceflog.Pair{Key: "msg", Value: msgBuffer.String()})
+	if msgBuffer.String() != "" {
+		extension = append(extension, ceflog.Pair{Key: "msg", Value: msgBuffer.String()})
+	}
 	l.logger.LogEvent(signature, name, 0, extension)
 }
 
