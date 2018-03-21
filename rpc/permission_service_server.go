@@ -7,7 +7,6 @@ import (
 	"code.cloudfoundry.org/perm-go"
 
 	"code.cloudfoundry.org/perm/logging"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
 )
@@ -55,7 +54,7 @@ func (s *PermissionServiceServer) HasPermission(
 		"permission.name":            permissionName,
 		"permission.resourcePattern": resourcePattern,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.HasPermissionQuery{
 		Actor:           actor,
@@ -72,7 +71,7 @@ func (s *PermissionServiceServer) HasPermission(
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.HasPermissionResponse{HasPermission: found}, nil
 }
 
@@ -94,7 +93,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 			"permission.name": permissionName,
 		})
 
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.ListResourcePatternsQuery{
 		Actor:          actor,
@@ -112,7 +111,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 		resourcePatternStrings = append(resourcePatternStrings, string(rp))
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 
 	return &protos.ListResourcePatternsResponse{
 		ResourcePatterns: resourcePatternStrings,

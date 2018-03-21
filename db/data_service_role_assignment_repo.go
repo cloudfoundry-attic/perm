@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
 	"code.cloudfoundry.org/perm/sqlx"
@@ -21,7 +20,7 @@ func (s *DataService) AssignRole(
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
-		logger.Error(messages.FailedToStartTransaction, err)
+		logger.Error(failedToStartTransaction, err)
 		return
 	}
 
@@ -48,7 +47,7 @@ func (s *DataService) UnassignRole(
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
-		logger.Error(messages.FailedToStartTransaction, err)
+		logger.Error(failedToStartTransaction, err)
 		return
 	}
 

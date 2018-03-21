@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 
 	"code.cloudfoundry.org/perm-go"
 	"google.golang.org/grpc/codes"
@@ -29,8 +28,8 @@ func adminRoleName(s string) string {
 }
 
 func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	roleName := adminRoleName(uniqueSuffix)
 
@@ -42,7 +41,7 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 
 	// Not a GRPC error
 	if err != nil && !ok {
-		logger.Error(messages.FailedToDeleteRole, err, lager.Data{
+		logger.Error(failedToDeleteRole, err, lager.Data{
 			"roleName": deleteRoleRequest.GetName(),
 		})
 		return err
@@ -54,7 +53,7 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 		case codes.NotFound:
 
 		default:
-			logger.Error(messages.FailedToDeleteRole, err, lager.Data{
+			logger.Error(failedToDeleteRole, err, lager.Data{
 				"roleName": deleteRoleRequest.GetName(),
 			})
 			return err
@@ -65,8 +64,8 @@ func (p *AdminProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 }
 
 func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	roleName := adminRoleName(uniqueSuffix)
 	var err error
@@ -77,7 +76,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 	_, err = p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
 	if err != nil {
-		logger.Error(messages.FailedToCreateRole, err, lager.Data{
+		logger.Error(failedToCreateRole, err, lager.Data{
 			"roleName": createRoleRequest.GetName(),
 		})
 
@@ -91,7 +90,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 	_, err = p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
 	if err != nil {
-		logger.Error(messages.FailedToAssignRole, err, lager.Data{
+		logger.Error(failedToAssignRole, err, lager.Data{
 			"roleName":     assignRoleRequest.GetRoleName(),
 			"actor.ID":     assignRoleRequest.GetActor().GetID(),
 			"actor.Issuer": assignRoleRequest.GetActor().GetIssuer(),
@@ -106,7 +105,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 	_, err = p.RoleServiceClient.UnassignRole(ctx, unassignRoleRequest)
 	if err != nil {
-		logger.Error(messages.FailedToUnassignRole, err, lager.Data{
+		logger.Error(failedToUnassignRole, err, lager.Data{
 			"roleName":     unassignRoleRequest.GetRoleName(),
 			"actor.ID":     unassignRoleRequest.GetActor().GetID(),
 			"actor.Issuer": unassignRoleRequest.GetActor().GetIssuer(),
@@ -120,7 +119,7 @@ func (p *AdminProbe) Run(ctx context.Context, logger lager.Logger, uniqueSuffix 
 	}
 	_, err = p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
 	if err != nil {
-		logger.Error(messages.FailedToDeleteRole, err, lager.Data{
+		logger.Error(failedToDeleteRole, err, lager.Data{
 			"roleName": deleteRoleRequest.GetName(),
 		})
 

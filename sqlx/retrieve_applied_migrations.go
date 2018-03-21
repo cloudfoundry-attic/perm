@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"github.com/Masterminds/squirrel"
 )
 
@@ -21,7 +20,7 @@ func RetrieveAppliedMigrations(
 		QueryContext(ctx)
 
 	if err != nil {
-		logger.Error(messages.FailedToQueryMigrations, err)
+		logger.Error(failedToQueryMigrations, err)
 		return nil, err
 	}
 
@@ -36,7 +35,7 @@ func RetrieveAppliedMigrations(
 	for rows.Next() {
 		err = rows.Scan(&version, &name, &appliedAt)
 		if err != nil {
-			logger.Error(messages.FailedToParseAppliedMigration, err)
+			logger.Error(failedToParseAppliedMigration, err)
 
 			return nil, err
 		}
@@ -49,7 +48,7 @@ func RetrieveAppliedMigrations(
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error(messages.FailedToQueryMigrations, err)
+		logger.Error(failedToQueryMigrations, err)
 		return nil, err
 	}
 

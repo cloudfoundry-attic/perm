@@ -9,13 +9,15 @@ import (
 
 	"time"
 
+	"io/ioutil"
+	"os"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd/contextx"
 	"code.cloudfoundry.org/perm/db"
 	"code.cloudfoundry.org/perm/ioutilx"
 	"code.cloudfoundry.org/perm/logging"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/rpc"
 	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -26,8 +28,6 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
-	"io/ioutil"
-	"os"
 )
 
 type ServeCommand struct {
@@ -97,7 +97,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		"maxConnectionIdle": maxConnectionIdle.String(),
 	}
 	if err != nil {
-		logger.Error(messages.FailedToListen, err, listeningLogData)
+		logger.Error(failedToListen, err, listeningLogData)
 		return err
 	}
 
@@ -107,14 +107,14 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	tlsCreds, err := credentials.NewServerTLSFromFile(cmd.TLSCertificate, cmd.TLSKey)
 	if err != nil {
-		logger.Error(messages.FailedToParseTLSCredentials, err)
+		logger.Error(failedToParseTLSCredentials, err)
 		return err
 	}
 
 	recoveryOpts := []grpc_recovery.Option{
 		grpc_recovery.WithRecoveryHandler(func(p interface{}) error {
 			grpcErr := status.Errorf(codes.Internal, "%s", p)
-			logger.Error(messages.ErrInternal, grpcErr)
+			logger.Error(errInternal, grpcErr)
 			return grpcErr
 		}),
 	}
@@ -166,7 +166,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, store)
 	protos.RegisterPermissionServiceServer(grpcServer, permissionServiceServer)
 
-	logger.Debug(messages.Starting, listeningLogData)
+	logger.Debug(starting, listeningLogData)
 
 	return grpcServer.Serve(lis)
 }

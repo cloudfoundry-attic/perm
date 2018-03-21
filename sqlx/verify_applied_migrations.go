@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 )
 
 func VerifyAppliedMigrations(
@@ -21,21 +20,21 @@ func VerifyAppliedMigrations(
 	}
 
 	if len(migrations) != len(appliedMigrations) {
-		logger.Info(messages.MigrationCountMismatch)
+		logger.Info(migrationCountMismatch)
 		return false, nil
 	}
 
 	for i, migration := range migrations {
 		appliedMigration, exists := appliedMigrations[i]
 		if !exists {
-			logger.Info(messages.MigrationNotFound, lager.Data{
+			logger.Info(migrationNotFound, lager.Data{
 				"name": migration.Name,
 			})
 			return false, nil
 		}
 
 		if migration.Name != appliedMigration.Name {
-			logger.Info(messages.MigrationMismatch, lager.Data{
+			logger.Info(migrationMismatch, lager.Data{
 				"expected_name": migration.Name,
 				"applied_name":  appliedMigration.Name,
 			})
@@ -43,6 +42,6 @@ func VerifyAppliedMigrations(
 		}
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return true, nil
 }

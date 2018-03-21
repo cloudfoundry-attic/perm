@@ -6,7 +6,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/logging"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
 )
@@ -48,7 +47,7 @@ func (s *RoleServiceServer) CreateRole(
 	logExtensions := logging.CustomExtension{Key: "roleName", Value: string(name)}
 	s.securityLogger.Log(ctx, "CreateRole", "Role creation", logExtensions)
 	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	role, err := s.roleRepo.CreateRole(ctx, logger, name, permissions...)
 
@@ -56,7 +55,7 @@ func (s *RoleServiceServer) CreateRole(
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.CreateRoleResponse{
 		Role: role.ToProto(),
 	}, nil
@@ -68,7 +67,7 @@ func (s *RoleServiceServer) GetRole(
 ) (*protos.GetRoleResponse, error) {
 	name := models.RoleName(req.GetName())
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.FindRoleQuery{
 		RoleName: name,
@@ -78,7 +77,7 @@ func (s *RoleServiceServer) GetRole(
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.GetRoleResponse{
 		Role: role.ToProto(),
 	}, nil
@@ -94,14 +93,14 @@ func (s *RoleServiceServer) DeleteRole(
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	err := s.roleRepo.DeleteRole(ctx, logger, name)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.DeleteRoleResponse{}, nil
 }
 
@@ -125,14 +124,14 @@ func (s *RoleServiceServer) AssignRole(
 		"actor.issuer": issuer,
 		"role.name":    roleName,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	err := s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.AssignRoleResponse{}, nil
 }
 
@@ -159,14 +158,14 @@ func (s *RoleServiceServer) UnassignRole(
 		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	err := s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, issuer)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.UnassignRoleResponse{}, nil
 }
 
@@ -186,7 +185,7 @@ func (s *RoleServiceServer) HasRole(
 		"actor.issuer": actor.Issuer,
 		"role.name":    roleName,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.HasRoleQuery{
 		Actor:    actor,
@@ -202,7 +201,7 @@ func (s *RoleServiceServer) HasRole(
 		return nil, togRPCError(err)
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.HasRoleResponse{HasRole: found}, nil
 }
 
@@ -219,7 +218,7 @@ func (s *RoleServiceServer) ListActorRoles(
 		"actor.id":     actor.DomainID,
 		"actor.issuer": actor.Issuer,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.ListActorRolesQuery{Actor: actor}
 	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, query)
@@ -233,7 +232,7 @@ func (s *RoleServiceServer) ListActorRoles(
 		pRoles = append(pRoles, r.ToProto())
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.ListActorRolesResponse{
 		Roles: pRoles,
 	}, nil
@@ -247,7 +246,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
 		"role.name": roleName,
 	})
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	query := repos.ListRolePermissionsQuery{
 		RoleName: roleName,
@@ -267,7 +266,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 		pPermissions = append(pPermissions, p.ToProto())
 	}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 	return &protos.ListRolePermissionsResponse{
 		Permissions: pPermissions,
 	}, nil

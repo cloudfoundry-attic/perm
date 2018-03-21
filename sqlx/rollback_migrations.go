@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"github.com/Masterminds/squirrel"
 )
 
@@ -29,7 +28,7 @@ func RollbackMigrations(
 	if err != nil {
 		return err
 	}
-	migrationsLogger.Debug(messages.RetrievedAppliedMigrations, lager.Data{
+	migrationsLogger.Debug(retrievedAppliedMigrations, lager.Data{
 		"versions": appliedMigrations,
 	})
 
@@ -67,17 +66,17 @@ func rollbackMigration(
 	version int,
 	migration Migration,
 ) (err error) {
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
-		logger.Error(messages.FailedToStartTransaction, err)
+		logger.Error(failedToStartTransaction, err)
 		return
 	}
 
 	defer func() {
 		if err != nil {
-			logger.Error(messages.FailedToApplyMigration, err)
+			logger.Error(failedToApplyMigration, err)
 		}
 		err = Commit(logger, tx, err)
 	}()
@@ -92,7 +91,7 @@ func rollbackMigration(
 		RunWith(tx).
 		ExecContext(ctx)
 
-	logger.Debug(messages.Finished)
+	logger.Debug(finished)
 
 	return
 }

@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm/messages"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -33,8 +32,8 @@ type QueryProbe struct {
 }
 
 func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	err := p.setupCreateRole(ctx, logger, uniqueSuffix)
 	if err != nil {
@@ -63,7 +62,7 @@ func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, u
 
 	// Not a GRPC error
 	if err != nil && !ok {
-		logger.Error(messages.FailedToCreateRole, err, lager.Data{
+		logger.Error(failedToCreateRole, err, lager.Data{
 			"roleName":    createRoleRequest.GetName(),
 			"permissions": createRoleRequest.GetPermissions(),
 		})
@@ -76,7 +75,7 @@ func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, u
 		case codes.AlreadyExists:
 
 		default:
-			logger.Error(messages.FailedToCreateRole, err, lager.Data{
+			logger.Error(failedToCreateRole, err, lager.Data{
 				"roleName":    createRoleRequest.GetName(),
 				"permissions": createRoleRequest.GetPermissions(),
 			})
@@ -100,7 +99,7 @@ func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, u
 
 	// Not a GRPC error
 	if err != nil && !ok {
-		logger.Error(messages.FailedToAssignRole, err, lager.Data{
+		logger.Error(failedToAssignRole, err, lager.Data{
 			"roleName":     assignRoleRequest.GetRoleName(),
 			"actor.id":     assignRoleRequest.GetActor().GetID(),
 			"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
@@ -114,7 +113,7 @@ func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, u
 		case codes.AlreadyExists:
 
 		default:
-			logger.Error(messages.FailedToAssignRole, err, lager.Data{
+			logger.Error(failedToAssignRole, err, lager.Data{
 				"roleName":     assignRoleRequest.GetRoleName(),
 				"actor.id":     assignRoleRequest.GetActor().GetID(),
 				"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
@@ -127,8 +126,8 @@ func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, u
 }
 
 func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	roleName := QueryProbeRoleName + "." + uniqueSuffix
 
@@ -140,7 +139,7 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 
 	// Not a GRPC error
 	if err != nil && !ok {
-		logger.Error(messages.FailedToDeleteRole, err, lager.Data{
+		logger.Error(failedToDeleteRole, err, lager.Data{
 			"roleName": deleteRoleRequest.GetName(),
 		})
 		return err
@@ -152,7 +151,7 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 		case codes.NotFound:
 
 		default:
-			logger.Error(messages.FailedToDeleteRole, err, lager.Data{
+			logger.Error(failedToDeleteRole, err, lager.Data{
 				"roleName": deleteRoleRequest.GetName(),
 			})
 			return err
@@ -167,8 +166,8 @@ func (p *QueryProbe) Run(
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, []time.Duration, error) {
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	var (
 		correct  bool
@@ -229,7 +228,7 @@ func (p *QueryProbe) runAssignedPermission(
 	duration := end.Sub(start)
 
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err)
+		logger.Error(failedToFindPermissions, err)
 		return false, duration, err
 	}
 
@@ -272,7 +271,7 @@ func (p *QueryProbe) runUnassignedPermission(
 	duration := end.Sub(start)
 
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err)
+		logger.Error(failedToFindPermissions, err)
 		return false, duration, err
 	}
 

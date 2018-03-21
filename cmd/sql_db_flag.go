@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/sqlx"
 	"github.com/go-sql-driver/mysql"
 )
@@ -48,14 +47,14 @@ func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Stat
 		"db_username": o.DB.Username,
 	})
 
-	conn, err := o.open(ctx, logger.Session(messages.OpenSQLConnection), statter, reader)
+	conn, err := o.open(ctx, logger.Session(openSQLConnection), statter, reader)
 	if err != nil {
 		return nil, err
 	}
 
 	conn.SetConnMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond)
 
-	err = ping(ctx, logger.Session(messages.PingSQLConnection), conn)
+	err = ping(ctx, logger.Session(pingSQLConnection), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +63,7 @@ func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Stat
 }
 
 func (o *SQLFlag) open(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	var (
 		conn *sqlx.DB
@@ -73,10 +72,10 @@ func (o *SQLFlag) open(ctx context.Context, logger lager.Logger, statter Statter
 
 	defer func() {
 		if err != nil {
-			logger.Error(messages.FailedToOpenSQLConnection, err)
+			logger.Error(failedToOpenSQLConnection, err)
 
 		} else {
-			logger.Debug(messages.Finished)
+			logger.Debug(finished)
 		}
 	}()
 
@@ -130,7 +129,7 @@ func (o *SQLFlag) open(ctx context.Context, logger lager.Logger, statter Statter
 }
 
 func ping(ctx context.Context, logger lager.Logger, conn *sqlx.DB) error {
-	logger.Debug(messages.Starting)
+	logger.Debug(starting)
 
 	var attempt int
 	for {
@@ -138,19 +137,19 @@ func ping(ctx context.Context, logger lager.Logger, conn *sqlx.DB) error {
 
 		if attempt > 10 {
 			err := NewAttemptError(10)
-			logger.Error(messages.FailedToPingSQLConnection, err)
+			logger.Error(failedToPingSQLConnection, err)
 			return err
 		}
 
 		err := conn.PingContext(ctx)
 		if err != nil {
-			logger.Error(messages.FailedToPingSQLConnection, err, lager.Data{
+			logger.Error(failedToPingSQLConnection, err, lager.Data{
 				"attempt": attempt,
 			})
 
 			time.Sleep(1 * time.Second)
 		} else {
-			logger.Debug(messages.Finished)
+			logger.Debug(finished)
 			break
 		}
 	}

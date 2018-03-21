@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
@@ -44,8 +43,8 @@ var deleteActorsTable = `DROP TABLE actor`
 
 func CreateActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actors-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	var err error
 
@@ -65,8 +64,8 @@ func CreateActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) 
 
 func CreateActorsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actors-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	_, err := tx.ExecContext(ctx, deleteActorsTable)
 

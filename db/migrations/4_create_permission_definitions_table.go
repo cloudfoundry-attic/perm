@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
@@ -21,8 +20,8 @@ var deletePermissionDefinitionsTable = `DROP TABLE permission_definition`
 
 func CreatePermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permission-definitions-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	_, err := tx.ExecContext(ctx,
 		createPermissionDefinitionsTable)
@@ -32,8 +31,8 @@ func CreatePermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger
 
 func CreatePermissionDefinitionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permission-definitions-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	_, err := tx.ExecContext(ctx,
 		deletePermissionDefinitionsTable)

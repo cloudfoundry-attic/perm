@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
 )
@@ -65,7 +64,7 @@ func (s *InMemoryStore) DeleteRole(
 					"actor.issuer": actor.Issuer,
 					"role.name":    roleName,
 				}
-				logger.Debug(messages.Success, assignmentData)
+				logger.Debug(success, assignmentData)
 				break
 			}
 		}
@@ -74,7 +73,7 @@ func (s *InMemoryStore) DeleteRole(
 	// Remove permissions for role
 	s.permissions[roleName] = []*models.Permission{}
 
-	logger.Debug(messages.Success)
+	logger.Debug(success)
 
 	return nil
 }
@@ -102,7 +101,7 @@ func (s *InMemoryStore) AssignRole(
 	for _, role := range assignments {
 		if role == roleName {
 			err := models.ErrRoleAssignmentAlreadyExists
-			logger.Error(messages.ErrRoleAssignmentAlreadyExists, err)
+			logger.Error(errRoleAssignmentAlreadyExists, err)
 			return err
 		}
 	}
@@ -132,20 +131,20 @@ func (s *InMemoryStore) UnassignRole(
 	assignments, ok := s.assignments[actor]
 	if !ok {
 		err := models.ErrRoleAssignmentNotFound
-		logger.Error(messages.ErrRoleAssignmentNotFound, err)
+		logger.Error(errRoleAssignmentNotFound, err)
 		return err
 	}
 
 	for i, assignment := range assignments {
 		if assignment == roleName {
 			s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
-			logger.Debug(messages.Success)
+			logger.Debug(success)
 			return nil
 		}
 	}
 
 	err := models.ErrRoleAssignmentNotFound
-	logger.Error(messages.ErrRoleAssignmentNotFound, err)
+	logger.Error(errRoleAssignmentNotFound, err)
 
 	return err
 }

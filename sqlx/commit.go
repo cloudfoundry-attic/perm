@@ -2,24 +2,23 @@ package sqlx
 
 import (
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 )
 
 func Commit(logger lager.Logger, tx *Tx, err error) error {
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			logger.Error(messages.FailedToRollback, rollbackErr)
+			logger.Error(failedToRollback, rollbackErr)
 		}
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logger.Error(messages.FailedToCommit, err)
+		logger.Error(failedToCommit, err)
 		return err
 	}
 
-	logger.Debug(messages.Committed)
+	logger.Debug(committed)
 	return nil
 }

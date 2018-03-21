@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/sqlx"
 )
 
@@ -46,8 +45,8 @@ var deleteRoleAssignmentsTable = `DROP TABLE role_assignment`
 
 func CreateRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-role-assignments-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	_, err := tx.ExecContext(ctx,
 		createRoleAssignmentsTable)
@@ -72,8 +71,8 @@ func CreateRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *
 
 func CreateRoleAssignmentsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-role-assignments-table")
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	_, err := tx.ExecContext(ctx,
 		deleteRoleAssignmentsTable)

@@ -23,7 +23,6 @@ import (
 
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/monitor"
 )
 
@@ -67,15 +66,15 @@ func main() {
 
 	logger, _ := parserOpts.Logger.Logger("perm-monitor")
 
-	logger.Debug(messages.Starting)
-	defer logger.Debug(messages.Finished)
+	logger.Debug(starting)
+	defer logger.Debug(finished)
 
 	//////////////////////
 	// Setup StatsD Client
 	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
 	statsDClient, err := statsd.NewBufferedClient(statsDAddr, "", 0, 0)
 	if err != nil {
-		logger.Fatal(messages.FailedToConnectToStatsD, err, lager.Data{
+		logger.Fatal(failedToConnectToStatsD, err, lager.Data{
 			"addr": statsDAddr,
 		})
 		os.Exit(1)
@@ -92,14 +91,14 @@ func main() {
 	for _, certPath := range parserOpts.Perm.CACertificate {
 		caPem, e := certPath.Bytes(cmd.InjectableOS{}, cmd.InjectableIOReader{})
 		if e != nil {
-			logger.Fatal(messages.FailedToReadCertificate, e, lager.Data{
+			logger.Fatal(failedToReadCertificate, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
 		}
 
 		if ok := pool.AppendCertsFromPEM(caPem); !ok {
-			logger.Fatal(messages.FailedToAppendCertToPool, e, lager.Data{
+			logger.Fatal(failedToAppendCertToPool, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
@@ -112,7 +111,7 @@ func main() {
 	//// Setup GRPC connection
 	g, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		logger.Fatal(messages.FailedToGRPCDial, err, lager.Data{
+		logger.Fatal(failedToGRPCDial, err, lager.Data{
 			"addr": addr,
 		})
 		os.Exit(1)

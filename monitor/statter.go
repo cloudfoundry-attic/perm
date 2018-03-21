@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"github.com/cactus/go-statsd-client/statsd"
 )
 
@@ -39,7 +38,7 @@ func (s *Statter) Rotate() {
 func (s *Statter) RecordQueryProbeDuration(logger lager.Logger, d time.Duration) {
 	err := s.Histogram.RecordValue(int64(d))
 	if err != nil {
-		logger.Error(messages.FailedToRecordHistogramValue, err, lager.Data{
+		logger.Error(failedToRecordHistogramValue, err, lager.Data{
 			"value": int64(d),
 		})
 	}
@@ -74,7 +73,7 @@ func (s *Statter) SendSuccessfulAdminProbe(logger lager.Logger) {
 func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {
 	err := s.StatsD.Gauge(name, value, AlwaysSendMetric)
 	if err != nil {
-		logger.Error(messages.FailedToSendMetric, err, lager.Data{
+		logger.Error(failedToSendMetric, err, lager.Data{
 			"metric": name,
 		})
 	}

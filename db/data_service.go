@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/messages"
 	"code.cloudfoundry.org/perm/models"
 	"code.cloudfoundry.org/perm/repos"
 	"code.cloudfoundry.org/perm/sqlx"
@@ -78,7 +77,7 @@ func createRole(
 	case nil:
 		roleID, err2 := result.LastInsertId()
 		if err2 != nil {
-			logger.Error(messages.FailedToRetrieveID, err2)
+			logger.Error(failedToRetrieveID, err2)
 			return nil, err2
 		}
 
@@ -91,14 +90,14 @@ func createRole(
 		return role, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(messages.ErrRoleAlreadyExists)
+			logger.Debug(errRoleAlreadyExists)
 			return nil, models.ErrRoleAlreadyExists
 		}
 
-		logger.Error(messages.FailedToCreateRole, err)
+		logger.Error(failedToCreateRole, err)
 		return nil, err
 	default:
-		logger.Error(messages.FailedToCreateRole, err)
+		logger.Error(failedToCreateRole, err)
 		return nil, err
 	}
 }
@@ -133,10 +132,10 @@ func findRole(
 			},
 		}, nil
 	case sql.ErrNoRows:
-		logger.Debug(messages.ErrRoleNotFound)
+		logger.Debug(errRoleNotFound)
 		return nil, models.ErrRoleNotFound
 	default:
-		logger.Error(messages.FailedToFindRole, err)
+		logger.Error(failedToFindRole, err)
 		return nil, err
 	}
 }
@@ -159,21 +158,21 @@ func deleteRole(
 	case nil:
 		n, err2 := result.RowsAffected()
 		if err2 != nil {
-			logger.Error(messages.FailedToCountRowsAffected, err2)
+			logger.Error(failedToCountRowsAffected, err2)
 			return err2
 		}
 
 		if n == 0 {
-			logger.Debug(messages.ErrRoleNotFound)
+			logger.Debug(errRoleNotFound)
 			return models.ErrRoleNotFound
 		}
 
 		return nil
 	case sql.ErrNoRows:
-		logger.Debug(messages.ErrRoleNotFound)
+		logger.Debug(errRoleNotFound)
 		return models.ErrRoleNotFound
 	default:
-		logger.Error(messages.FailedToDeleteRole, err)
+		logger.Error(failedToDeleteRole, err)
 		return err
 	}
 }
@@ -199,7 +198,7 @@ func createActor(
 	case nil:
 		actorID, err2 := result.LastInsertId()
 		if err2 != nil {
-			logger.Error(messages.FailedToRetrieveID, err2)
+			logger.Error(failedToRetrieveID, err2)
 			return nil, err2
 		}
 		actor := &actor{
@@ -212,13 +211,13 @@ func createActor(
 		return actor, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(messages.ErrActorAlreadyExists)
+			logger.Debug(errActorAlreadyExists)
 			return nil, models.ErrActorAlreadyExists
 		}
-		logger.Error(messages.FailedToCreateActor, err)
+		logger.Error(failedToCreateActor, err)
 		return nil, err
 	default:
-		logger.Error(messages.FailedToCreateActor, err)
+		logger.Error(failedToCreateActor, err)
 		return nil, err
 	}
 }
@@ -253,10 +252,10 @@ func findActorID(
 	case nil:
 		return actorID, nil
 	case sql.ErrNoRows:
-		logger.Debug(messages.ErrActorNotFound)
+		logger.Debug(errActorNotFound)
 		return actorID, models.ErrActorNotFound
 	default:
-		logger.Error(messages.FailedToFindActor, err)
+		logger.Error(failedToFindActor, err)
 		return actorID, err
 	}
 }
@@ -311,14 +310,14 @@ func createRoleAssignment(
 		return nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(messages.ErrRoleAssignmentAlreadyExists)
+			logger.Debug(errRoleAssignmentAlreadyExists)
 			return models.ErrRoleAssignmentAlreadyExists
 		}
 
-		logger.Error(messages.FailedToCreateRoleAssignment, err)
+		logger.Error(failedToCreateRoleAssignment, err)
 		return err
 	default:
-		logger.Error(messages.FailedToCreateRoleAssignment, err)
+		logger.Error(failedToCreateRoleAssignment, err)
 		return err
 	}
 }
@@ -371,21 +370,21 @@ func deleteRoleAssignment(
 	case nil:
 		n, e := result.RowsAffected()
 		if e != nil {
-			logger.Error(messages.FailedToDeleteRoleAssignment, e)
+			logger.Error(failedToDeleteRoleAssignment, e)
 			return e
 		}
 
 		if n == 0 {
-			logger.Debug(messages.ErrRoleAssignmentNotFound)
+			logger.Debug(errRoleAssignmentNotFound)
 			return models.ErrRoleAssignmentNotFound
 		}
 
 		return nil
 	case sql.ErrNoRows:
-		logger.Debug(messages.ErrRoleAssignmentNotFound)
+		logger.Debug(errRoleAssignmentNotFound)
 		return models.ErrRoleAssignmentNotFound
 	default:
-		logger.Error(messages.FailedToDeleteRoleAssignment, err)
+		logger.Error(failedToDeleteRoleAssignment, err)
 		return err
 	}
 }
@@ -440,7 +439,7 @@ func findRoleAssignment(
 	case sql.ErrNoRows:
 		return false, nil
 	default:
-		logger.Error(messages.FailedToFindRoleAssignment, err)
+		logger.Error(failedToFindRoleAssignment, err)
 		return false, err
 	}
 }
@@ -480,7 +479,7 @@ func findActorRoleAssignments(
 		RunWith(conn).
 		QueryContext(ctx)
 	if err != nil {
-		logger.Error(messages.FailedToFindRoleAssignments, err)
+		logger.Error(failedToFindRoleAssignments, err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -493,7 +492,7 @@ func findActorRoleAssignments(
 		)
 		e := rows.Scan(&roleID, &name)
 		if e != nil {
-			logger.Error(messages.FailedToScanRow, e)
+			logger.Error(failedToScanRow, e)
 			return nil, e
 		}
 
@@ -502,7 +501,7 @@ func findActorRoleAssignments(
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error(messages.FailedToIterateOverRows, err)
+		logger.Error(failedToIterateOverRows, err)
 		return nil, err
 	}
 
@@ -544,7 +543,7 @@ func createPermissionDefinition(
 	case nil:
 		permissionDefinitionID, err2 := result.LastInsertId()
 		if err2 != nil {
-			logger.Error(messages.FailedToRetrieveID, err2)
+			logger.Error(failedToRetrieveID, err2)
 			return nil, err2
 		}
 
@@ -557,14 +556,14 @@ func createPermissionDefinition(
 		return permissionDefinition, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(messages.ErrPermissionDefinitionAlreadyExists)
+			logger.Debug(errPermissionDefinitionAlreadyExists)
 			return nil, models.ErrPermissionDefinitionAlreadyExists
 		}
 
-		logger.Error(messages.FailedToCreatePermissionDefinition, err)
+		logger.Error(failedToCreatePermissionDefinition, err)
 		return nil, err
 	default:
-		logger.Error(messages.FailedToCreatePermissionDefinition, err)
+		logger.Error(failedToCreatePermissionDefinition, err)
 		return nil, err
 	}
 }
@@ -599,10 +598,10 @@ func findPermissionDefinition(
 			},
 		}, nil
 	case sql.ErrNoRows:
-		logger.Debug(messages.ErrPermissionDefinitionNotFound)
+		logger.Debug(errPermissionDefinitionNotFound)
 		return nil, models.ErrPermissionDefinitionNotFound
 	default:
-		logger.Error(messages.FailedToFindPermissionDefinition, err)
+		logger.Error(failedToFindPermissionDefinition, err)
 		return nil, err
 	}
 }
@@ -625,7 +624,7 @@ func findRolePermissions(
 		RunWith(conn).
 		QueryContext(ctx)
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err)
+		logger.Error(failedToFindPermissions, err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -639,7 +638,7 @@ func findRolePermissions(
 		)
 		e := rows.Scan(&permissionID, &name, &resourcePattern)
 		if e != nil {
-			logger.Error(messages.FailedToScanRow, e)
+			logger.Error(failedToScanRow, e)
 			return nil, e
 		}
 
@@ -655,7 +654,7 @@ func findRolePermissions(
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error(messages.FailedToIterateOverRows, err)
+		logger.Error(failedToIterateOverRows, err)
 		return nil, err
 	}
 
@@ -692,7 +691,7 @@ func hasPermission(
 		ScanContext(ctx, &count)
 
 	if err != nil {
-		logger.Error(messages.FailedToFindPermissions, err)
+		logger.Error(failedToFindPermissions, err)
 		return false, err
 	}
 
@@ -725,7 +724,7 @@ func createPermission(
 	case nil:
 		permissionID, err2 := result.LastInsertId()
 		if err2 != nil {
-			logger.Error(messages.FailedToRetrieveID, err2)
+			logger.Error(failedToRetrieveID, err2)
 			return nil, err2
 		}
 
@@ -739,14 +738,14 @@ func createPermission(
 		return permission, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(messages.ErrPermissionAlreadyExists)
+			logger.Debug(errPermissionAlreadyExists)
 			return nil, models.ErrPermissionAlreadyExists
 		}
 
-		logger.Error(messages.FailedToCreatePermission, err)
+		logger.Error(failedToCreatePermission, err)
 		return nil, err
 	default:
-		logger.Error(messages.FailedToCreatePermission, err)
+		logger.Error(failedToCreatePermission, err)
 		return nil, err
 	}
 }
@@ -783,7 +782,7 @@ func listResourcePatterns(
 		RunWith(conn).
 		QueryContext(ctx)
 	if err != nil {
-		logger.Error(messages.FailedToListResourcePatterns, err)
+		logger.Error(failedToListResourcePatterns, err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -794,7 +793,7 @@ func listResourcePatterns(
 
 		err = rows.Scan(&resourcePattern)
 		if err != nil {
-			logger.Error(messages.FailedToScanRow, err)
+			logger.Error(failedToScanRow, err)
 			return nil, err
 		}
 
@@ -803,7 +802,7 @@ func listResourcePatterns(
 
 	err = rows.Err()
 	if err != nil {
-		logger.Error(messages.FailedToIterateOverRows, err)
+		logger.Error(failedToIterateOverRows, err)
 		return nil, err
 	}
 
