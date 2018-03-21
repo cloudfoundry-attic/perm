@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/api/models"
 )
 
 type InMemoryStore struct {

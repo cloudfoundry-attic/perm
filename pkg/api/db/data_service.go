@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/Masterminds/squirrel"

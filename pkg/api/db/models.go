@@ -1,7 +1,7 @@
 package db
 
 import (
-	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/api/models"
 )
 
 type id int64

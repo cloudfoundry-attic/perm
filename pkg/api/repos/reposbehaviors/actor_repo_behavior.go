@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
