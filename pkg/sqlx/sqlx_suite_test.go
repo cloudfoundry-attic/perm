@@ -1,13 +1,13 @@
-package sqlx
+package sqlx_test
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"testing"
 )
 
-func TestMigrator(t *testing.T) {
+func TestSqlx(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Migrator Suite")
+	RunSpecs(t, "Sqlx Suite")
 }

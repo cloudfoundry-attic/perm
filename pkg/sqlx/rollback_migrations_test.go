@@ -47,7 +47,7 @@ var _ = Describe("#RollbackMigrations", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		conn = &DB{
-			DB: fakeConn,
+			Conn: fakeConn,
 		}
 
 		appliedAt = time.Now()

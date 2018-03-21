@@ -48,7 +48,7 @@ func CreateActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) 
 
 	var err error
 
-	if tx.Flavor == sqlx.DBFlavorMariaDBMySQL && strings.HasPrefix(tx.Version, "10.1") {
+	if tx.Flavor() == sqlx.DBFlavorMariaDB && strings.HasPrefix(tx.Version(), "10.1") {
 		_, err = tx.ExecContext(ctx, createActorsTableMariaDB)
 	} else {
 		_, err = tx.ExecContext(ctx, createActorsTable)

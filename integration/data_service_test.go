@@ -34,7 +34,7 @@ var _ = Describe("DataService", func() {
 	)
 
 	BeforeSuite(func() {
-		driver := sqlx.DBDriverNameMySQL
+		driver := sqlx.DBDriverMySQL
 		hostname := "localhost"
 
 		username, found := os.LookupEnv("PERM_TEST_MYSQL_USERNAME")

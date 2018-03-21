@@ -13,4 +13,6 @@ const (
 	failedToOpenSQLConnection = "failed-to-open-sql-connection"
 	pingSQLConnection         = "ping-sql-connection"
 	failedToPingSQLConnection = "failed-to-ping-sql-connection"
+
+	failedToReadFile = "failed-to-read-file"
 )

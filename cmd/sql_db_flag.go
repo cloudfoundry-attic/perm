@@ -2,16 +2,11 @@ package cmd
 
 import (
 	"context"
-	"net"
-	"strconv"
 	"time"
 
-	"crypto/tls"
-	"crypto/x509"
-
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	"github.com/go-sql-driver/mysql"
 )
 
 type SQLFlag struct {
@@ -21,12 +16,12 @@ type SQLFlag struct {
 }
 
 type DBFlag struct {
-	Driver   sqlx.DBDriverName `long:"driver" description:"Database driver to use for SQL backend (e.g. mysql, postgres)" required:"true"`
-	Host     string            `long:"host" description:"Host for SQL backend" required:"true"`
-	Port     int               `long:"port" description:"Port for SQL backend" required:"true"`
-	Schema   string            `long:"schema" description:"Database name to use for connecting to SQL backend" required:"true"`
-	Username string            `long:"username" description:"Username to use for connecting to SQL backend" required:"true"`
-	Password string            `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
+	Driver   sqlx.DBDriver `long:"driver" description:"Database driver to use for SQL backend (e.g. mysql, postgres)" required:"true"`
+	Host     string        `long:"host" description:"Host for SQL backend" required:"true"`
+	Port     int           `long:"port" description:"Port for SQL backend" required:"true"`
+	Schema   string        `long:"schema" description:"Database name to use for connecting to SQL backend" required:"true"`
+	Username string        `long:"username" description:"Username to use for connecting to SQL backend" required:"true"`
+	Password string        `long:"password" description:"Password to use for connecting to SQL backend" required:"true"`
 }
 
 type SQLTLSFlag struct {
@@ -47,112 +42,43 @@ func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Stat
 		"db_username": o.DB.Username,
 	})
 
-	conn, err := o.open(ctx, logger.Session(openSQLConnection), statter, reader)
-	if err != nil {
-		return nil, err
+	dbOpts := []sqlx.DBOption{
+		sqlx.DBUsername(o.DB.Username),
+		sqlx.DBPassword(o.DB.Password),
+		sqlx.DBDatabaseName(o.DB.Schema),
+		sqlx.DBHost(o.DB.Host),
+		sqlx.DBPort(o.DB.Port),
+		sqlx.DBConnectionMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond),
 	}
 
-	conn.SetConnMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond)
+	if len(o.TLS.RootCAs) != 0 {
+		tlsLogger := logger.Session("create-sql-root-ca-pool")
 
-	err = ping(ctx, logger.Session(pingSQLConnection), conn)
+		var certs [][]byte
+		for _, cert := range o.TLS.RootCAs {
+			b, bErr := cert.Bytes(OS, IOReader)
+			if bErr != nil {
+				tlsLogger.Error(failedToReadFile, bErr)
+				return nil, bErr
+			}
+
+			certs = append(certs, b)
+		}
+
+		rootCAPool, err := cryptox.NewCertPool(certs...)
+		if err != nil {
+			tlsLogger.Error(failedToParseTLSCredentials, err)
+			return nil, err
+		}
+
+		dbOpts = append(dbOpts, sqlx.DBRootCAPool(rootCAPool))
+	}
+
+	conn, err := sqlx.Connect(o.DB.Driver, dbOpts...)
 	if err != nil {
+		logger.Error(failedToOpenSQLConnection, err)
 		return nil, err
 	}
 
 	return conn, nil
-}
-
-func (o *SQLFlag) open(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
-	logger.Debug(starting)
-
-	var (
-		conn *sqlx.DB
-		err  error
-	)
-
-	defer func() {
-		if err != nil {
-			logger.Error(failedToOpenSQLConnection, err)
-
-		} else {
-			logger.Debug(finished)
-		}
-	}()
-
-	switch o.DB.Driver {
-	case "mysql":
-		cfg := mysql.NewConfig()
-
-		cfg.User = o.DB.Username
-		cfg.Passwd = o.DB.Password
-		cfg.Net = "tcp"
-		cfg.Addr = net.JoinHostPort(o.DB.Host, strconv.Itoa(o.DB.Port))
-		cfg.DBName = o.DB.Schema
-		cfg.ParseTime = true
-
-		if o.TLS.Required {
-			rootCertPool := x509.NewCertPool()
-			for _, rootCA := range o.TLS.RootCAs {
-				var pem []byte
-				pem, err = rootCA.Bytes(statter, reader)
-				if err != nil {
-					return nil, err
-				}
-				if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
-					err = ErrFailedToAppendCertsFromPem
-					return nil, err
-				}
-			}
-
-			tlsConfigName := "perm"
-			err = mysql.RegisterTLSConfig(tlsConfigName, &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				RootCAs:    rootCertPool,
-			})
-			if err != nil {
-				return nil, err
-			}
-			cfg.TLSConfig = tlsConfigName
-		}
-
-		conn, err = sqlx.Connect(context.Background(), o.DB.Driver, cfg.FormatDSN())
-
-		if err != nil {
-			return nil, err
-		}
-
-		return conn, nil
-	default:
-		err = ErrUnsupportedSQLDriver
-		return nil, err
-	}
-}
-
-func ping(ctx context.Context, logger lager.Logger, conn *sqlx.DB) error {
-	logger.Debug(starting)
-
-	var attempt int
-	for {
-		attempt++
-
-		if attempt > 10 {
-			err := NewAttemptError(10)
-			logger.Error(failedToPingSQLConnection, err)
-			return err
-		}
-
-		err := conn.PingContext(ctx)
-		if err != nil {
-			logger.Error(failedToPingSQLConnection, err, lager.Data{
-				"attempt": attempt,
-			})
-
-			time.Sleep(1 * time.Second)
-		} else {
-			logger.Debug(finished)
-			break
-		}
-	}
-
-	return nil
 }

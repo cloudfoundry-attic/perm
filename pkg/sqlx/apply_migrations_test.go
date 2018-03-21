@@ -42,7 +42,7 @@ var _ = Describe("#ApplyMigrations", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		conn = &DB{
-			DB: fakeConn,
+			Conn: fakeConn,
 		}
 		ctx = context.Background()
 	})
