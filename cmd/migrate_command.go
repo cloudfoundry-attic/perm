@@ -10,7 +10,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/db"
-	"code.cloudfoundry.org/perm/sqlx"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
 )
 

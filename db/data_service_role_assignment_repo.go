@@ -5,8 +5,8 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/models"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"code.cloudfoundry.org/perm/repos"
-	"code.cloudfoundry.org/perm/sqlx"
 )
 
 func (s *DataService) AssignRole(

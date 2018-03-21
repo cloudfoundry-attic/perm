@@ -10,7 +10,7 @@ import (
 	"crypto/x509"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/sqlx"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/go-sql-driver/mysql"
 )
 

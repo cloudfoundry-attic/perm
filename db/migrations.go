@@ -2,7 +2,7 @@ package db
 
 import (
 	"code.cloudfoundry.org/perm/db/migrations"
-	"code.cloudfoundry.org/perm/sqlx"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 var MigrationsTableName = "perm_migrations"

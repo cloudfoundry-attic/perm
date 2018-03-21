@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	. "code.cloudfoundry.org/perm/sqlx"
+	. "code.cloudfoundry.org/perm/pkg/sqlx"
 
 	"context"
 	"database/sql"

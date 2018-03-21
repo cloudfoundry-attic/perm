@@ -19,8 +19,8 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 	. "code.cloudfoundry.org/perm/repos/reposbehaviors"
-	"code.cloudfoundry.org/perm/sqlx"
 )
 
 var _ = Describe("DataService", func() {

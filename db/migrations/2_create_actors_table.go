@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/sqlx"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 var createActorsTable = `
