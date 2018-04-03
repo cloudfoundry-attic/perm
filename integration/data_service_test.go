@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"code.cloudfoundry.org/perm/cmd/flags"
 	. "code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 
@@ -18,14 +19,13 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/cmd"
 	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 var _ = Describe("DataService", func() {
 	var (
-		flag        cmd.SQLFlag
+		flag        flags.SQLFlag
 		mySQLRunner *MySQLRunner
 
 		store *DataService
@@ -61,8 +61,8 @@ var _ = Describe("DataService", func() {
 			schema = fmt.Sprintf("perm_test_%s", strings.Replace(uuid.String(), "-", "_", -1))
 		}
 
-		flag = cmd.SQLFlag{
-			DB: cmd.DBFlag{
+		flag = flags.SQLFlag{
+			DB: flags.DBFlag{
 				Driver:   driver,
 				Host:     hostname,
 				Port:     port,
@@ -80,7 +80,7 @@ var _ = Describe("DataService", func() {
 
 	BeforeEach(func() {
 		var err error
-		conn, err = flag.Connect(context.Background(), lagertest.NewTestLogger("data-service-test"), cmd.OS, cmd.IOReader)
+		conn, err = flag.Connect(context.Background(), lagertest.NewTestLogger("data-service-test"))
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(conn.Ping()).To(Succeed())

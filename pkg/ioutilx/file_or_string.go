@@ -1,4 +1,4 @@
-package cmd
+package ioutilx
 
 import (
 	"fmt"
@@ -12,9 +12,9 @@ var (
 	IOReader = InjectableIOReader{}
 )
 
-type FileOrStringFlag string
+type FileOrString string
 
-func (f FileOrStringFlag) Bytes(statter Statter, reader FileReader) ([]byte, error) {
+func (f FileOrString) Bytes(statter Statter, reader FileReader) ([]byte, error) {
 	value := string(f)
 	stat, err := statter.Stat(value)
 	if err != nil {

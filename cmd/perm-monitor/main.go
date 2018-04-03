@@ -22,7 +22,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm-go"
-	"code.cloudfoundry.org/perm/cmd"
+	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
+	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
 )
 
@@ -31,7 +32,7 @@ type options struct {
 
 	StatsD statsDOptions `group:"StatsD" namespace:"statsd"`
 
-	Logger cmd.LagerFlag
+	Logger cmdflags.LagerFlag
 
 	QueryProbe probeOptions `group:"Query probe" namespace:"query-probe"`
 
@@ -41,7 +42,7 @@ type options struct {
 type permOptions struct {
 	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
 	Port          int                    `long:"port" description:"Port used to connect to Perm" required:"true"`
-	CACertificate []cmd.FileOrStringFlag `long:"ca-certificate" description:"File path of Perm's CA certificate"`
+	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path of Perm's CA certificate"`
 }
 
 type statsDOptions struct {
@@ -89,7 +90,7 @@ func main() {
 	pool := x509.NewCertPool()
 
 	for _, certPath := range parserOpts.Perm.CACertificate {
-		caPem, e := certPath.Bytes(cmd.InjectableOS{}, cmd.InjectableIOReader{})
+		caPem, e := certPath.Bytes(ioutilx.InjectableOS{}, ioutilx.InjectableIOReader{})
 		if e != nil {
 			logger.Fatal(failedToReadCertificate, e, lager.Data{
 				"location": certPath,

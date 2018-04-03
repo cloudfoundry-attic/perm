@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/cmd/contextx"
+	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
@@ -31,13 +32,13 @@ import (
 )
 
 type ServeCommand struct {
-	Logger            LagerFlag
+	Logger            flags.LagerFlag
 	Hostname          string        `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
 	Port              int           `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
 	MaxConnectionIdle time.Duration `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
 	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	SQL               SQLFlag       `group:"SQL" namespace:"sql"`
+	SQL               flags.SQLFlag `group:"SQL" namespace:"sql"`
 	AuditFilePath     string        `long:"audit-file-path" default:""`
 }
 
@@ -135,7 +136,7 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	grpcServer := grpc.NewServer(serverOpts...)
 
-	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}

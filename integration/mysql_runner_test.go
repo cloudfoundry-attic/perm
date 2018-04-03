@@ -17,6 +17,7 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd"
+	"code.cloudfoundry.org/perm/cmd/flags"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -39,10 +40,10 @@ func (statter) Stat(name string) (os.FileInfo, error) {
 }
 
 type MySQLRunner struct {
-	SQLFlag cmd.SQLFlag
+	SQLFlag flags.SQLFlag
 }
 
-func NewRunner(flag cmd.SQLFlag) *MySQLRunner {
+func NewRunner(flag flags.SQLFlag) *MySQLRunner {
 	return &MySQLRunner{
 		SQLFlag: flag,
 	}
@@ -62,7 +63,7 @@ func (r *MySQLRunner) CreateTestDB() {
 	Eventually(session, 5*time.Second).Should(gexec.Exit(0))
 
 	c := &cmd.UpCommand{
-		Logger: cmd.LagerFlag{LogLevel: "error"},
+		Logger: flags.LagerFlag{LogLevel: "error"},
 		SQL:    r.SQLFlag,
 	}
 
@@ -88,8 +89,6 @@ func (r *MySQLRunner) Truncate() {
 	dbConn, err := r.SQLFlag.Connect(
 		context.Background(),
 		lagertest.NewTestLogger("mysql-migrator"),
-		statter{},
-		ioReader{},
 	)
 	Expect(err).NotTo(HaveOccurred())
 

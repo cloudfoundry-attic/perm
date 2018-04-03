@@ -1,4 +1,4 @@
-package cmd
+package flags
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
+	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -25,15 +26,15 @@ type DBFlag struct {
 }
 
 type SQLTLSFlag struct {
-	Required bool               `long:"required" description:"Require TLS connections to the SQL backend"`
-	RootCAs  []FileOrStringFlag `long:"root-ca" description:"CA certificate(s) for TLS connection to the SQL backend"`
+	Required bool                   `long:"required" description:"Require TLS connections to the SQL backend"`
+	RootCAs  []ioutilx.FileOrString `long:"root-ca" description:"CA certificate(s) for TLS connection to the SQL backend"`
 }
 
 type SQLTuningFlag struct {
 	ConnMaxLifetime int `long:"connection-max-lifetime" description:"Limit the lifetime in milliseconds of a SQL connection"`
 }
 
-func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Statter, reader FileReader) (*sqlx.DB, error) {
+func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, error) {
 	logger = logger.WithData(lager.Data{
 		"db_driver":   o.DB.Driver,
 		"db_host":     o.DB.Host,
@@ -56,7 +57,7 @@ func (o *SQLFlag) Connect(ctx context.Context, logger lager.Logger, statter Stat
 
 		var certs [][]byte
 		for _, cert := range o.TLS.RootCAs {
-			b, bErr := cert.Bytes(OS, IOReader)
+			b, bErr := cert.Bytes(ioutilx.OS, ioutilx.IOReader)
 			if bErr != nil {
 				tlsLogger.Error(failedToReadFile, bErr)
 				return nil, bErr

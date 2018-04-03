@@ -1,29 +1,29 @@
-package cmd_test
+package ioutilx_test
 
 import (
-	. "code.cloudfoundry.org/perm/cmd"
+	. "code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/ioutilx/ioutilxfakes"
 
 	"errors"
 
-	"code.cloudfoundry.org/perm/cmd/cmdfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("FileOrStringFlag", func() {
+var _ = Describe("FileOrString", func() {
 	Describe("#Bytes", func() {
 		var (
-			statter *cmdfakes.FakeStatter
-			reader  *cmdfakes.FakeFileReader
-			info    *cmdfakes.FakeFileInfo
+			statter *ioutilxfakes.FakeStatter
+			reader  *ioutilxfakes.FakeFileReader
+			info    *ioutilxfakes.FakeFileInfo
 
-			subject FileOrStringFlag
+			subject FileOrString
 		)
 
 		BeforeEach(func() {
-			statter = new(cmdfakes.FakeStatter)
-			reader = new(cmdfakes.FakeFileReader)
-			info = new(cmdfakes.FakeFileInfo)
+			statter = new(ioutilxfakes.FakeStatter)
+			reader = new(ioutilxfakes.FakeFileReader)
+			info = new(ioutilxfakes.FakeFileInfo)
 		})
 
 		It("returns the file contents if readable", func() {

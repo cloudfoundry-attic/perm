@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
@@ -21,23 +22,23 @@ type MigrateCommand struct {
 }
 
 type UpCommand struct {
-	Logger LagerFlag
+	Logger flags.LagerFlag
 
-	SQL SQLFlag `group:"SQL" namespace:"sql"`
+	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
 }
 
 type DownCommand struct {
-	Logger LagerFlag
+	Logger flags.LagerFlag
 
-	SQL SQLFlag `group:"SQL" namespace:"sql"`
+	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
 
 	All bool `long:"all" description:"Revert all migrations"`
 }
 
 type StatusCommand struct {
-	Logger LagerFlag
+	Logger flags.LagerFlag
 
-	SQL SQLFlag `group:"SQL" namespace:"sql"`
+	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
 }
 
 func (cmd UpCommand) Execute([]string) error {
@@ -46,7 +47,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (cmd DownCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -77,8 +78,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	logger = logger.Session("migrate-status")
 
 	ctx := context.Background()
-
-	conn, err := cmd.SQL.Connect(ctx, logger, OS, IOReader)
+	conn, err := cmd.SQL.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}
