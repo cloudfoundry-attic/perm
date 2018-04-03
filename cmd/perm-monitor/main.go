@@ -17,8 +17,6 @@ import (
 
 	"strconv"
 
-	"sync"
-
 	"time"
 
 	"code.cloudfoundry.org/perm-go"
@@ -35,8 +33,6 @@ type options struct {
 	Logger cmdflags.LagerFlag
 
 	QueryProbe probeOptions `group:"Query probe" namespace:"query-probe"`
-
-	AdminProbe probeOptions `group:"Admin probe" namespace:"admin-probe"`
 }
 
 type permOptions struct {
@@ -125,10 +121,6 @@ func main() {
 
 	ctx := context.Background()
 
-	adminProbe := &monitor.AdminProbe{
-		RoleServiceClient: roleServiceClient,
-	}
-
 	queryProbe := &monitor.QueryProbe{
 		RoleServiceClient:       roleServiceClient,
 		PermissionServiceClient: permissionServiceClient,
@@ -143,12 +135,5 @@ func main() {
 		Histogram: queryProbeHistogram,
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go RunAdminProbe(ctx, logger.Session("admin-probe"), &wg, adminProbe, statter, parserOpts.AdminProbe.Interval, parserOpts.AdminProbe.Timeout)
-	go RunQueryProbe(ctx, logger.Session("query-probe"), &wg, queryProbe, statter, parserOpts.QueryProbe.Interval, parserOpts.AdminProbe.Timeout)
-
-	wg.Wait()
-	os.Exit(0)
+	RunQueryProbe(ctx, logger.Session("query-probe"), queryProbe, statter, parserOpts.QueryProbe.Interval, parserOpts.QueryProbe.Timeout)
 }

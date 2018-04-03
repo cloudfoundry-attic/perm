@@ -13,8 +13,6 @@ const (
 
 	AlwaysSendMetric = 1.0
 
-	MetricAdminProbeRunsSuccess = "perm.probe.admin.runs.success"
-
 	MetricQueryProbeRunsSuccess = "perm.probe.query.runs.success"
 	MetricQueryProbeRunsCorrect = "perm.probe.query.runs.correct"
 
@@ -60,14 +58,6 @@ func (s *Statter) SendCorrectQueryProbe(logger lager.Logger) {
 	s.sendHistogramQuantile(logger, 99, MetricQueryProbeTimingP99)
 	s.sendHistogramQuantile(logger, 99.9, MetricQueryProbeTimingP999)
 	s.sendHistogramMax(logger, MetricQueryProbeTimingMax)
-}
-
-func (s *Statter) SendFailedAdminProbe(logger lager.Logger) {
-	s.sendGauge(logger, MetricAdminProbeRunsSuccess, MetricFailure)
-}
-
-func (s *Statter) SendSuccessfulAdminProbe(logger lager.Logger) {
-	s.sendGauge(logger, MetricAdminProbeRunsSuccess, MetricSuccess)
 }
 
 func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {

@@ -17,17 +17,15 @@ const (
 
 func RunQueryProbe(ctx context.Context,
 	logger lager.Logger,
-	wg *sync.WaitGroup,
 	probe *monitor.QueryProbe,
 	statter *monitor.Statter,
 	probeInterval, probeTimeout time.Duration,
 ) {
-	defer wg.Done()
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	var innerWG sync.WaitGroup
-	innerWG.Add(2)
 	go func() {
-		defer innerWG.Done()
+		defer wg.Done()
 
 		for range time.NewTicker(QueryProbeHistogramRefreshTime).C {
 			statter.Rotate()
@@ -35,7 +33,7 @@ func RunQueryProbe(ctx context.Context,
 	}()
 
 	go func() {
-		defer innerWG.Done()
+		defer wg.Done()
 
 		for range time.NewTicker(probeInterval).C {
 			correct, durations, err := cmd.RunQueryProbe(ctx, logger, probe, probeTimeout)
@@ -53,5 +51,5 @@ func RunQueryProbe(ctx context.Context,
 		}
 	}()
 
-	innerWG.Wait()
+	wg.Wait()
 }

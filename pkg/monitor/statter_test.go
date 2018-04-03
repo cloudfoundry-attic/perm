@@ -101,30 +101,4 @@ var _ = Describe("Statter", func() {
 			Expect(rate).To(Equal(float32(1.0)))
 		})
 	})
-
-	Describe("SendFailedAdminProbe", func() {
-		It("sends a failure for the admin stat", func() {
-			statter.SendFailedAdminProbe(logger)
-
-			Expect(statsd.GaugeCallCount()).To(Equal(1))
-
-			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.admin.runs.success"))
-			Expect(value).To(Equal(int64(0)))
-			Expect(rate).To(Equal(float32(1.0)))
-		})
-	})
-
-	Describe("SendSuccessfulAdminProbe", func() {
-		It("sends a success for the admin stat", func() {
-			statter.SendSuccessfulAdminProbe(logger)
-
-			Expect(statsd.GaugeCallCount()).To(Equal(1))
-
-			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.admin.runs.success"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
-		})
-	})
 })
