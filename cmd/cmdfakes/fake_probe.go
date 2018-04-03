@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/perm/cmd"
 )
 
-type FakeQueryProbe struct {
+type FakeProbe struct {
 	CleanupStub        func(context.Context, lager.Logger, string) error
 	cleanupMutex       sync.RWMutex
 	cleanupArgsForCall []struct {
@@ -58,7 +58,7 @@ type FakeQueryProbe struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeQueryProbe) Cleanup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
 	fake.cleanupMutex.Lock()
 	ret, specificReturn := fake.cleanupReturnsOnCall[len(fake.cleanupArgsForCall)]
 	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct {
@@ -77,26 +77,26 @@ func (fake *FakeQueryProbe) Cleanup(arg1 context.Context, arg2 lager.Logger, arg
 	return fake.cleanupReturns.result1
 }
 
-func (fake *FakeQueryProbe) CleanupCallCount() int {
+func (fake *FakeProbe) CleanupCallCount() int {
 	fake.cleanupMutex.RLock()
 	defer fake.cleanupMutex.RUnlock()
 	return len(fake.cleanupArgsForCall)
 }
 
-func (fake *FakeQueryProbe) CleanupArgsForCall(i int) (context.Context, lager.Logger, string) {
+func (fake *FakeProbe) CleanupArgsForCall(i int) (context.Context, lager.Logger, string) {
 	fake.cleanupMutex.RLock()
 	defer fake.cleanupMutex.RUnlock()
 	return fake.cleanupArgsForCall[i].arg1, fake.cleanupArgsForCall[i].arg2, fake.cleanupArgsForCall[i].arg3
 }
 
-func (fake *FakeQueryProbe) CleanupReturns(result1 error) {
+func (fake *FakeProbe) CleanupReturns(result1 error) {
 	fake.CleanupStub = nil
 	fake.cleanupReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeQueryProbe) CleanupReturnsOnCall(i int, result1 error) {
+func (fake *FakeProbe) CleanupReturnsOnCall(i int, result1 error) {
 	fake.CleanupStub = nil
 	if fake.cleanupReturnsOnCall == nil {
 		fake.cleanupReturnsOnCall = make(map[int]struct {
@@ -108,7 +108,7 @@ func (fake *FakeQueryProbe) CleanupReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeQueryProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+func (fake *FakeProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
 	fake.setupMutex.Lock()
 	ret, specificReturn := fake.setupReturnsOnCall[len(fake.setupArgsForCall)]
 	fake.setupArgsForCall = append(fake.setupArgsForCall, struct {
@@ -127,26 +127,26 @@ func (fake *FakeQueryProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 
 	return fake.setupReturns.result1
 }
 
-func (fake *FakeQueryProbe) SetupCallCount() int {
+func (fake *FakeProbe) SetupCallCount() int {
 	fake.setupMutex.RLock()
 	defer fake.setupMutex.RUnlock()
 	return len(fake.setupArgsForCall)
 }
 
-func (fake *FakeQueryProbe) SetupArgsForCall(i int) (context.Context, lager.Logger, string) {
+func (fake *FakeProbe) SetupArgsForCall(i int) (context.Context, lager.Logger, string) {
 	fake.setupMutex.RLock()
 	defer fake.setupMutex.RUnlock()
 	return fake.setupArgsForCall[i].arg1, fake.setupArgsForCall[i].arg2, fake.setupArgsForCall[i].arg3
 }
 
-func (fake *FakeQueryProbe) SetupReturns(result1 error) {
+func (fake *FakeProbe) SetupReturns(result1 error) {
 	fake.SetupStub = nil
 	fake.setupReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeQueryProbe) SetupReturnsOnCall(i int, result1 error) {
+func (fake *FakeProbe) SetupReturnsOnCall(i int, result1 error) {
 	fake.SetupStub = nil
 	if fake.setupReturnsOnCall == nil {
 		fake.setupReturnsOnCall = make(map[int]struct {
@@ -158,7 +158,7 @@ func (fake *FakeQueryProbe) SetupReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeQueryProbe) Run(arg1 context.Context, arg2 lager.Logger, arg3 string) (bool, []time.Duration, error) {
+func (fake *FakeProbe) Run(arg1 context.Context, arg2 lager.Logger, arg3 string) (bool, []time.Duration, error) {
 	fake.runMutex.Lock()
 	ret, specificReturn := fake.runReturnsOnCall[len(fake.runArgsForCall)]
 	fake.runArgsForCall = append(fake.runArgsForCall, struct {
@@ -177,19 +177,19 @@ func (fake *FakeQueryProbe) Run(arg1 context.Context, arg2 lager.Logger, arg3 st
 	return fake.runReturns.result1, fake.runReturns.result2, fake.runReturns.result3
 }
 
-func (fake *FakeQueryProbe) RunCallCount() int {
+func (fake *FakeProbe) RunCallCount() int {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	return len(fake.runArgsForCall)
 }
 
-func (fake *FakeQueryProbe) RunArgsForCall(i int) (context.Context, lager.Logger, string) {
+func (fake *FakeProbe) RunArgsForCall(i int) (context.Context, lager.Logger, string) {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	return fake.runArgsForCall[i].arg1, fake.runArgsForCall[i].arg2, fake.runArgsForCall[i].arg3
 }
 
-func (fake *FakeQueryProbe) RunReturns(result1 bool, result2 []time.Duration, result3 error) {
+func (fake *FakeProbe) RunReturns(result1 bool, result2 []time.Duration, result3 error) {
 	fake.RunStub = nil
 	fake.runReturns = struct {
 		result1 bool
@@ -198,7 +198,7 @@ func (fake *FakeQueryProbe) RunReturns(result1 bool, result2 []time.Duration, re
 	}{result1, result2, result3}
 }
 
-func (fake *FakeQueryProbe) RunReturnsOnCall(i int, result1 bool, result2 []time.Duration, result3 error) {
+func (fake *FakeProbe) RunReturnsOnCall(i int, result1 bool, result2 []time.Duration, result3 error) {
 	fake.RunStub = nil
 	if fake.runReturnsOnCall == nil {
 		fake.runReturnsOnCall = make(map[int]struct {
@@ -214,7 +214,7 @@ func (fake *FakeQueryProbe) RunReturnsOnCall(i int, result1 bool, result2 []time
 	}{result1, result2, result3}
 }
 
-func (fake *FakeQueryProbe) Invocations() map[string][][]interface{} {
+func (fake *FakeProbe) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.cleanupMutex.RLock()
@@ -230,7 +230,7 @@ func (fake *FakeQueryProbe) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeQueryProbe) recordInvocation(key string, args []interface{}) {
+func (fake *FakeProbe) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -242,4 +242,4 @@ func (fake *FakeQueryProbe) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ cmd.QueryProbe = new(FakeQueryProbe)
+var _ cmd.Probe = new(FakeProbe)

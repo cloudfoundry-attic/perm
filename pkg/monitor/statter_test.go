@@ -31,72 +31,72 @@ var _ = Describe("Statter", func() {
 		}
 	})
 
-	Describe("SendFailedQueryProbe", func() {
-		It("sends a failure for the query stat", func() {
-			statter.SendFailedQueryProbe(logger)
+	Describe("SendFailedProbe", func() {
+		It("sends a failure for the stat", func() {
+			statter.SendFailedProbe(logger)
 
 			Expect(statsd.GaugeCallCount()).To(Equal(1))
 
 			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.query.runs.success"))
+			Expect(metricName).To(Equal("perm.probe.runs.success"))
 			Expect(value).To(Equal(int64(0)))
 			Expect(rate).To(Equal(float32(1.0)))
 		})
 	})
 
-	Describe("SendIncorrectQueryProbe", func() {
-		It("sends a failure and incorrect query stat", func() {
-			statter.SendIncorrectQueryProbe(logger)
+	Describe("SendIncorrectProbe", func() {
+		It("sends a failure and incorrect stat", func() {
+			statter.SendIncorrectProbe(logger)
 
 			Expect(statsd.GaugeCallCount()).To(Equal(2))
 
 			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.query.runs.success"))
+			Expect(metricName).To(Equal("perm.probe.runs.success"))
 			Expect(value).To(Equal(int64(0)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(1)
-			Expect(metricName).To(Equal("perm.probe.query.runs.correct"))
+			Expect(metricName).To(Equal("perm.probe.runs.correct"))
 			Expect(value).To(Equal(int64(0)))
 			Expect(rate).To(Equal(float32(1.0)))
 		})
 	})
 
-	Describe("SendCorrectQueryProbe", func() {
-		It("sends successful and correct gauges, and 90, 99, 99.9th, and max quantile query stats", func() {
-			statter.RecordQueryProbeDuration(logger, 1)
+	Describe("SendCorrectProbe", func() {
+		It("sends successful and correct gauges, and 90, 99, 99.9th, and max quantile stats", func() {
+			statter.RecordProbeDuration(logger, 1)
 
-			statter.SendCorrectQueryProbe(logger)
+			statter.SendCorrectProbe(logger)
 
 			Expect(statsd.GaugeCallCount()).To(Equal(6))
 
 			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.query.runs.success"))
+			Expect(metricName).To(Equal("perm.probe.runs.success"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(1)
-			Expect(metricName).To(Equal("perm.probe.query.runs.correct"))
+			Expect(metricName).To(Equal("perm.probe.runs.correct"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(2)
-			Expect(metricName).To(Equal("perm.probe.query.responses.timing.p90"))
+			Expect(metricName).To(Equal("perm.probe.responses.timing.p90"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(3)
-			Expect(metricName).To(Equal("perm.probe.query.responses.timing.p99"))
+			Expect(metricName).To(Equal("perm.probe.responses.timing.p99"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(4)
-			Expect(metricName).To(Equal("perm.probe.query.responses.timing.p999"))
+			Expect(metricName).To(Equal("perm.probe.responses.timing.p999"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
 			metricName, value, rate = statsd.GaugeArgsForCall(5)
-			Expect(metricName).To(Equal("perm.probe.query.responses.timing.max"))
+			Expect(metricName).To(Equal("perm.probe.responses.timing.max"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 		})

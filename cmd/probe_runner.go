@@ -8,18 +8,18 @@ import (
 	guuid "github.com/satori/go.uuid"
 )
 
-//go:generate counterfeiter . QueryProbe
+//go:generate counterfeiter . Probe
 
-type QueryProbe interface {
+type Probe interface {
 	Cleanup(context.Context, lager.Logger, string) error
 	Setup(context.Context, lager.Logger, string) error
 	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 }
 
-func RunQueryProbe(
+func RunProbe(
 	ctx context.Context,
 	logger lager.Logger,
-	probe QueryProbe,
+	probe Probe,
 	timeout time.Duration,
 ) (correct bool, durations []time.Duration, err error) {
 	uuid := guuid.NewV4()

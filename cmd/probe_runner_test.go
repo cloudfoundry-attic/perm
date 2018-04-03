@@ -46,9 +46,9 @@ var _ = Describe("Running the Probes", func() {
 		someOtherErr = errors.New("some-other-error")
 	})
 
-	Describe(".RunQueryProbe", func() {
+	Describe(".RunProbe", func() {
 		var (
-			queryProbe *cmdfakes.FakeQueryProbe
+			probe *cmdfakes.FakeProbe
 
 			ctx    context.Context
 			logger *lagertest.TestLogger
@@ -59,27 +59,27 @@ var _ = Describe("Running the Probes", func() {
 		)
 
 		BeforeEach(func() {
-			queryProbe = new(cmdfakes.FakeQueryProbe)
+			probe = new(cmdfakes.FakeProbe)
 
 			ctx = context.Background()
-			logger = lagertest.NewTestLogger("run-query-probe")
+			logger = lagertest.NewTestLogger("run-probe")
 
 			timeout = 5 * time.Second
 
 			expectedDurations = []time.Duration{1 * time.Second, 2 * time.Second}
-			queryProbe.RunReturns(true, expectedDurations, nil)
+			probe.RunReturns(true, expectedDurations, nil)
 		})
 
 		It("calls the setup, run, and cleanup with a uuid", func() {
-			correct, durations, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+			correct, durations, err := RunProbe(ctx, logger, probe, timeout)
 
-			Expect(queryProbe.SetupCallCount()).To(Equal(1))
-			Expect(queryProbe.RunCallCount()).To(Equal(1))
-			Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+			Expect(probe.SetupCallCount()).To(Equal(1))
+			Expect(probe.RunCallCount()).To(Equal(1))
+			Expect(probe.CleanupCallCount()).To(Equal(1))
 
-			_, _, setupId := queryProbe.SetupArgsForCall(0)
-			_, _, runId := queryProbe.RunArgsForCall(0)
-			_, _, cleanupId := queryProbe.CleanupArgsForCall(0)
+			_, _, setupId := probe.SetupArgsForCall(0)
+			_, _, runId := probe.RunArgsForCall(0)
+			_, _, cleanupId := probe.CleanupArgsForCall(0)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
@@ -91,7 +91,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("timeouts", func() {
 			It("errors if it times out", func() {
-				queryProbe.RunStub = func(
+				probe.RunStub = func(
 					ctx context.Context,
 					logger lager.Logger,
 					uniqueSuffix string,
@@ -104,18 +104,18 @@ var _ = Describe("Running the Probes", func() {
 					return true, nil, err
 				}
 
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 10*time.Nanosecond)
+				_, _, err := RunProbe(ctx, logger, probe, 10*time.Nanosecond)
 
-				Expect(queryProbe.SetupCallCount()).To(Equal(1))
-				Expect(queryProbe.RunCallCount()).To(Equal(1))
-				Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+				Expect(probe.SetupCallCount()).To(Equal(1))
+				Expect(probe.RunCallCount()).To(Equal(1))
+				Expect(probe.CleanupCallCount()).To(Equal(1))
 
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(context.DeadlineExceeded))
 			})
 
 			It("succeeds if the timeout is not exceeded", func() {
-				queryProbe.RunStub = func(
+				probe.RunStub = func(
 					ctx context.Context,
 					logger lager.Logger,
 					uniqueSuffix string,
@@ -128,11 +128,11 @@ var _ = Describe("Running the Probes", func() {
 					return true, nil, err
 				}
 
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, 300*time.Millisecond)
+				_, _, err := RunProbe(ctx, logger, probe, 300*time.Millisecond)
 
-				Expect(queryProbe.SetupCallCount()).To(Equal(1))
-				Expect(queryProbe.RunCallCount()).To(Equal(1))
-				Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+				Expect(probe.SetupCallCount()).To(Equal(1))
+				Expect(probe.RunCallCount()).To(Equal(1))
+				Expect(probe.CleanupCallCount()).To(Equal(1))
 
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -140,15 +140,15 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when the setup fails", func() {
 			BeforeEach(func() {
-				queryProbe.SetupReturns(someErr)
+				probe.SetupReturns(someErr)
 			})
 
 			It("returns the error, calling cleanup, but not calling run", func() {
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+				_, _, err := RunProbe(ctx, logger, probe, timeout)
 
-				Expect(queryProbe.SetupCallCount()).To(Equal(1))
-				Expect(queryProbe.RunCallCount()).To(Equal(0))
-				Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+				Expect(probe.SetupCallCount()).To(Equal(1))
+				Expect(probe.RunCallCount()).To(Equal(0))
+				Expect(probe.CleanupCallCount()).To(Equal(1))
 
 				Expect(err).To(MatchError(someErr))
 			})
@@ -156,15 +156,15 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when the run fails", func() {
 			BeforeEach(func() {
-				queryProbe.RunReturns(false, nil, someErr)
+				probe.RunReturns(false, nil, someErr)
 			})
 
 			It("still runs cleanup, but returns the error", func() {
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+				_, _, err := RunProbe(ctx, logger, probe, timeout)
 
-				Expect(queryProbe.SetupCallCount()).To(Equal(1))
-				Expect(queryProbe.RunCallCount()).To(Equal(1))
-				Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+				Expect(probe.SetupCallCount()).To(Equal(1))
+				Expect(probe.RunCallCount()).To(Equal(1))
+				Expect(probe.CleanupCallCount()).To(Equal(1))
 
 				Expect(err).To(MatchError(someErr))
 			})
@@ -172,15 +172,15 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when cleanup fails", func() {
 			BeforeEach(func() {
-				queryProbe.CleanupReturns(someErr)
+				probe.CleanupReturns(someErr)
 			})
 
 			It("returns the error", func() {
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+				_, _, err := RunProbe(ctx, logger, probe, timeout)
 
-				Expect(queryProbe.SetupCallCount()).To(Equal(1))
-				Expect(queryProbe.RunCallCount()).To(Equal(1))
-				Expect(queryProbe.CleanupCallCount()).To(Equal(1))
+				Expect(probe.SetupCallCount()).To(Equal(1))
+				Expect(probe.RunCallCount()).To(Equal(1))
+				Expect(probe.CleanupCallCount()).To(Equal(1))
 
 				Expect(err).To(MatchError(someErr))
 			})
@@ -188,12 +188,12 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when setup and cleanup fail", func() {
 			BeforeEach(func() {
-				queryProbe.SetupReturns(someErr)
-				queryProbe.CleanupReturns(someOtherErr)
+				probe.SetupReturns(someErr)
+				probe.CleanupReturns(someOtherErr)
 			})
 
 			It("returns the setup error", func() {
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+				_, _, err := RunProbe(ctx, logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))
@@ -202,12 +202,12 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when run and cleanup fail", func() {
 			BeforeEach(func() {
-				queryProbe.RunReturns(false, nil, someErr)
-				queryProbe.CleanupReturns(someOtherErr)
+				probe.RunReturns(false, nil, someErr)
+				probe.CleanupReturns(someOtherErr)
 			})
 
 			It("returns the run error", func() {
-				_, _, err := RunQueryProbe(ctx, logger, queryProbe, timeout)
+				_, _, err := RunProbe(ctx, logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))

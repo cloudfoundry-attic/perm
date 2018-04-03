@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	QueryProbeHistogramWindow      = 5 // Minutes
-	QueryProbeHistogramRefreshTime = 1 * time.Minute
+	ProbeHistogramWindow      = 5 // Minutes
+	ProbeHistogramRefreshTime = 1 * time.Minute
 )
 
-func RunQueryProbe(ctx context.Context,
+func RunProbe(ctx context.Context,
 	logger lager.Logger,
-	probe *monitor.QueryProbe,
+	probe *monitor.Probe,
 	statter *monitor.Statter,
 	probeInterval, probeTimeout time.Duration,
 ) {
@@ -27,7 +27,7 @@ func RunQueryProbe(ctx context.Context,
 	go func() {
 		defer wg.Done()
 
-		for range time.NewTicker(QueryProbeHistogramRefreshTime).C {
+		for range time.NewTicker(ProbeHistogramRefreshTime).C {
 			statter.Rotate()
 		}
 	}()
@@ -36,17 +36,17 @@ func RunQueryProbe(ctx context.Context,
 		defer wg.Done()
 
 		for range time.NewTicker(probeInterval).C {
-			correct, durations, err := cmd.RunQueryProbe(ctx, logger, probe, probeTimeout)
+			correct, durations, err := cmd.RunProbe(ctx, logger, probe, probeTimeout)
 
 			if err != nil {
-				statter.SendFailedQueryProbe(logger.Session("metrics"))
+				statter.SendFailedProbe(logger.Session("metrics"))
 			} else if !correct {
-				statter.SendIncorrectQueryProbe(logger.Session("metrics"))
+				statter.SendIncorrectProbe(logger.Session("metrics"))
 			} else {
 				for _, d := range durations {
-					statter.RecordQueryProbeDuration(logger.Session("metrics"), d)
+					statter.RecordProbeDuration(logger.Session("metrics"), d)
 				}
-				statter.SendCorrectQueryProbe(logger.Session("metrics"))
+				statter.SendCorrectProbe(logger.Session("metrics"))
 			}
 		}
 	}()

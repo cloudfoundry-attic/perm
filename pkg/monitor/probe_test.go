@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ = Describe("QueryProbe", func() {
+var _ = Describe("Probe", func() {
 	var (
-		p *QueryProbe
+		p *Probe
 
 		fakeRoleServiceClient        *permgofakes.FakeRoleServiceClient
 		fakePermissionsServiceClient *permgofakes.FakePermissionServiceClient
@@ -34,12 +34,12 @@ var _ = Describe("QueryProbe", func() {
 		fakeRoleServiceClient = new(permgofakes.FakeRoleServiceClient)
 		fakePermissionsServiceClient = new(permgofakes.FakePermissionServiceClient)
 
-		fakeLogger = lagertest.NewTestLogger("query-probe")
+		fakeLogger = lagertest.NewTestLogger("probe")
 		fakeContext = context.Background()
 
 		uniqueSuffix = "foobar"
 
-		p = &QueryProbe{
+		p = &Probe{
 			RoleServiceClient:       fakeRoleServiceClient,
 			PermissionServiceClient: fakePermissionsServiceClient,
 		}
@@ -54,17 +54,17 @@ var _ = Describe("QueryProbe", func() {
 
 			Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
 			_, createRoleRequest, _ := fakeRoleServiceClient.CreateRoleArgsForCall(0)
-			Expect(createRoleRequest.GetName()).To(Equal("system.query-probe.foobar"))
+			Expect(createRoleRequest.GetName()).To(Equal("system.probe.foobar"))
 			permissions := createRoleRequest.GetPermissions()
 			Expect(permissions).To(HaveLen(1))
-			Expect(permissions[0].GetName()).To(Equal("system.query-probe.assigned-permission.name"))
-			Expect(permissions[0].GetResourcePattern()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
+			Expect(permissions[0].GetName()).To(Equal("system.probe.assigned-permission.name"))
+			Expect(permissions[0].GetResourcePattern()).To(Equal("system.probe.assigned-permission.resource-id.foobar"))
 
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			_, assignRoleRequest, _ := fakeRoleServiceClient.AssignRoleArgsForCall(0)
-			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.query-probe.foobar"))
+			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.probe.foobar"))
 			Expect(assignRoleRequest.GetActor().GetIssuer()).To(Equal("system"))
-			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("query-probe"))
+			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("probe"))
 		})
 
 		Context("when creating the role", func() {
@@ -124,7 +124,7 @@ var _ = Describe("QueryProbe", func() {
 
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
 			_, deleteRoleRequest, _ := fakeRoleServiceClient.DeleteRoleArgsForCall(0)
-			Expect(deleteRoleRequest.GetName()).To(Equal("system.query-probe.foobar"))
+			Expect(deleteRoleRequest.GetName()).To(Equal("system.probe.foobar"))
 		})
 
 		Context("when the role doesn't exist", func() {
@@ -166,15 +166,15 @@ var _ = Describe("QueryProbe", func() {
 
 			_, hasPositivePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(0)
 			Expect(hasPositivePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
-			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.assigned-permission.name"))
-			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.query-probe.assigned-permission.resource-id.foobar"))
+			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("probe"))
+			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.probe.assigned-permission.name"))
+			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.probe.assigned-permission.resource-id.foobar"))
 
 			_, hasNegativePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(1)
 			Expect(hasNegativePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
-			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("query-probe"))
-			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.query-probe.unassigned-permission.name"))
-			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.query-probe.unassigned-permission.resource-id.foobar"))
+			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("probe"))
+			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.probe.unassigned-permission.name"))
+			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.probe.unassigned-permission.resource-id.foobar"))
 		})
 
 		Context("when checking for the permission it should have errors", func() {

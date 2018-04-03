@@ -13,13 +13,13 @@ const (
 
 	AlwaysSendMetric = 1.0
 
-	MetricQueryProbeRunsSuccess = "perm.probe.query.runs.success"
-	MetricQueryProbeRunsCorrect = "perm.probe.query.runs.correct"
+	MetricProbeRunsSuccess = "perm.probe.runs.success"
+	MetricProbeRunsCorrect = "perm.probe.runs.correct"
 
-	MetricQueryProbeTimingMax  = "perm.probe.query.responses.timing.max"  // gauge
-	MetricQueryProbeTimingP90  = "perm.probe.query.responses.timing.p90"  // gauge
-	MetricQueryProbeTimingP99  = "perm.probe.query.responses.timing.p99"  // gauge
-	MetricQueryProbeTimingP999 = "perm.probe.query.responses.timing.p999" // gauge
+	MetricProbeTimingMax  = "perm.probe.responses.timing.max"  // gauge
+	MetricProbeTimingP90  = "perm.probe.responses.timing.p90"  // gauge
+	MetricProbeTimingP99  = "perm.probe.responses.timing.p99"  // gauge
+	MetricProbeTimingP999 = "perm.probe.responses.timing.p999" // gauge
 )
 
 //go:generate counterfeiter github.com/cactus/go-statsd-client/statsd.Statter
@@ -33,7 +33,7 @@ func (s *Statter) Rotate() {
 	s.Histogram.Rotate()
 }
 
-func (s *Statter) RecordQueryProbeDuration(logger lager.Logger, d time.Duration) {
+func (s *Statter) RecordProbeDuration(logger lager.Logger, d time.Duration) {
 	err := s.Histogram.RecordValue(int64(d))
 	if err != nil {
 		logger.Error(failedToRecordHistogramValue, err, lager.Data{
@@ -42,22 +42,22 @@ func (s *Statter) RecordQueryProbeDuration(logger lager.Logger, d time.Duration)
 	}
 }
 
-func (s *Statter) SendFailedQueryProbe(logger lager.Logger) {
-	s.sendGauge(logger, MetricQueryProbeRunsSuccess, MetricFailure)
+func (s *Statter) SendFailedProbe(logger lager.Logger) {
+	s.sendGauge(logger, MetricProbeRunsSuccess, MetricFailure)
 }
 
-func (s *Statter) SendIncorrectQueryProbe(logger lager.Logger) {
-	s.sendGauge(logger, MetricQueryProbeRunsSuccess, MetricFailure)
-	s.sendGauge(logger, MetricQueryProbeRunsCorrect, MetricFailure)
+func (s *Statter) SendIncorrectProbe(logger lager.Logger) {
+	s.sendGauge(logger, MetricProbeRunsSuccess, MetricFailure)
+	s.sendGauge(logger, MetricProbeRunsCorrect, MetricFailure)
 }
 
-func (s *Statter) SendCorrectQueryProbe(logger lager.Logger) {
-	s.sendGauge(logger, MetricQueryProbeRunsSuccess, MetricSuccess)
-	s.sendGauge(logger, MetricQueryProbeRunsCorrect, MetricSuccess)
-	s.sendHistogramQuantile(logger, 90, MetricQueryProbeTimingP90)
-	s.sendHistogramQuantile(logger, 99, MetricQueryProbeTimingP99)
-	s.sendHistogramQuantile(logger, 99.9, MetricQueryProbeTimingP999)
-	s.sendHistogramMax(logger, MetricQueryProbeTimingMax)
+func (s *Statter) SendCorrectProbe(logger lager.Logger) {
+	s.sendGauge(logger, MetricProbeRunsSuccess, MetricSuccess)
+	s.sendGauge(logger, MetricProbeRunsCorrect, MetricSuccess)
+	s.sendHistogramQuantile(logger, 90, MetricProbeTimingP90)
+	s.sendHistogramQuantile(logger, 99, MetricProbeTimingP99)
+	s.sendHistogramQuantile(logger, 99.9, MetricProbeTimingP999)
+	s.sendHistogramMax(logger, MetricProbeTimingMax)
 }
 
 func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {

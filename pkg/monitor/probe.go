@@ -12,26 +12,26 @@ import (
 )
 
 const (
-	QueryProbeRoleName = "system.query-probe"
+	ProbeRoleName = "system.probe"
 
-	QueryProbeAssignedPermissionName       = "system.query-probe.assigned-permission.name"
-	QueryProbeAssignedPermissionResourceID = "system.query-probe.assigned-permission.resource-id"
+	ProbeAssignedPermissionName       = "system.probe.assigned-permission.name"
+	ProbeAssignedPermissionResourceID = "system.probe.assigned-permission.resource-id"
 
-	QueryProbeUnassignedPermissionName       = "system.query-probe.unassigned-permission.name"
-	QueryProbeUnassignedPermissionResourceID = "system.query-probe.unassigned-permission.resource-id"
+	ProbeUnassignedPermissionName       = "system.probe.unassigned-permission.name"
+	ProbeUnassignedPermissionResourceID = "system.probe.unassigned-permission.resource-id"
 )
 
-var QueryProbeActor = &protos.Actor{
-	ID:     "query-probe",
+var ProbeActor = &protos.Actor{
+	ID:     "probe",
 	Issuer: "system",
 }
 
-type QueryProbe struct {
+type Probe struct {
 	RoleServiceClient       protos.RoleServiceClient
 	PermissionServiceClient protos.PermissionServiceClient
 }
 
-func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -43,12 +43,12 @@ func (p *QueryProbe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffi
 	return p.setupAssignRole(ctx, logger, uniqueSuffix)
 }
 
-func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	roleName := QueryProbeRoleName + "." + uniqueSuffix
+func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	assignedPermission := &protos.Permission{
-		Name:            QueryProbeAssignedPermissionName,
-		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
+		Name:            ProbeAssignedPermissionName,
+		ResourcePattern: ProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
 	createRoleRequest := &protos.CreateRoleRequest{
@@ -86,11 +86,11 @@ func (p *QueryProbe) setupCreateRole(ctx context.Context, logger lager.Logger, u
 	return nil
 }
 
-func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	roleName := QueryProbeRoleName + "." + uniqueSuffix
+func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	assignRoleRequest := &protos.AssignRoleRequest{
-		Actor:    QueryProbeActor,
+		Actor:    ProbeActor,
 		RoleName: roleName,
 	}
 
@@ -125,11 +125,11 @@ func (p *QueryProbe) setupAssignRole(ctx context.Context, logger lager.Logger, u
 	return nil
 }
 
-func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	roleName := QueryProbeRoleName + "." + uniqueSuffix
+	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	deleteRoleRequest := &protos.DeleteRoleRequest{
 		Name: roleName,
@@ -161,7 +161,7 @@ func (p *QueryProbe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuf
 	return nil
 }
 
-func (p *QueryProbe) Run(
+func (p *Probe) Run(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
@@ -200,24 +200,24 @@ func (p *QueryProbe) Run(
 	return true, durations, nil
 }
 
-func (p *QueryProbe) runAssignedPermission(
+func (p *Probe) runAssignedPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	assignedPermission := &protos.Permission{
-		Name:            QueryProbeAssignedPermissionName,
-		ResourcePattern: QueryProbeAssignedPermissionResourceID + "." + uniqueSuffix,
+		Name:            ProbeAssignedPermissionName,
+		ResourcePattern: ProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
 	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
-		"actor.id":                    QueryProbeActor.GetID(),
-		"actor.issuer":                QueryProbeActor.GetIssuer(),
+		"actor.id":                    ProbeActor.GetID(),
+		"actor.issuer":                ProbeActor.GetIssuer(),
 		"permission.name":             assignedPermission.GetName(),
 		"permission.resource_pattern": assignedPermission.GetResourcePattern(),
 	})
 	req := &protos.HasPermissionRequest{
-		Actor:          QueryProbeActor,
+		Actor:          ProbeActor,
 		PermissionName: assignedPermission.Name,
 		ResourceId:     assignedPermission.ResourcePattern,
 	}
@@ -243,24 +243,24 @@ func (p *QueryProbe) runAssignedPermission(
 	return true, duration, nil
 }
 
-func (p *QueryProbe) runUnassignedPermission(
+func (p *Probe) runUnassignedPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	unassignedPermission := &protos.Permission{
-		Name:            QueryProbeUnassignedPermissionName,
-		ResourcePattern: QueryProbeUnassignedPermissionResourceID + "." + uniqueSuffix,
+		Name:            ProbeUnassignedPermissionName,
+		ResourcePattern: ProbeUnassignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
 	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
-		"actor.id":                    QueryProbeActor.GetID(),
-		"actor.issuer":                QueryProbeActor.GetIssuer(),
+		"actor.id":                    ProbeActor.GetID(),
+		"actor.issuer":                ProbeActor.GetIssuer(),
 		"permission.name":             unassignedPermission.GetName(),
 		"permission.resource_pattern": unassignedPermission.GetResourcePattern(),
 	})
 	req := &protos.HasPermissionRequest{
-		Actor:          QueryProbeActor,
+		Actor:          ProbeActor,
 		PermissionName: unassignedPermission.Name,
 		ResourceId:     unassignedPermission.ResourcePattern,
 	}

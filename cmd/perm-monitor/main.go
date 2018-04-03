@@ -32,7 +32,8 @@ type options struct {
 
 	Logger cmdflags.LagerFlag
 
-	QueryProbe probeOptions `group:"Query probe" namespace:"query-probe"`
+	Interval time.Duration `long:"interval" description:"Frequency with which the probe is issued" default:"5s"`
+	Timeout  time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
 }
 
 type permOptions struct {
@@ -47,8 +48,6 @@ type statsDOptions struct {
 }
 
 type probeOptions struct {
-	Interval time.Duration `long:"interval" description:"Frequency with which the probe is issued" default:"5s"`
-	Timeout  time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
 }
 
 func main() {
@@ -121,19 +120,19 @@ func main() {
 
 	ctx := context.Background()
 
-	queryProbe := &monitor.QueryProbe{
+	probe := &monitor.Probe{
 		RoleServiceClient:       roleServiceClient,
 		PermissionServiceClient: permissionServiceClient,
 	}
 
-	queryProbeHistogram := monitor.NewThreadSafeHistogram(
-		QueryProbeHistogramWindow,
+	probeHistogram := monitor.NewThreadSafeHistogram(
+		ProbeHistogramWindow,
 		3,
 	)
 	statter := &monitor.Statter{
 		StatsD:    statsDClient,
-		Histogram: queryProbeHistogram,
+		Histogram: probeHistogram,
 	}
 
-	RunQueryProbe(ctx, logger.Session("query-probe"), queryProbe, statter, parserOpts.QueryProbe.Interval, parserOpts.QueryProbe.Timeout)
+	RunProbe(ctx, logger.Session("probe"), probe, statter, parserOpts.Interval, parserOpts.Timeout)
 }
