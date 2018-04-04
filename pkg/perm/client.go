@@ -146,6 +146,26 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 	}
 }
 
+func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourceID string) (bool, error) {
+	req := &protos.HasPermissionRequest{
+		Actor: &protos.Actor{
+			ID:     actor.ID,
+			Issuer: actor.Namespace,
+		},
+		PermissionName: action,
+		ResourceId:     resourceID,
+	}
+	res, err := c.permissionServiceClient.HasPermission(ctx, req)
+	s := status.Convert(err)
+
+	switch s.Code() {
+	case codes.OK:
+		return res.HasPermission, nil
+	default:
+		return false, ErrUnknown
+	}
+}
+
 type DialOption func(*options)
 
 func WithTLSConfig(config *tls.Config) DialOption {

@@ -207,6 +207,134 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			Expect(err).To(MatchError("assignment not found"))
 		})
 	})
+
+	Describe("#HasPermission", func() {
+		It("returns true when the actor has a single role that matches the permission", func() {
+			permission := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			hasPermission, err := client.HasPermission(context.Background(), actor, permission.Action, permission.ResourcePattern)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(hasPermission).To(Equal(true))
+		})
+
+		It("returns true when the actor has multiple roles that match the permission", func() {
+			permission := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role1, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			role2, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role1.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role2.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			hasPermission, err := client.HasPermission(context.Background(), actor, permission.Action, permission.ResourcePattern)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(hasPermission).To(Equal(true))
+		})
+
+		It("returns false when the actor has not been assigned to a role with the matching permission", func() {
+			permission1 := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role1, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission1)
+			Expect(err).NotTo(HaveOccurred())
+
+			permission2 := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String(), permission2)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role1.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			hasPermission, err := client.HasPermission(context.Background(), actor, permission2.Action, permission2.ResourcePattern)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(hasPermission).To(Equal(false))
+		})
+
+		It("returns false when the actor has been assigned to no roles", func() {
+			permission := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			_, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			hasPermission, err := client.HasPermission(context.Background(), actor, permission.Action, permission.ResourcePattern)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(hasPermission).To(Equal(false))
+		})
+
+		It("returns false when no roles have the matching permission", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			permission := perm.Permission{
+				Action:          "test.read",
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			hasPermission, err := client.HasPermission(context.Background(), actor, permission.Action, permission.ResourcePattern)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(hasPermission).To(Equal(false))
+		})
+	})
 }
 
 type serverConfig struct {
