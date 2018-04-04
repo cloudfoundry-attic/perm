@@ -12,16 +12,16 @@ func VerifyAppliedMigrations(
 	conn *DB,
 	tableName string,
 	migrations []Migration,
-) (bool, error) {
+) error {
 	retrieveLogger := logger.Session("retrieve-applied-migrations")
 	appliedMigrations, err := RetrieveAppliedMigrations(ctx, retrieveLogger, conn, tableName)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if len(migrations) != len(appliedMigrations) {
 		logger.Info(migrationCountMismatch)
-		return false, nil
+		return ErrMigrationsOutOfSync
 	}
 
 	for i, migration := range migrations {
@@ -30,7 +30,7 @@ func VerifyAppliedMigrations(
 			logger.Info(migrationNotFound, lager.Data{
 				"name": migration.Name,
 			})
-			return false, nil
+			return ErrMigrationsOutOfSync
 		}
 
 		if migration.Name != appliedMigration.Name {
@@ -38,10 +38,10 @@ func VerifyAppliedMigrations(
 				"expected_name": migration.Name,
 				"applied_name":  appliedMigration.Name,
 			})
-			return false, nil
+			return ErrMigrationsOutOfSync
 		}
 	}
 
 	logger.Debug(success)
-	return true, nil
+	return nil
 }

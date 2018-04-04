@@ -143,7 +143,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	defer conn.Close()
 
 	migrationLogger := logger.Session("verify-migrations")
-	appliedCorrectly, err := sqlx.VerifyAppliedMigrations(
+	err = sqlx.VerifyAppliedMigrations(
 		context.Background(),
 		migrationLogger,
 		conn,
@@ -152,9 +152,6 @@ func (cmd ServeCommand) Execute([]string) error {
 	)
 	if err != nil {
 		return err
-	}
-	if !appliedCorrectly {
-		return ErrMigrationsOutOfSync
 	}
 
 	logger = logger.Session("grpc-server")

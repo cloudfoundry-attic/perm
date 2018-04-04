@@ -84,17 +84,15 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 		Expect(mock.ExpectationsWereMet()).To(Succeed())
 	})
 
-	It("returns true if there are no migrations", func() {
+	It("succeeds if there are no migrations", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}))
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
-
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 		Expect(err).NotTo(HaveOccurred())
-		Expect(verify).To(BeTrue())
 	})
 
-	It("returns true if all the migrations match", func() {
+	It("succeeds if all the migrations match", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}).
 				AddRow("0", "migration_1", appliedAt).
@@ -102,26 +100,24 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("2", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).NotTo(HaveOccurred())
-		Expect(verify).To(BeTrue())
 	})
 
-	It("returns false if there is a migration count mismatch", func() {
+	It("fails if there is a migration count mismatch", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}).
 				AddRow("0", "migration_1", appliedAt).
 				AddRow("1", "migration_2", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(verify).To(BeFalse())
+		Expect(err).To(MatchError(ErrMigrationsOutOfSync))
 	})
 
-	It("returns false if there is a migration which has not been applied", func() {
+	It("fails if there is a migration which has not been applied", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}).
 				AddRow("0", "migration_1", appliedAt).
@@ -129,13 +125,12 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("3", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(verify).To(BeFalse())
+		Expect(err).To(MatchError(ErrMigrationsOutOfSync))
 	})
 
-	It("returns false if the migration names do not match in order of application", func() {
+	It("fails if the migration names do not match in order of application", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnRows(sqlmock.NewRows([]string{"version", "name", "applied_at"}).
 				AddRow("0", "migration_2", appliedAt).
@@ -143,17 +138,16 @@ var _ = Describe("#VerifyAppliedMigrations", func() {
 				AddRow("2", "migration_3", appliedAt),
 			)
 
-		verify, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(verify).To(BeFalse())
+		Expect(err).To(MatchError(ErrMigrationsOutOfSync))
 	})
 
 	It("fails if it cannot retrieve the applied migrations", func() {
 		mock.ExpectQuery("SELECT version, name, applied_at FROM " + migrationTableName).
 			WillReturnError(errors.New("some sql error"))
 
-		_, err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
+		err := VerifyAppliedMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 
 		Expect(err).To(MatchError("some sql error"))
 	})
