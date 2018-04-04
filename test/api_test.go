@@ -147,6 +147,66 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			Expect(err).To(MatchError("assignment already exists"))
 		})
 	})
+
+	Describe("#UnassignRole", func() {
+		It("succeeds when the role exists and the actor has been assigned to it", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("can only be called once per assignment", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRole(context.Background(), role.Name, actor)
+			Expect(err).To(MatchError("assignment not found"))
+		})
+
+		It("fails when the role does not exist", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err := client.UnassignRole(context.Background(), uuid.NewV4().String(), actor)
+			Expect(err).To(MatchError("assignment not found"))
+		})
+
+		It("fails when the actor has not been assigned to the role", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRole(context.Background(), role.Name, actor)
+			Expect(err).To(MatchError("assignment not found"))
+		})
+	})
 }
 
 type serverConfig struct {

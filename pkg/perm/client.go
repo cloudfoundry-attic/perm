@@ -125,6 +125,27 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) e
 	}
 }
 
+func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor) error {
+	req := &protos.UnassignRoleRequest{
+		RoleName: roleName,
+		Actor: &protos.Actor{
+			ID:     actor.ID,
+			Issuer: actor.Namespace,
+		},
+	}
+	_, err := c.roleServiceClient.UnassignRole(ctx, req)
+	s := status.Convert(err)
+
+	switch s.Code() {
+	case codes.OK:
+		return nil
+	case codes.NotFound:
+		return ErrAssignmentNotFound
+	default:
+		return ErrUnknown
+	}
+}
+
 type DialOption func(*options)
 
 func WithTLSConfig(config *tls.Config) DialOption {

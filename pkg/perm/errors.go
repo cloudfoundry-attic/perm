@@ -16,5 +16,6 @@ var (
 	ErrRoleNotFound      = errdefs.NewErrNotFound("role")
 	ErrRoleAlreadyExists = errdefs.NewErrAlreadyExists("role")
 
+	ErrAssignmentNotFound      = errdefs.NewErrNotFound("assignment")
 	ErrAssignmentAlreadyExists = errdefs.NewErrAlreadyExists("assignment")
 )
