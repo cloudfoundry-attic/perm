@@ -102,6 +102,29 @@ func (c *Client) DeleteRole(ctx context.Context, name string) error {
 	}
 }
 
+func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) error {
+	req := &protos.AssignRoleRequest{
+		RoleName: roleName,
+		Actor: &protos.Actor{
+			ID:     actor.ID,
+			Issuer: actor.Namespace,
+		},
+	}
+	_, err := c.roleServiceClient.AssignRole(ctx, req)
+	s := status.Convert(err)
+
+	switch s.Code() {
+	case codes.OK:
+		return nil
+	case codes.NotFound:
+		return ErrRoleNotFound
+	case codes.AlreadyExists:
+		return ErrAssignmentAlreadyExists
+	default:
+		return ErrUnknown
+	}
+}
+
 type DialOption func(*options)
 
 func WithTLSConfig(config *tls.Config) DialOption {

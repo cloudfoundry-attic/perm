@@ -1,5 +1,10 @@
 package perm
 
+type Actor struct {
+	ID        string
+	Namespace string
+}
+
 type Permission struct {
 	Action          string
 	ResourcePattern string

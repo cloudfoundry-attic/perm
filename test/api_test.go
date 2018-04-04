@@ -64,6 +64,89 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			Expect(err).To(MatchError("role not found"))
 		})
 	})
+
+	Describe("#AssignRole", func() {
+		It("succeeds when the role exists and the actor has not yet been assigned to it", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("allows assignments with the same actor ID but different namespaces", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			id := uuid.NewV4().String()
+			actor1 := perm.Actor{
+				ID:        id,
+				Namespace: uuid.NewV4().String(),
+			}
+			actor2 := perm.Actor{
+				ID:        id,
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor1)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, actor2)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("allows assignments with the same namespace but different actor IDs", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			namespace := uuid.NewV4().String()
+			actor1 := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: namespace,
+			}
+			actor2 := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: namespace,
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor1)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, actor2)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("fails when the role does not exist", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err := client.AssignRole(context.Background(), uuid.NewV4().String(), actor)
+			Expect(err).To(MatchError("role not found"))
+		})
+
+		It("fails when the actor has already been assigned to the role", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).To(MatchError("assignment already exists"))
+		})
+	})
 }
 
 type serverConfig struct {
