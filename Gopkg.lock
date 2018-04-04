@@ -9,7 +9,7 @@
     "lagerctx",
     "lagertest"
   ]
-  revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
+  revision = "25ee72f227fe10c5671d8a99d05a2faf388ccfeb"
 
 [[projects]]
   name = "code.cloudfoundry.org/perm-go"
@@ -17,8 +17,8 @@
     ".",
     "perm-gofakes"
   ]
-  revision = "845cb508d224a80d70268d6ddb4315b74731712f"
-  version = "v0.0.2"
+  revision = "89502bafc8c3ac36c8c4e570da8e54a2c5b2c826"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/DATA-DOG/go-sqlmock"
@@ -30,13 +30,13 @@
   branch = "v1"
   name = "github.com/Masterminds/squirrel"
   packages = ["."]
-  revision = "a6b93000bd219143c56c16e6cb1c4b91da3f224b"
+  revision = "40ef4f86bf59a996c348a9f56ddb4c4d3d49a6df"
 
 [[projects]]
   name = "github.com/cactus/go-statsd-client"
   packages = ["statsd"]
-  revision = "91c326c3f7bd20f0226d3d1c289dd9f8ce28d33d"
-  version = "v3.1.0"
+  revision = "138b925ccdf617776955904ba7759fce64406cec"
+  version = "v3.1.1"
 
 [[projects]]
   branch = "master"
@@ -48,7 +48,7 @@
   branch = "master"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
-  revision = "2cc627ac8defc45d65066ae98f898166f580f9a4"
+  revision = "1a676ac6e4dce68e9303a1800773861350374a9e"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -79,19 +79,19 @@
     ".",
     "recovery"
   ]
-  revision = "6d3547c644afb325c16df96e3c7177ea6e2fdebd"
+  revision = "bc372cc64f55abd91995ba3f219b380ffbc59e9d"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
   packages = ["."]
-  revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
-  version = "v1.3.0"
+  revision = "c6ca198ec95c841fdb89fc0de7496fed11ab854e"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/lann/builder"
   packages = ["."]
-  revision = "f22ce00fd9394014049dad11c244859432bd6820"
+  revision = "1b87b36280d04fe7882d1512bf038ea2967ad534"
 
 [[projects]]
   branch = "master"
@@ -109,7 +109,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "a7a4c189eb47ed33ce7b35f2880070a0c82a67d4"
+  revision = "b8a9be070da40449e501c3c4730a889e42d87a9e"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -154,14 +154,14 @@
     "matchers/support/goraph/util",
     "types"
   ]
-  revision = "c893efa28eb45626cdaa76c9f653b62488858837"
-  version = "v1.2.0"
+  revision = "003f63b7f4cff3fc95357005358af2de0f5fe152"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -184,16 +184,15 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "a04bdaca5b32abe1c069418fb7088ae607de5bd0"
+  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "43eea11bc92608addb41b8a406b0407495c106f6"
+  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
 
 [[projects]]
-  branch = "master"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -223,7 +222,8 @@
     "unicode/norm",
     "unicode/rangetable"
   ]
-  revision = "825fc78a2fd6fa0a5447e300189e3219e05e1f25"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -235,7 +235,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "f676e0f3ac6395ff1a529ae59a6670878a8371a6"
+  revision = "35de2414665fc36f56b72d982c5af480d86de5ab"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -248,6 +248,7 @@
     "connectivity",
     "credentials",
     "encoding",
+    "encoding/proto",
     "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
@@ -263,14 +264,14 @@
     "tap",
     "transport"
   ]
-  revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
-  version = "v1.9.2"
+  revision = "d89cded64628466c4ab532d1f0ba5c220459ebe8"
+  version = "v1.11.2"
 
 [[projects]]
-  branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
