@@ -30,14 +30,6 @@
   version = "3.1.0"
 
 [[constraint]]
-  name = "github.com/gogo/protobuf"
-  version = "0.5.0"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/golang/protobuf"
-
-[[constraint]]
   branch = "master"
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
 
@@ -56,10 +48,6 @@
 [[constraint]]
   name = "github.com/satori/go.uuid"
   version = "1.1.0"
-
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/net"
 
 [[constraint]]
   name = "google.golang.org/grpc"

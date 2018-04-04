@@ -142,7 +142,6 @@
     ".",
     "format",
     "gbytes",
-    "gexec",
     "ghttp",
     "internal/assertion",
     "internal/asyncassertion",
@@ -276,6 +275,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "01e535638c12a9360e75bcc31a544391e0532177444abc8582e203ee93cd03df"
+  inputs-digest = "940373f6b4cc5e4ff84a56c6dd049044f71cb48968310859e2c25c2c9786d068"
   solver-name = "gps-cdcl"
   solver-version = 1

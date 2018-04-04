@@ -18,6 +18,9 @@ adjusting the level (debug, info, warn, error, etc.) of a log message. This
 will not work in this case because some of the audit events you want to emit
 are not errors.
 
+This library does not append syslog headers onto the message. You should ensure
+that your syslog forwarder adds these.
+
 ```go
 logger := ceflog.New(w, "vendor", "product", "version")
 
