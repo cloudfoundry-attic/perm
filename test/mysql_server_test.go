@@ -6,9 +6,7 @@ import (
 	"net"
 
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,22 +14,16 @@ import (
 
 var _ = Describe("MySQL server", func() {
 	var (
-		testDB   *sqlxtest.TestMySQLDB
 		conn     *sqlx.DB
 		listener net.Listener
 
 		subject *api.Server
 	)
 
-	BeforeSuite(func() {
+	BeforeEach(func() {
 		var err error
 
-		testDB = sqlxtest.NewTestMySQLDB()
-
-		err = testDB.Create(db.Migrations...)
-		Expect(err).NotTo(HaveOccurred())
-
-		conn, err = testDB.Connect()
+		conn, err = testMySQLDB.Connect()
 		Expect(err).NotTo(HaveOccurred())
 
 		// Port 0 should find a random open port
@@ -53,20 +45,15 @@ var _ = Describe("MySQL server", func() {
 	})
 
 	AfterEach(func() {
-		err := testDB.Truncate(
+		subject.Stop()
+
+		err := testMySQLDB.Truncate(
 			"DELETE FROM role",
 			"DELETE FROM actor",
 		)
 		Expect(err).NotTo(HaveOccurred())
-	})
 
-	AfterSuite(func() {
-		subject.Stop()
-
-		err := conn.Close()
-		Expect(err).NotTo(HaveOccurred())
-
-		err = testDB.Drop()
+		err = conn.Close()
 		Expect(err).NotTo(HaveOccurred())
 	})
 
