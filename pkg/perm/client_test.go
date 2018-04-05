@@ -28,6 +28,18 @@ var _ = Describe("Client", func() {
 
 			Expect(err).To(MatchError("perm: no transport security set (use perm.WithTransportCredentials() to set)"))
 		})
+
+		Context("when the WithInsecure DialOption is specified", func() {
+			It("succeeds even with no TLS config supplied", func() {
+				server := ghttp.NewTLSServer()
+				defer server.Close()
+
+				client, err := Dial(server.Addr(), WithInsecure())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(client).NotTo(BeNil())
+			})
+		})
 	})
 
 	Describe("#Close", func() {

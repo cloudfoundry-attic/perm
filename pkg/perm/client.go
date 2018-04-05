@@ -29,6 +29,8 @@ func Dial(addr string, opts ...DialOption) (*Client, error) {
 
 	if config.transportCredentials != nil {
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(config.transportCredentials))
+	} else if config.insecure {
+		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	} else {
 		return nil, ErrNoTransportSecurity
 	}
@@ -198,6 +200,13 @@ func WithTLSConfig(config *tls.Config) DialOption {
 	}
 }
 
+func WithInsecure() DialOption {
+	return func(o *options) {
+		o.insecure = true
+	}
+}
+
 type options struct {
 	transportCredentials credentials.TransportCredentials
+	insecure             bool
 }
