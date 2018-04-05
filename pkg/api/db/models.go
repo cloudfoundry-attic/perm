@@ -1,27 +1,23 @@
 package db
 
-import (
-	"code.cloudfoundry.org/perm/pkg/api/models"
-)
-
-type id int64
+import "code.cloudfoundry.org/perm/pkg/perm"
 
 type actor struct {
-	ID id
-	*models.Actor
+	ID int64
+	*perm.Actor
 }
 
 type role struct {
-	ID id
-	*models.Role
+	ID int64
+	*perm.Role
 }
 
 type permission struct {
-	ID id
-	*models.Permission
+	ID int64
+	*perm.Permission
 }
 
 type permissionDefinition struct {
-	ID id
-	*models.PermissionDefinition
+	ID int64
+	*perm.PermissionDefinition
 }

@@ -4,17 +4,17 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 func (s *DataService) AssignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName,
+	domainID,
+	issuer string,
 ) (err error) {
 	logger = logger.Session("data-service")
 
@@ -39,9 +39,9 @@ func (s *DataService) AssignRole(
 func (s *DataService) UnassignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName,
+	domainID,
+	issuer string,
 ) (err error) {
 	logger = logger.Session("data-service")
 
@@ -75,13 +75,13 @@ func (s *DataService) ListActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListActorRolesQuery,
-) ([]*models.Role, error) {
+) ([]*perm.Role, error) {
 	r, err := listActorRoles(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}
 
-	var roles []*models.Role
+	var roles []*perm.Role
 	for _, role := range r {
 		roles = append(roles, role.Role)
 	}

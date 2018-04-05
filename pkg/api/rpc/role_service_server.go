@@ -6,8 +6,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type RoleServiceServer struct {
@@ -36,15 +36,15 @@ func (s *RoleServiceServer) CreateRole(
 	ctx context.Context,
 	req *protos.CreateRoleRequest,
 ) (*protos.CreateRoleResponse, error) {
-	name := models.RoleName(req.GetName())
-	var permissions []*models.Permission
+	name := req.GetName()
+	var permissions []*perm.Permission
 	for _, p := range req.GetPermissions() {
-		permissions = append(permissions, &models.Permission{
-			Name:            models.PermissionName(p.GetName()),
-			ResourcePattern: models.PermissionResourcePattern(p.GetResourcePattern()),
+		permissions = append(permissions, &perm.Permission{
+			Action:          p.GetName(),
+			ResourcePattern: p.GetResourcePattern(),
 		})
 	}
-	logExtensions := logging.CustomExtension{Key: "roleName", Value: string(name)}
+	logExtensions := logging.CustomExtension{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "CreateRole", "Role creation", logExtensions)
 	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
 	logger.Debug(starting)
@@ -57,7 +57,9 @@ func (s *RoleServiceServer) CreateRole(
 
 	logger.Debug(success)
 	return &protos.CreateRoleResponse{
-		Role: role.ToProto(),
+		Role: &protos.Role{
+			Name: role.Name,
+		},
 	}, nil
 }
 
@@ -65,7 +67,7 @@ func (s *RoleServiceServer) GetRole(
 	ctx context.Context,
 	req *protos.GetRoleRequest,
 ) (*protos.GetRoleResponse, error) {
-	name := models.RoleName(req.GetName())
+	name := req.GetName()
 	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
 	logger.Debug(starting)
 
@@ -79,7 +81,9 @@ func (s *RoleServiceServer) GetRole(
 
 	logger.Debug(success)
 	return &protos.GetRoleResponse{
-		Role: role.ToProto(),
+		Role: &protos.Role{
+			Name: role.Name,
+		},
 	}, nil
 }
 
@@ -87,8 +91,8 @@ func (s *RoleServiceServer) DeleteRole(
 	ctx context.Context,
 	req *protos.DeleteRoleRequest,
 ) (*protos.DeleteRoleResponse, error) {
-	name := models.RoleName(req.GetName())
-	logExtensions := logging.CustomExtension{Key: "roleName", Value: string(name)}
+	name := req.GetName()
+	logExtensions := logging.CustomExtension{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion", logExtensions)
 	logger := s.logger.Session("delete-role").WithData(lager.Data{
 		"role.name": name,
@@ -108,21 +112,21 @@ func (s *RoleServiceServer) AssignRole(
 	ctx context.Context,
 	req *protos.AssignRoleRequest,
 ) (*protos.AssignRoleResponse, error) {
-	roleName := models.RoleName(req.GetRoleName())
+	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
 	logExtensions := []logging.CustomExtension{
-		{Key: "roleName", Value: string(roleName)},
+		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
 	}
 
 	s.securityLogger.Log(ctx, "AssignRole", "Role assignment", logExtensions...)
 	logger := s.logger.Session("assign-role").WithData(lager.Data{
-		"actor.id":     domainID,
-		"actor.issuer": issuer,
-		"role.name":    roleName,
+		"actor.id":        domainID,
+		"actor.namespace": issuer,
+		"role.name":       roleName,
 	})
 	logger.Debug(starting)
 
@@ -139,24 +143,24 @@ func (s *RoleServiceServer) UnassignRole(
 	ctx context.Context,
 	req *protos.UnassignRoleRequest,
 ) (*protos.UnassignRoleResponse, error) {
-	roleName := models.RoleName(req.GetRoleName())
+	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
-	domainID := models.ActorDomainID(pActor.GetID())
-	issuer := models.ActorIssuer(pActor.GetIssuer())
-	actor := models.Actor{
-		DomainID: domainID,
-		Issuer:   issuer,
+	domainID := pActor.GetID()
+	issuer := pActor.GetIssuer()
+	actor := perm.Actor{
+		ID:        domainID,
+		Namespace: issuer,
 	}
 	logExtensions := []logging.CustomExtension{
-		{Key: "roleName", Value: string(roleName)},
+		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
 	}
 	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment", logExtensions...)
 	logger := s.logger.Session("unassign-role").WithData(lager.Data{
-		"actor.id":     actor.DomainID,
-		"actor.issuer": actor.Issuer,
-		"role.name":    roleName,
+		"actor.id":        actor.ID,
+		"actor.namespace": actor.Namespace,
+		"role.name":       roleName,
 	})
 	logger.Debug(starting)
 
@@ -173,17 +177,17 @@ func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
 ) (*protos.HasRoleResponse, error) {
-	roleName := models.RoleName(req.GetRoleName())
+	roleName := req.GetRoleName()
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: models.ActorDomainID(pActor.GetID()),
-		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	actor := perm.Actor{
+		ID:        pActor.GetID(),
+		Namespace: pActor.GetIssuer(),
 	}
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":     actor.DomainID,
-		"actor.issuer": actor.Issuer,
-		"role.name":    roleName,
+		"actor.id":        actor.ID,
+		"actor.namespace": actor.Namespace,
+		"role.name":       roleName,
 	})
 	logger.Debug(starting)
 
@@ -194,7 +198,7 @@ func (s *RoleServiceServer) HasRole(
 
 	found, err := s.roleAssignmentRepo.HasRole(ctx, logger, query)
 	if err != nil {
-		if err == models.ErrRoleNotFound {
+		if err == perm.ErrRoleNotFound {
 			return &protos.HasRoleResponse{HasRole: false}, nil
 		}
 
@@ -210,13 +214,13 @@ func (s *RoleServiceServer) ListActorRoles(
 	req *protos.ListActorRolesRequest,
 ) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: models.ActorDomainID(pActor.GetID()),
-		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	actor := perm.Actor{
+		ID:        pActor.GetID(),
+		Namespace: pActor.GetIssuer(),
 	}
 	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
-		"actor.id":     actor.DomainID,
-		"actor.issuer": actor.Issuer,
+		"actor.id":        actor.ID,
+		"actor.namespace": actor.Namespace,
 	})
 	logger.Debug(starting)
 
@@ -229,7 +233,9 @@ func (s *RoleServiceServer) ListActorRoles(
 	var pRoles []*protos.Role
 
 	for _, r := range roles {
-		pRoles = append(pRoles, r.ToProto())
+		pRoles = append(pRoles, &protos.Role{
+			Name: r.Name,
+		})
 	}
 
 	logger.Debug(success)
@@ -242,7 +248,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	ctx context.Context,
 	req *protos.ListRolePermissionsRequest,
 ) (*protos.ListRolePermissionsResponse, error) {
-	roleName := models.RoleName(req.GetRoleName())
+	roleName := req.GetRoleName()
 	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
 		"role.name": roleName,
 	})
@@ -253,8 +259,8 @@ func (s *RoleServiceServer) ListRolePermissions(
 	}
 	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, query)
 	if err != nil {
-		if err == models.ErrRoleNotFound {
-			permissions = []*models.Permission{}
+		if err == perm.ErrRoleNotFound {
+			permissions = []*perm.Permission{}
 		} else {
 			return nil, togRPCError(err)
 		}
@@ -263,7 +269,10 @@ func (s *RoleServiceServer) ListRolePermissions(
 	var pPermissions []*protos.Permission
 
 	for _, p := range permissions {
-		pPermissions = append(pPermissions, p.ToProto())
+		pPermissions = append(pPermissions, &protos.Permission{
+			Name:            p.Action,
+			ResourcePattern: p.ResourcePattern,
+		})
 	}
 
 	logger.Debug(success)

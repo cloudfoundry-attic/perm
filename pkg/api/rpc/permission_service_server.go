@@ -7,8 +7,8 @@ import (
 	"code.cloudfoundry.org/perm-go"
 
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type PermissionServiceServer struct {
@@ -34,37 +34,37 @@ func (s *PermissionServiceServer) HasPermission(
 	req *protos.HasPermissionRequest,
 ) (*protos.HasPermissionResponse, error) {
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: models.ActorDomainID(pActor.GetID()),
-		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	actor := perm.Actor{
+		ID:        pActor.GetID(),
+		Namespace: pActor.GetIssuer(),
 	}
-	permissionName := models.PermissionName(req.GetPermissionName())
-	resourcePattern := models.PermissionResourcePattern(req.GetResourceId())
+	action := req.GetPermissionName()
+	resourcePattern := req.GetResourceId()
 	extensions := []logging.CustomExtension{
 		{Key: "userID", Value: pActor.GetID()},
-		{Key: "permission", Value: string(permissionName)},
-		{Key: "resourceID", Value: string(resourcePattern)},
+		{Key: "permission", Value: action},
+		{Key: "resourceID", Value: resourcePattern},
 	}
 
 	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":                   actor.DomainID,
-		"actor.issuer":               actor.Issuer,
-		"permission.name":            permissionName,
+		"actor.id":                   actor.ID,
+		"actor.issuer":               actor.Namespace,
+		"permission.action":          action,
 		"permission.resourcePattern": resourcePattern,
 	})
 	logger.Debug(starting)
 
 	query := repos.HasPermissionQuery{
 		Actor:           actor,
-		PermissionName:  permissionName,
+		Action:          action,
 		ResourcePattern: resourcePattern,
 	}
 
 	found, err := s.permissionRepo.HasPermission(ctx, logger, query)
 	if err != nil {
-		if err == models.ErrRoleNotFound {
+		if err == perm.ErrRoleNotFound {
 			return &protos.HasPermissionResponse{HasPermission: false}, nil
 		}
 
@@ -80,24 +80,24 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	req *protos.ListResourcePatternsRequest,
 ) (*protos.ListResourcePatternsResponse, error) {
 	pActor := req.GetActor()
-	actor := models.Actor{
-		DomainID: models.ActorDomainID(pActor.GetID()),
-		Issuer:   models.ActorIssuer(pActor.GetIssuer()),
+	actor := perm.Actor{
+		ID:        pActor.GetID(),
+		Namespace: pActor.GetIssuer(),
 	}
-	permissionName := models.PermissionName(req.GetPermissionName())
+	action := req.GetPermissionName()
 
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.id":        actor.DomainID,
-			"actor.issuer":    actor.Issuer,
-			"permission.name": permissionName,
+			"actor.id":          actor.ID,
+			"actor.issuer":      actor.Namespace,
+			"permission.action": action,
 		})
 
 	logger.Debug(starting)
 
 	query := repos.ListResourcePatternsQuery{
-		Actor:          actor,
-		PermissionName: permissionName,
+		Actor:  actor,
+		Action: action,
 	}
 
 	resourcePatterns, err := s.permissionRepo.ListResourcePatterns(ctx, logger, query)
@@ -108,7 +108,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	var resourcePatternStrings []string
 
 	for _, rp := range resourcePatterns {
-		resourcePatternStrings = append(resourcePatternStrings, string(rp))
+		resourcePatternStrings = append(resourcePatternStrings, rp)
 	}
 
 	logger.Debug(success)

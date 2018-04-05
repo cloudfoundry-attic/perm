@@ -5,8 +5,8 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
@@ -27,8 +27,8 @@ func createRoleAndAssignPermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleName models.RoleName,
-	permissions ...*models.Permission,
+	roleName string,
+	permissions ...*perm.Permission,
 ) (*role, error) {
 	role, err := createRole(ctx, logger, conn, roleName)
 	if err != nil {
@@ -36,19 +36,19 @@ func createRoleAndAssignPermissions(
 	}
 
 	for _, permission := range permissions {
-		permissionName := models.PermissionName(permission.Name)
-		_, err = createPermissionDefinition(ctx, logger, conn, permissionName)
-		if err != nil && err != models.ErrPermissionDefinitionAlreadyExists {
+		action := permission.Action
+		_, err = createPermissionDefinition(ctx, logger, conn, action)
+		if err != nil && err != errPermissionDefinitionAlreadyExistsDB {
 			return nil, err
 		}
 
 		var p *permissionDefinition
-		p, err = findPermissionDefinition(ctx, logger, conn, permissionName)
+		p, err = findPermissionDefinition(ctx, logger, conn, action)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = createPermission(ctx, logger, conn, p.ID, role.ID, permission.ResourcePattern, permissionName)
+		_, err = createPermission(ctx, logger, conn, p.ID, role.ID, permission.ResourcePattern, action)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func createRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	name models.RoleName,
+	name string,
 ) (*role, error) {
 	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
@@ -82,8 +82,8 @@ func createRole(
 		}
 
 		role := &role{
-			ID: id(roleID),
-			Role: &models.Role{
+			ID: roleID,
+			Role: &perm.Role{
 				Name: name,
 			},
 		}
@@ -91,7 +91,7 @@ func createRole(
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errRoleAlreadyExists)
-			return nil, models.ErrRoleAlreadyExists
+			return nil, perm.ErrRoleAlreadyExists
 		}
 
 		logger.Error(failedToCreateRole, err)
@@ -111,8 +111,8 @@ func findRole(
 	logger = logger.Session("find-role")
 
 	var (
-		roleID   id
-		roleName models.RoleName
+		roleID   int64
+		roleName string
 	)
 
 	err := squirrel.Select("id", "name").
@@ -127,13 +127,13 @@ func findRole(
 	case nil:
 		return &role{
 			ID: roleID,
-			Role: &models.Role{
+			Role: &perm.Role{
 				Name: roleName,
 			},
 		}, nil
 	case sql.ErrNoRows:
 		logger.Debug(errRoleNotFound)
-		return nil, models.ErrRoleNotFound
+		return nil, perm.ErrRoleNotFound
 	default:
 		logger.Error(failedToFindRole, err)
 		return nil, err
@@ -144,7 +144,7 @@ func deleteRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleName models.RoleName,
+	roleName string,
 ) error {
 	logger = logger.Session("delete-role")
 	result, err := squirrel.Delete("role").
@@ -164,13 +164,13 @@ func deleteRole(
 
 		if n == 0 {
 			logger.Debug(errRoleNotFound)
-			return models.ErrRoleNotFound
+			return perm.ErrRoleNotFound
 		}
 
 		return nil
 	case sql.ErrNoRows:
 		logger.Debug(errRoleNotFound)
-		return models.ErrRoleNotFound
+		return perm.ErrRoleNotFound
 	default:
 		logger.Error(failedToDeleteRole, err)
 		return err
@@ -181,8 +181,8 @@ func createActor(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	id string,
+	namespace string,
 ) (*actor, error) {
 	logger = logger.Session("create-actor")
 
@@ -190,7 +190,7 @@ func createActor(
 
 	result, err := squirrel.Insert("actor").
 		Columns("uuid", "domain_id", "issuer").
-		Values(u, domainID, issuer).
+		Values(u, id, namespace).
 		RunWith(conn).
 		ExecContext(ctx)
 
@@ -202,17 +202,17 @@ func createActor(
 			return nil, err2
 		}
 		actor := &actor{
-			ID: id(actorID),
-			Actor: &models.Actor{
-				DomainID: domainID,
-				Issuer:   issuer,
+			ID: actorID,
+			Actor: &perm.Actor{
+				ID:        id,
+				Namespace: namespace,
 			},
 		}
 		return actor, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errActorAlreadyExists)
-			return nil, models.ErrActorAlreadyExists
+			return nil, perm.ErrActorAlreadyExists
 		}
 		logger.Error(failedToCreateActor, err)
 		return nil, err
@@ -226,21 +226,21 @@ func findActorID(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
-) (id, error) {
+	id string,
+	namespace string,
+) (int64, error) {
 	logger = logger.Session("find-actor")
 
 	sQuery := squirrel.Eq{}
-	if domainID != "" {
-		sQuery["domain_id"] = domainID
+	if id != "" {
+		sQuery["domain_id"] = id
 	}
-	if issuer != "" {
-		sQuery["issuer"] = issuer
+	if namespace != "" {
+		sQuery["issuer"] = namespace
 	}
 
 	var (
-		actorID id
+		actorID int64
 	)
 	err := squirrel.Select("id").
 		From("actor").
@@ -253,7 +253,7 @@ func findActorID(
 		return actorID, nil
 	case sql.ErrNoRows:
 		logger.Debug(errActorNotFound)
-		return actorID, models.ErrActorNotFound
+		return actorID, errActorNotFoundDB
 	default:
 		logger.Error(failedToFindActor, err)
 		return actorID, err
@@ -264,9 +264,9 @@ func assignRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName string,
+	id string,
+	namespace string,
 ) error {
 	logger = logger.Session("assign-role")
 
@@ -275,12 +275,12 @@ func assignRole(
 		return err
 	}
 
-	_, err = createActor(ctx, logger, conn, domainID, issuer)
-	if err != nil && err != models.ErrActorAlreadyExists {
+	_, err = createActor(ctx, logger, conn, id, namespace)
+	if err != nil && err != perm.ErrActorAlreadyExists {
 		return err
 	}
 
-	actorID, err := findActorID(ctx, logger, conn, domainID, issuer)
+	actorID, err := findActorID(ctx, logger, conn, id, namespace)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func createRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleID, actorID id,
+	roleID, actorID int64,
 ) error {
 	logger = logger.Session("create-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
@@ -311,7 +311,7 @@ func createRoleAssignment(
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errRoleAssignmentAlreadyExists)
-			return models.ErrRoleAssignmentAlreadyExists
+			return perm.ErrAssignmentAlreadyExists
 		}
 
 		logger.Error(failedToCreateRoleAssignment, err)
@@ -325,9 +325,9 @@ func createRoleAssignment(
 func unassignRole(ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName string,
+	id string,
+	namespace string,
 ) error {
 	logger = logger.Session("unassign-role")
 
@@ -336,9 +336,9 @@ func unassignRole(ctx context.Context,
 		return err
 	}
 
-	actorID, err := findActorID(ctx, logger, conn, domainID, issuer)
-	if err == models.ErrActorNotFound {
-		return models.ErrRoleAssignmentNotFound
+	actorID, err := findActorID(ctx, logger, conn, id, namespace)
+	if err == errActorNotFoundDB {
+		return perm.ErrAssignmentNotFound
 	} else if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func deleteRoleAssignment(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleID,
-	actorID id,
+	actorID int64,
 ) error {
 	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
@@ -376,13 +376,13 @@ func deleteRoleAssignment(
 
 		if n == 0 {
 			logger.Debug(errRoleAssignmentNotFound)
-			return models.ErrRoleAssignmentNotFound
+			return perm.ErrAssignmentNotFound
 		}
 
 		return nil
 	case sql.ErrNoRows:
 		logger.Debug(errRoleAssignmentNotFound)
-		return models.ErrRoleAssignmentNotFound
+		return perm.ErrAssignmentNotFound
 	default:
 		logger.Error(failedToDeleteRoleAssignment, err)
 		return err
@@ -397,8 +397,8 @@ func hasRole(
 ) (bool, error) {
 	logger = logger.Session("has-role")
 
-	actorID, err := findActorID(ctx, logger, conn, query.Actor.DomainID, query.Actor.Issuer)
-	if err == models.ErrActorNotFound {
+	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
+	if err == errActorNotFoundDB {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -419,8 +419,8 @@ func findRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleID id,
-	actorID id,
+	roleID int64,
+	actorID int64,
 ) (bool, error) {
 	logger = logger.Session("find-role-assignment").WithData(lager.Data{
 		"role.id":  roleID,
@@ -452,8 +452,8 @@ func listActorRoles(
 ) ([]*role, error) {
 	logger = logger.Session("list-actor-roles")
 
-	actorID, err := findActorID(ctx, logger, conn, query.Actor.DomainID, query.Actor.Issuer)
-	if err == models.ErrActorNotFound {
+	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
+	if err == errActorNotFoundDB {
 		return []*role{}, nil
 	} else if err != nil {
 		return nil, err
@@ -466,7 +466,7 @@ func findActorRoleAssignments(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	actorID id,
+	actorID int64,
 ) ([]*role, error) {
 	logger = logger.Session("find-actor-role-assignments").WithData(lager.Data{
 		"actor.id": actorID,
@@ -487,16 +487,16 @@ func findActorRoleAssignments(
 	var roles []*role
 	for rows.Next() {
 		var (
-			roleID id
-			name   models.RoleName
+			roleID int64
+			action string
 		)
-		e := rows.Scan(&roleID, &name)
+		e := rows.Scan(&roleID, &action)
 		if e != nil {
 			logger.Error(failedToScanRow, e)
 			return nil, e
 		}
 
-		roles = append(roles, &role{ID: roleID, Role: &models.Role{Name: name}})
+		roles = append(roles, &role{ID: roleID, Role: &perm.Role{Name: action}})
 	}
 
 	err = rows.Err()
@@ -528,7 +528,7 @@ func createPermissionDefinition(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	name models.PermissionName,
+	name string,
 ) (*permissionDefinition, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
@@ -548,8 +548,8 @@ func createPermissionDefinition(
 		}
 
 		permissionDefinition := &permissionDefinition{
-			ID: id(permissionDefinitionID),
-			PermissionDefinition: &models.PermissionDefinition{
+			ID: permissionDefinitionID,
+			PermissionDefinition: &perm.PermissionDefinition{
 				Name: name,
 			},
 		}
@@ -557,7 +557,7 @@ func createPermissionDefinition(
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errPermissionDefinitionAlreadyExists)
-			return nil, models.ErrPermissionDefinitionAlreadyExists
+			return nil, errPermissionDefinitionAlreadyExistsDB
 		}
 
 		logger.Error(failedToCreatePermissionDefinition, err)
@@ -572,19 +572,19 @@ func findPermissionDefinition(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	permissionName models.PermissionName,
+	action string,
 ) (*permissionDefinition, error) {
 	logger = logger.Session("find-permission-definition")
 
 	var (
-		permissionDefinitionID id
-		name                   models.PermissionName
+		permissionDefinitionID int64
+		name                   string
 	)
 
 	err := squirrel.Select("id", "name").
 		From("permission_definition").
 		Where(squirrel.Eq{
-			"name": permissionName,
+			"name": action,
 		}).
 		RunWith(conn).
 		ScanContext(ctx, &permissionDefinitionID, &name)
@@ -593,13 +593,13 @@ func findPermissionDefinition(
 	case nil:
 		return &permissionDefinition{
 			ID: permissionDefinitionID,
-			PermissionDefinition: &models.PermissionDefinition{
+			PermissionDefinition: &perm.PermissionDefinition{
 				Name: name,
 			},
 		}, nil
 	case sql.ErrNoRows:
 		logger.Debug(errPermissionDefinitionNotFound)
-		return nil, models.ErrPermissionDefinitionNotFound
+		return nil, errPermissionDefinitionNotFoundDB
 	default:
 		logger.Error(failedToFindPermissionDefinition, err)
 		return nil, err
@@ -610,7 +610,7 @@ func findRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleID id,
+	roleID int64,
 ) ([]*permission, error) {
 	logger = logger.Session("find-role-permissions").WithData(lager.Data{
 		"role.id": roleID,
@@ -632,11 +632,11 @@ func findRolePermissions(
 	var permissions []*permission
 	for rows.Next() {
 		var (
-			permissionID    id
-			name            models.PermissionName
-			resourcePattern models.PermissionResourcePattern
+			permissionID    int64
+			action          string
+			resourcePattern string
 		)
-		e := rows.Scan(&permissionID, &name, &resourcePattern)
+		e := rows.Scan(&permissionID, &action, &resourcePattern)
 		if e != nil {
 			logger.Error(failedToScanRow, e)
 			return nil, e
@@ -644,8 +644,8 @@ func findRolePermissions(
 
 		p := permission{
 			ID: permissionID,
-			Permission: &models.Permission{
-				Name:            name,
+			Permission: &perm.Permission{
+				Action:          action,
 				ResourcePattern: resourcePattern,
 			},
 		}
@@ -668,9 +668,9 @@ func hasPermission(
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
-		"actor.issuer":               query.Actor.Issuer,
-		"actor.domainID":             query.Actor.DomainID,
-		"permission.name":            query.PermissionName,
+		"actor.namespace":            query.Actor.Namespace,
+		"actor.id":                   query.Actor.ID,
+		"permission.name":            query.Action,
 		"permission.resourcePattern": query.ResourcePattern,
 	})
 
@@ -682,9 +682,9 @@ func hasPermission(
 		JoinClause("INNER JOIN permission p ON ra.role_id = p.role_id").
 		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
 		Where(squirrel.Eq{
-			"a.issuer":           query.Actor.Issuer,
-			"a.domain_id":        query.Actor.DomainID,
-			"pd.name":            query.PermissionName,
+			"a.issuer":           query.Actor.Namespace,
+			"a.domain_id":        query.Actor.ID,
+			"pd.name":            query.Action,
 			"p.resource_pattern": query.ResourcePattern,
 		}).
 		RunWith(conn).
@@ -706,10 +706,10 @@ func createPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	permissionDefinitionID id,
-	roleID id,
-	resourcePattern models.PermissionResourcePattern,
-	permissionName models.PermissionName,
+	permissionDefinitionID int64,
+	roleID int64,
+	resourcePattern string,
+	action string,
 ) (*permission, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
@@ -729,9 +729,9 @@ func createPermission(
 		}
 
 		permission := &permission{
-			ID: id(permissionID),
-			Permission: &models.Permission{
-				Name:            permissionName,
+			ID: permissionID,
+			Permission: &perm.Permission{
+				Action:          action,
 				ResourcePattern: resourcePattern,
 			},
 		}
@@ -739,7 +739,7 @@ func createPermission(
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errPermissionAlreadyExists)
-			return nil, models.ErrPermissionAlreadyExists
+			return nil, errPermissionAlreadyExistsDB
 		}
 
 		logger.Error(failedToCreatePermission, err)
@@ -755,16 +755,16 @@ func listResourcePatterns(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListResourcePatternsQuery,
-) ([]models.PermissionResourcePattern, error) {
-	permissionName := query.PermissionName
-	issuer := query.Actor.Issuer
-	domainID := query.Actor.DomainID
+) ([]string, error) {
+	action := query.Action
+	namespace := query.Actor.Namespace
+	id := query.Actor.ID
 
 	logger = logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.issuer":    issuer,
-			"actor.domainID":  domainID,
-			"permission.name": permissionName,
+			"actor.namespace": namespace,
+			"actor.id":        id,
+			"permission.name": action,
 		})
 
 	rows, err := squirrel.Select("permission.resource_pattern").
@@ -775,9 +775,9 @@ func listResourcePatterns(
 		Join("permission ON permission.role_id = role.id").
 		Join("permission_definition ON permission.permission_definition_id = permission_definition.id").
 		Where(squirrel.Eq{
-			"permission_definition.name": permissionName,
-			"actor.domain_id":            domainID,
-			"actor.issuer":               issuer,
+			"permission_definition.name": action,
+			"actor.domain_id":            id,
+			"actor.issuer":               namespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -787,9 +787,9 @@ func listResourcePatterns(
 	}
 	defer rows.Close()
 
-	var resourcePatterns []models.PermissionResourcePattern
+	var resourcePatterns []string
 	for rows.Next() {
-		var resourcePattern models.PermissionResourcePattern
+		var resourcePattern string
 
 		err = rows.Scan(&resourcePattern)
 		if err != nil {

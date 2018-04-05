@@ -1,20 +1,18 @@
 package rpc
 
-import (
-	"code.cloudfoundry.org/perm/pkg/api/models"
-)
+import "code.cloudfoundry.org/perm/pkg/perm"
 
 type InMemoryStore struct {
-	roles       map[models.RoleName]*models.Role
-	permissions map[models.RoleName][]*models.Permission
+	roles       map[string]*perm.Role
+	permissions map[string][]*perm.Permission
 
-	assignments map[models.Actor][]models.RoleName
+	assignments map[perm.Actor][]string
 }
 
 func NewInMemoryStore() *InMemoryStore {
 	return &InMemoryStore{
-		roles:       make(map[models.RoleName]*models.Role),
-		assignments: make(map[models.Actor][]models.RoleName),
-		permissions: make(map[models.RoleName][]*models.Permission),
+		roles:       make(map[string]*perm.Role),
+		assignments: make(map[perm.Actor][]string),
+		permissions: make(map[string][]*perm.Permission),
 	}
 }

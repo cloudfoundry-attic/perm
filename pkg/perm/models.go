@@ -13,3 +13,7 @@ type Permission struct {
 type Role struct {
 	Name string
 }
+
+type PermissionDefinition struct {
+	Name string
+}

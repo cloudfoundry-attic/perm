@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 )
 
@@ -20,6 +19,6 @@ func (s *DataService) ListResourcePatterns(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListResourcePatternsQuery,
-) ([]models.PermissionResourcePattern, error) {
+) ([]string, error) {
 	return listResourcePatterns(ctx, logger.Session("data-service"), s.conn, query)
 }

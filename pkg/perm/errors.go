@@ -2,8 +2,6 @@ package perm
 
 import (
 	"errors"
-
-	"code.cloudfoundry.org/perm/pkg/api/errdefs"
 )
 
 var (
@@ -13,9 +11,10 @@ var (
 	ErrNoTransportSecurity = errors.New("perm: no transport security set (use perm.WithTransportCredentials() to set)")
 	ErrClientConnClosing   = errors.New("perm: the client connection is already closing or closed")
 
-	ErrRoleNotFound      = errdefs.NewErrNotFound("role")
-	ErrRoleAlreadyExists = errdefs.NewErrAlreadyExists("role")
+	ErrRoleNotFound      = NewErrNotFound("role")
+	ErrRoleAlreadyExists = NewErrAlreadyExists("role")
 
-	ErrAssignmentNotFound      = errdefs.NewErrNotFound("assignment")
-	ErrAssignmentAlreadyExists = errdefs.NewErrAlreadyExists("assignment")
+	ErrAssignmentNotFound      = NewErrNotFound("assignment")
+	ErrAssignmentAlreadyExists = NewErrAlreadyExists("assignment")
+	ErrActorAlreadyExists      = NewErrAlreadyExists("actor")
 )

@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 )
 
@@ -26,7 +25,7 @@ type FakePermissionRepo struct {
 		result1 bool
 		result2 error
 	}
-	ListResourcePatternsStub        func(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]models.PermissionResourcePattern, error)
+	ListResourcePatternsStub        func(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]string, error)
 	listResourcePatternsMutex       sync.RWMutex
 	listResourcePatternsArgsForCall []struct {
 		ctx    context.Context
@@ -34,11 +33,11 @@ type FakePermissionRepo struct {
 		query  repos.ListResourcePatternsQuery
 	}
 	listResourcePatternsReturns struct {
-		result1 []models.PermissionResourcePattern
+		result1 []string
 		result2 error
 	}
 	listResourcePatternsReturnsOnCall map[int]struct {
-		result1 []models.PermissionResourcePattern
+		result1 []string
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -98,7 +97,7 @@ func (fake *FakePermissionRepo) HasPermissionReturnsOnCall(i int, result1 bool, 
 	}{result1, result2}
 }
 
-func (fake *FakePermissionRepo) ListResourcePatterns(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]models.PermissionResourcePattern, error) {
+func (fake *FakePermissionRepo) ListResourcePatterns(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]string, error) {
 	fake.listResourcePatternsMutex.Lock()
 	ret, specificReturn := fake.listResourcePatternsReturnsOnCall[len(fake.listResourcePatternsArgsForCall)]
 	fake.listResourcePatternsArgsForCall = append(fake.listResourcePatternsArgsForCall, struct {
@@ -129,24 +128,24 @@ func (fake *FakePermissionRepo) ListResourcePatternsArgsForCall(i int) (context.
 	return fake.listResourcePatternsArgsForCall[i].ctx, fake.listResourcePatternsArgsForCall[i].logger, fake.listResourcePatternsArgsForCall[i].query
 }
 
-func (fake *FakePermissionRepo) ListResourcePatternsReturns(result1 []models.PermissionResourcePattern, result2 error) {
+func (fake *FakePermissionRepo) ListResourcePatternsReturns(result1 []string, result2 error) {
 	fake.ListResourcePatternsStub = nil
 	fake.listResourcePatternsReturns = struct {
-		result1 []models.PermissionResourcePattern
+		result1 []string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePermissionRepo) ListResourcePatternsReturnsOnCall(i int, result1 []models.PermissionResourcePattern, result2 error) {
+func (fake *FakePermissionRepo) ListResourcePatternsReturnsOnCall(i int, result1 []string, result2 error) {
 	fake.ListResourcePatternsStub = nil
 	if fake.listResourcePatternsReturnsOnCall == nil {
 		fake.listResourcePatternsReturnsOnCall = make(map[int]struct {
-			result1 []models.PermissionResourcePattern
+			result1 []string
 			result2 error
 		})
 	}
 	fake.listResourcePatternsReturnsOnCall[i] = struct {
-		result1 []models.PermissionResourcePattern
+		result1 []string
 		result2 error
 	}{result1, result2}
 }

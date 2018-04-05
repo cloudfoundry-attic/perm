@@ -4,40 +4,40 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type FindRoleQuery struct {
-	RoleName models.RoleName
+	RoleName string
 }
 
 type ListRolePermissionsQuery struct {
-	RoleName models.RoleName
+	RoleName string
 }
 
 type RoleRepo interface {
 	CreateRole(
 		ctx context.Context,
 		logger lager.Logger,
-		name models.RoleName,
-		permissions ...*models.Permission,
-	) (*models.Role, error)
+		name string,
+		permissions ...*perm.Permission,
+	) (*perm.Role, error)
 
 	FindRole(
 		context.Context,
 		lager.Logger,
 		FindRoleQuery,
-	) (*models.Role, error)
+	) (*perm.Role, error)
 
 	DeleteRole(
 		context.Context,
 		lager.Logger,
-		models.RoleName,
+		string,
 	) error
 
 	ListRolePermissions(
 		ctx context.Context,
 		logger lager.Logger,
 		query ListRolePermissionsQuery,
-	) ([]*models.Permission, error)
+	) ([]*perm.Permission, error)
 }

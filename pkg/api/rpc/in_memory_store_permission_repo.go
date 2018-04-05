@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 func (s *InMemoryStore) HasPermission(
@@ -18,8 +18,8 @@ func (s *InMemoryStore) HasPermission(
 		return false, nil
 	}
 
-	var permissions []*models.Permission
-	permissionName := query.PermissionName
+	var permissions []*perm.Permission
+	action := query.Action
 
 	for _, roleName := range assignments {
 		p, ok := s.permissions[roleName]
@@ -33,7 +33,7 @@ func (s *InMemoryStore) HasPermission(
 	resourcePattern := query.ResourcePattern
 
 	for _, permission := range permissions {
-		if permission.Name == permissionName && permission.ResourcePattern == resourcePattern {
+		if permission.Action == action && permission.ResourcePattern == resourcePattern {
 			return true, nil
 		}
 	}
@@ -45,15 +45,15 @@ func (s *InMemoryStore) ListResourcePatterns(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListResourcePatternsQuery,
-) ([]models.PermissionResourcePattern, error) {
-	var resourcePatterns []models.PermissionResourcePattern
+) ([]string, error) {
+	var resourcePatterns []string
 
 	assignments, ok := s.assignments[query.Actor]
 	if !ok {
 		return resourcePatterns, nil
 	}
 
-	var permissions []*models.Permission
+	var permissions []*perm.Permission
 	for _, roleName := range assignments {
 		p, ok := s.permissions[roleName]
 		if !ok {
@@ -63,11 +63,11 @@ func (s *InMemoryStore) ListResourcePatterns(
 		permissions = append(permissions, p...)
 	}
 
-	patternMap := make(map[models.PermissionResourcePattern]interface{})
-	permissionName := query.PermissionName
+	patternMap := make(map[string]interface{})
+	action := query.Action
 
 	for _, permission := range permissions {
-		if permission.Name == permissionName {
+		if permission.Action == action {
 			patternMap[permission.ResourcePattern] = nil
 		}
 	}

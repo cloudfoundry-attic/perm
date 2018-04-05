@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
@@ -36,39 +36,39 @@ func BehavesLikeAnActorRepo(actorRepoCreator func() repos.ActorRepo) {
 
 	Describe("#CreateActor", func() {
 		It("saves the actor", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+			id := uuid.NewV4().String()
+			namespace := uuid.NewV4().String()
 
-			actor, err := subject.CreateActor(ctx, logger, domainID, issuer)
+			actor, err := subject.CreateActor(ctx, logger, id, namespace)
 
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(actor).NotTo(BeNil())
-			Expect(actor.DomainID).To(Equal(domainID))
-			Expect(actor.Issuer).To(Equal(issuer))
+			Expect(actor.ID).To(Equal(id))
+			Expect(actor.Namespace).To(Equal(namespace))
 
-			_, err = subject.CreateActor(ctx, logger, domainID, issuer)
+			_, err = subject.CreateActor(ctx, logger, id, namespace)
 
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(models.ErrActorAlreadyExists))
+			Expect(err).To(Equal(perm.ErrActorAlreadyExists))
 		})
 
-		It("fails if an actor with the domain ID/issuer combo already exists", func() {
-			domainID := models.ActorDomainID(uuid.NewV4().String())
-			issuer := models.ActorIssuer(uuid.NewV4().String())
+		It("fails if an actor with the domain ID/namespace combo already exists", func() {
+			id := uuid.NewV4().String()
+			namespace := uuid.NewV4().String()
 
-			_, err := subject.CreateActor(ctx, logger, domainID, issuer)
+			_, err := subject.CreateActor(ctx, logger, id, namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = subject.CreateActor(ctx, logger, domainID, issuer)
-			Expect(err).To(Equal(models.ErrActorAlreadyExists))
+			_, err = subject.CreateActor(ctx, logger, id, namespace)
+			Expect(err).To(Equal(perm.ErrActorAlreadyExists))
 
-			uniqueDomainID := models.ActorDomainID(uuid.NewV4().String())
-			_, err = subject.CreateActor(ctx, logger, uniqueDomainID, issuer)
+			uniqueID := uuid.NewV4().String()
+			_, err = subject.CreateActor(ctx, logger, uniqueID, namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			uniqueIssuer := models.ActorIssuer(uuid.NewV4().String())
-			_, err = subject.CreateActor(ctx, logger, domainID, uniqueIssuer)
+			uniqueNamespace := uuid.NewV4().String()
+			_, err = subject.CreateActor(ctx, logger, id, uniqueNamespace)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

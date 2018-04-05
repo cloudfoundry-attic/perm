@@ -4,17 +4,17 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 func (s *DataService) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
-	name models.RoleName,
-	permissions ...*models.Permission,
-) (r *models.Role, err error) {
+	name string,
+	permissions ...*perm.Permission,
+) (r *perm.Role, err error) {
 	logger = logger.Session("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
@@ -44,7 +44,7 @@ func (s *DataService) FindRole(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.FindRoleQuery,
-) (*models.Role, error) {
+) (*perm.Role, error) {
 	role, err := findRole(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (s *DataService) FindRole(
 func (s *DataService) DeleteRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
+	roleName string,
 ) error {
 	return deleteRole(ctx, logger.Session("data-service"), s.conn, roleName)
 }
@@ -64,13 +64,13 @@ func (s *DataService) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListRolePermissionsQuery,
-) ([]*models.Permission, error) {
+) ([]*perm.Permission, error) {
 	p, err := listRolePermissions(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}
 
-	var permissions []*models.Permission
+	var permissions []*perm.Permission
 	for _, permission := range p {
 		permissions = append(permissions, permission.Permission)
 	}

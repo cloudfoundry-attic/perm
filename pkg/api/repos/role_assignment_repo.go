@@ -4,33 +4,33 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type ListActorRolesQuery struct {
-	Actor models.Actor
+	Actor perm.Actor
 }
 
 type HasRoleQuery struct {
-	Actor    models.Actor
-	RoleName models.RoleName
+	Actor    perm.Actor
+	RoleName string
 }
 
 type RoleAssignmentRepo interface {
 	AssignRole(
 		ctx context.Context,
 		logger lager.Logger,
-		roleName models.RoleName,
-		domainID models.ActorDomainID,
-		issuer models.ActorIssuer,
+		roleName,
+		domainID,
+		issuer string,
 	) error
 
 	UnassignRole(
 		ctx context.Context,
 		logger lager.Logger,
-		roleName models.RoleName,
-		domainID models.ActorDomainID,
-		issuer models.ActorIssuer,
+		roleName,
+		domainID,
+		issuer string,
 	) error
 
 	HasRole(
@@ -43,5 +43,5 @@ type RoleAssignmentRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		query ListActorRolesQuery,
-	) ([]*models.Role, error)
+	) ([]*perm.Role, error)
 }

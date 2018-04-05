@@ -4,21 +4,21 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/models"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 func (s *InMemoryStore) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
-	name models.RoleName,
-	permissions ...*models.Permission,
-) (*models.Role, error) {
+	name string,
+	permissions ...*perm.Permission,
+) (*perm.Role, error) {
 	if _, exists := s.roles[name]; exists {
-		return nil, models.ErrRoleAlreadyExists
+		return nil, perm.ErrRoleAlreadyExists
 	}
 
-	role := &models.Role{
+	role := &perm.Role{
 		Name: name,
 	}
 	s.roles[name] = role
@@ -31,12 +31,12 @@ func (s *InMemoryStore) FindRole(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.FindRoleQuery,
-) (*models.Role, error) {
+) (*perm.Role, error) {
 	name := query.RoleName
 	role, exists := s.roles[name]
 
 	if !exists {
-		return nil, models.ErrRoleNotFound
+		return nil, perm.ErrRoleNotFound
 	}
 
 	return role, nil
@@ -45,10 +45,10 @@ func (s *InMemoryStore) FindRole(
 func (s *InMemoryStore) DeleteRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
+	roleName string,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
-		return models.ErrRoleNotFound
+		return perm.ErrRoleNotFound
 	}
 
 	delete(s.roles, roleName)
@@ -60,9 +60,9 @@ func (s *InMemoryStore) DeleteRole(
 			if roleName == roleName {
 				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
 				assignmentData := lager.Data{
-					"actor.id":     actor.DomainID,
-					"actor.issuer": actor.Issuer,
-					"role.name":    roleName,
+					"actor.id":        actor.ID,
+					"actor.namespace": actor.Namespace,
+					"role.name":       roleName,
 				}
 				logger.Debug(success, assignmentData)
 				break
@@ -71,7 +71,7 @@ func (s *InMemoryStore) DeleteRole(
 	}
 	// "Cascade"
 	// Remove permissions for role
-	s.permissions[roleName] = []*models.Permission{}
+	s.permissions[roleName] = []*perm.Permission{}
 
 	logger.Debug(success)
 
@@ -81,26 +81,26 @@ func (s *InMemoryStore) DeleteRole(
 func (s *InMemoryStore) AssignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName,
+	id,
+	namespace string,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
-		return models.ErrRoleNotFound
+		return perm.ErrRoleNotFound
 	}
-	actor := models.Actor{
-		DomainID: domainID,
-		Issuer:   issuer,
+	actor := perm.Actor{
+		ID:        id,
+		Namespace: namespace,
 	}
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		assignments = []models.RoleName{}
+		assignments = []string{}
 	}
 
 	for _, role := range assignments {
 		if role == roleName {
-			err := models.ErrRoleAssignmentAlreadyExists
+			err := perm.ErrAssignmentAlreadyExists
 			logger.Error(errRoleAssignmentAlreadyExists, err)
 			return err
 		}
@@ -115,22 +115,22 @@ func (s *InMemoryStore) AssignRole(
 func (s *InMemoryStore) UnassignRole(
 	ctx context.Context,
 	logger lager.Logger,
-	roleName models.RoleName,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
+	roleName,
+	id,
+	namespace string,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
-		return models.ErrRoleNotFound
+		return perm.ErrRoleNotFound
 	}
 
-	actor := models.Actor{
-		DomainID: domainID,
-		Issuer:   issuer,
+	actor := perm.Actor{
+		ID:        id,
+		Namespace: namespace,
 	}
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
-		err := models.ErrRoleAssignmentNotFound
+		err := perm.ErrAssignmentNotFound
 		logger.Error(errRoleAssignmentNotFound, err)
 		return err
 	}
@@ -143,7 +143,7 @@ func (s *InMemoryStore) UnassignRole(
 		}
 	}
 
-	err := models.ErrRoleAssignmentNotFound
+	err := perm.ErrAssignmentNotFound
 	logger.Error(errRoleAssignmentNotFound, err)
 
 	return err
@@ -158,7 +158,7 @@ func (s *InMemoryStore) HasRole(
 
 	_, ok := s.roles[roleName]
 	if !ok {
-		return false, models.ErrRoleNotFound
+		return false, perm.ErrRoleNotFound
 	}
 
 	assignments, ok := s.assignments[query.Actor]
@@ -182,10 +182,10 @@ func (s *InMemoryStore) ListActorRoles(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListActorRolesQuery,
-) ([]*models.Role, error) {
+) ([]*perm.Role, error) {
 	actor := query.Actor
 
-	var roles []*models.Role
+	var roles []*perm.Role
 
 	assignments, ok := s.assignments[actor]
 	if !ok {
@@ -195,7 +195,7 @@ func (s *InMemoryStore) ListActorRoles(
 	for _, name := range assignments {
 		role, found := s.roles[name]
 		if !found {
-			return nil, models.ErrRoleNotFound
+			return nil, perm.ErrRoleNotFound
 		}
 
 		roles = append(roles, role)
@@ -207,19 +207,19 @@ func (s *InMemoryStore) ListActorRoles(
 func (s *InMemoryStore) CreateActor(
 	ctx context.Context,
 	logger lager.Logger,
-	domainID models.ActorDomainID,
-	issuer models.ActorIssuer,
-) (*models.Actor, error) {
-	actor := models.Actor{
-		DomainID: domainID,
-		Issuer:   issuer,
+	id,
+	namespace string,
+) (*perm.Actor, error) {
+	actor := perm.Actor{
+		ID:        id,
+		Namespace: namespace,
 	}
 
 	if _, exists := s.assignments[actor]; exists {
-		return nil, models.ErrActorAlreadyExists
+		return nil, perm.ErrActorAlreadyExists
 	}
 
-	s.assignments[actor] = []models.RoleName{}
+	s.assignments[actor] = []string{}
 
 	return &actor, nil
 }
@@ -228,10 +228,10 @@ func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListRolePermissionsQuery,
-) ([]*models.Permission, error) {
+) ([]*perm.Permission, error) {
 	permissions, exists := s.permissions[query.RoleName]
 	if !exists {
-		return nil, models.ErrRoleNotFound
+		return nil, perm.ErrRoleNotFound
 	}
 
 	return permissions, nil
