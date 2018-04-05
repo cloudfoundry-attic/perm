@@ -31,6 +31,7 @@ It has these top-level messages:
 	Backend
 	BackendRule
 	Billing
+	BillingStatusRule
 	ProjectProperties
 	Property
 	Context

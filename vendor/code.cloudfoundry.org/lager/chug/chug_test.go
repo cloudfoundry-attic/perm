@@ -62,7 +62,7 @@ var _ = Describe("Chug", func() {
 		It("should parse the timestamp", func() {
 			logger.Debug("chug")
 			entry := <-stream
-			Expect(entry.Log.Timestamp).To(BeTemporally("~", time.Now(), time.Second))
+			Expect(entry.Log.Timestamp).To(BeTemporally("~", time.Now(), 10*time.Millisecond))
 		})
 
 		Context("when parsing an error message", func() {

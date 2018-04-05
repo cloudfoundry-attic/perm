@@ -17,6 +17,7 @@ import (
 )
 
 func TestIsolationLevelMapping(t *testing.T) {
+
 	data := []struct {
 		level    driver.IsolationLevel
 		expected string
@@ -46,12 +47,8 @@ func TestIsolationLevelMapping(t *testing.T) {
 	}
 
 	// check unsupported mapping
-	expectedErr := "mysql: unsupported isolation level: 7"
-	actual, err := mapIsolationLevel(driver.IsolationLevel(sql.LevelLinearizable))
-	if actual != "" || err == nil {
+	if actual, err := mapIsolationLevel(driver.IsolationLevel(sql.LevelLinearizable)); actual != "" || err == nil {
 		t.Fatal("Expected error on unsupported isolation level")
 	}
-	if err.Error() != expectedErr {
-		t.Fatalf("Expected error to be %q, got %q", expectedErr, err)
-	}
+
 }

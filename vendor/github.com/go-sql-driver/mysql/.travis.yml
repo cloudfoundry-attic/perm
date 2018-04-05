@@ -4,7 +4,6 @@ go:
   - 1.7.x
   - 1.8.x
   - 1.9.x
-  - 1.10.x
   - master
 
 before_install:
@@ -22,7 +21,7 @@ matrix:
     - env: DB=MYSQL57
       sudo: required
       dist: trusty
-      go: 1.10.x
+      go: 1.9.x
       services:
         - docker
       before_install:
@@ -44,7 +43,7 @@ matrix:
     - env: DB=MARIA55
       sudo: required
       dist: trusty
-      go: 1.10.x
+      go: 1.9.x
       services:
         - docker
       before_install:
@@ -66,7 +65,7 @@ matrix:
     - env: DB=MARIA10_1
       sudo: required
       dist: trusty
-      go: 1.10.x
+      go: 1.9.x
       services:
         - docker
       before_install:
@@ -88,6 +87,6 @@ matrix:
 script:
   - go test -v -covermode=count -coverprofile=coverage.out
   - go vet ./...
-  - .travis/gofmt.sh
+  - test -z "$(gofmt -d -s . | tee /dev/stderr)"
 after_script:
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
