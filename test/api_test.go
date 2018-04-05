@@ -335,6 +335,124 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			Expect(hasPermission).To(Equal(false))
 		})
 	})
+
+	Describe("#ListResourcePatterns", func() {
+		It("returns the list of resource patterns on which the actor can perform the action", func() {
+			action := uuid.NewV4().String()
+			permission1 := perm.Permission{
+				Action:          action,
+				ResourcePattern: uuid.NewV4().String(),
+			}
+			permission2 := perm.Permission{
+				Action:          uuid.NewV4().String(),
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role1, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission1, permission2)
+			Expect(err).NotTo(HaveOccurred())
+
+			permission3 := perm.Permission{
+				Action:          action,
+				ResourcePattern: uuid.NewV4().String(),
+			}
+			role2, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission3)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role1.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role2.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			resourcePatterns, err := client.ListResourcePatterns(context.Background(), actor, action)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resourcePatterns).To(HaveLen(2))
+			Expect(resourcePatterns).To(ContainElement(permission1.ResourcePattern))
+			Expect(resourcePatterns).To(ContainElement(permission3.ResourcePattern))
+		})
+
+		It("de-dupes the results if the user has access to the same resource pattern via multiple roles", func() {
+			action := uuid.NewV4().String()
+			permission := perm.Permission{
+				Action:          action,
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role1, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			role2, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role1.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role2.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			resourcePatterns, err := client.ListResourcePatterns(context.Background(), actor, action)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resourcePatterns).To(HaveLen(1))
+			Expect(resourcePatterns).To(ContainElement(permission.ResourcePattern))
+		})
+
+		It("returns an empty list if the actor is not assigned to any roles with a relevant permission", func() {
+			action := uuid.NewV4().String()
+			permission1 := perm.Permission{
+				Action:          action,
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			_, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission1)
+			Expect(err).NotTo(HaveOccurred())
+
+			permission2 := perm.Permission{
+				Action:          uuid.NewV4().String(),
+				ResourcePattern: uuid.NewV4().String(),
+			}
+
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission2)
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			resourcePatterns, err := client.ListResourcePatterns(context.Background(), actor, action)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resourcePatterns).To(BeEmpty())
+		})
+
+		It("returns an empty list if the actor is not assigned to any roles", func() {
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+			action := uuid.NewV4().String()
+
+			resourcePatterns, err := client.ListResourcePatterns(context.Background(), actor, action)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resourcePatterns).To(BeEmpty())
+		})
+	})
 }
 
 type serverConfig struct {

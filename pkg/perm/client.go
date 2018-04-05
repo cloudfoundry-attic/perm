@@ -166,6 +166,30 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 	}
 }
 
+func (c *Client) ListResourcePatterns(ctx context.Context, actor Actor, action string) ([]string, error) {
+	req := &protos.ListResourcePatternsRequest{
+		Actor: &protos.Actor{
+			ID:     actor.ID,
+			Issuer: actor.Namespace,
+		},
+		PermissionName: action,
+	}
+	res, err := c.permissionServiceClient.ListResourcePatterns(ctx, req)
+	s := status.Convert(err)
+
+	switch s.Code() {
+	case codes.OK:
+		var resourcePatterns []string
+		for _, resourcePattern := range res.GetResourcePatterns() {
+			resourcePatterns = append(resourcePatterns, resourcePattern)
+		}
+
+		return resourcePatterns, nil
+	default:
+		return nil, ErrUnknown
+	}
+}
+
 type DialOption func(*options)
 
 func WithTLSConfig(config *tls.Config) DialOption {
