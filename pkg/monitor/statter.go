@@ -22,7 +22,16 @@ const (
 	MetricProbeTimingP999 = "perm.probe.responses.timing.p999" // gauge
 )
 
-//go:generate counterfeiter github.com/cactus/go-statsd-client/statsd.Statter
+//go:generate counterfeiter . PermStatter
+
+type PermStatter interface {
+	statsd.Statter
+	Rotate()
+	RecordProbeDuration(logger lager.Logger, d time.Duration)
+	SendFailedProbe(logger lager.Logger)
+	SendIncorrectProbe(logger lager.Logger)
+	SendCorrectProbe(logger lager.Logger)
+}
 
 type Statter struct {
 	StatsD    statsd.Statter

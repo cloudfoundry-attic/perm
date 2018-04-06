@@ -12,7 +12,7 @@ import (
 var _ = Describe("Statter", func() {
 	var (
 		histogram *ThreadSafeHistogram
-		statsd    *monitorfakes.FakeStatter
+		statsd    *monitorfakes.FakePermStatter
 
 		logger *lagertest.TestLogger
 
@@ -21,7 +21,7 @@ var _ = Describe("Statter", func() {
 
 	BeforeEach(func() {
 		histogram = NewThreadSafeHistogram(1, 3)
-		statsd = new(monitorfakes.FakeStatter)
+		statsd = new(monitorfakes.FakePermStatter)
 
 		logger = lagertest.NewTestLogger("statter")
 

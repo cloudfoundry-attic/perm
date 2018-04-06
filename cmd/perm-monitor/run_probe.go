@@ -15,10 +15,10 @@ const (
 	ProbeHistogramRefreshTime = 1 * time.Minute
 )
 
-func RunProbe(ctx context.Context,
+func RunProbeAtAnInterval(ctx context.Context,
 	logger lager.Logger,
 	probe *monitor.Probe,
-	statter *monitor.Statter,
+	statter monitor.PermStatter,
 	probeInterval, probeTimeout time.Duration,
 ) {
 	var wg sync.WaitGroup
@@ -36,18 +36,7 @@ func RunProbe(ctx context.Context,
 		defer wg.Done()
 
 		for range time.NewTicker(probeInterval).C {
-			correct, durations, err := cmd.RunProbe(ctx, logger, probe, probeTimeout)
-
-			if err != nil {
-				statter.SendFailedProbe(logger.Session("metrics"))
-			} else if !correct {
-				statter.SendIncorrectProbe(logger.Session("metrics"))
-			} else {
-				for _, d := range durations {
-					statter.RecordProbeDuration(logger.Session("metrics"), d)
-				}
-				statter.SendCorrectProbe(logger.Session("metrics"))
-			}
+			cmd.RecordProbeResults(ctx, logger, probe, probeTimeout, statter)
 		}
 	}()
 

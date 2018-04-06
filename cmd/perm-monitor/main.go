@@ -134,5 +134,5 @@ func main() {
 		Histogram: probeHistogram,
 	}
 
-	RunProbe(ctx, logger.Session("probe"), probe, statter, parserOpts.Interval, parserOpts.Timeout)
+	RunProbeAtAnInterval(ctx, logger.Session("probe"), probe, statter, parserOpts.Interval, parserOpts.Timeout)
 }

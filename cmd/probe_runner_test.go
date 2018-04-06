@@ -14,6 +14,8 @@ import (
 	"code.cloudfoundry.org/perm/cmd/cmdfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 )
 
 var cancellableComputation = func(ctx context.Context, timeout time.Duration) error {
@@ -39,39 +41,42 @@ var _ = Describe("Running the Probes", func() {
 	var (
 		someErr      error
 		someOtherErr error
+					logger *lagertest.TestLogger
+					timeout time.Duration
 	)
 
 	BeforeEach(func() {
 		someErr = errors.New("some-error")
 		someOtherErr = errors.New("some-other-error")
+	    logger = lagertest.NewTestLogger("run-probe")
+			timeout = 5 * time.Second
+
 	})
 
-	Describe(".RunProbe", func() {
+	Describe(".GetProbeResults", func() {
 		var (
 			probe *cmdfakes.FakeProbe
 
 			ctx    context.Context
-			logger *lagertest.TestLogger
 
-			timeout time.Duration
+
+
 
 			expectedDurations []time.Duration
+
 		)
 
 		BeforeEach(func() {
 			probe = new(cmdfakes.FakeProbe)
 
 			ctx = context.Background()
-			logger = lagertest.NewTestLogger("run-probe")
-
-			timeout = 5 * time.Second
 
 			expectedDurations = []time.Duration{1 * time.Second, 2 * time.Second}
 			probe.RunReturns(true, expectedDurations, nil)
 		})
 
 		It("calls the setup, run, and cleanup with a uuid", func() {
-			correct, durations, err := RunProbe(ctx, logger, probe, timeout)
+			correct, durations, err := GetProbeResults(ctx, logger, probe, timeout)
 
 			Expect(probe.SetupCallCount()).To(Equal(1))
 			Expect(probe.RunCallCount()).To(Equal(1))
@@ -104,7 +109,7 @@ var _ = Describe("Running the Probes", func() {
 					return true, nil, err
 				}
 
-				_, _, err := RunProbe(ctx, logger, probe, 10*time.Nanosecond)
+				_, _, err := GetProbeResults(ctx, logger, probe, 10*time.Nanosecond)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -128,7 +133,7 @@ var _ = Describe("Running the Probes", func() {
 					return true, nil, err
 				}
 
-				_, _, err := RunProbe(ctx, logger, probe, 300*time.Millisecond)
+				_, _, err := GetProbeResults(ctx, logger, probe, 300*time.Millisecond)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -144,7 +149,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the error, calling cleanup, but not calling run", func() {
-				_, _, err := RunProbe(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(0))
@@ -160,7 +165,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("still runs cleanup, but returns the error", func() {
-				_, _, err := RunProbe(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -176,7 +181,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the error", func() {
-				_, _, err := RunProbe(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -193,7 +198,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the setup error", func() {
-				_, _, err := RunProbe(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))
@@ -207,11 +212,43 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the run error", func() {
-				_, _, err := RunProbe(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))
 			})
+		})
+	})
+	Describe(".RecordProbeResults", func() {
+		var probe *cmdfakes.FakeProbe
+		var statter *monitorfakes.FakePermStatter
+		BeforeEach(func() {
+			probe = new(cmdfakes.FakeProbe)
+			statter = new(monitorfakes.FakePermStatter)
+		})
+		It("reports failed probe when probe's setup fails", func() {
+			probe.SetupReturns(errors.New("error in setup"))
+			RecordProbeResults(context.Background(), logger, probe, timeout, statter)
+			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
+		})
+		It("reports failed probe when probe's cleanup fails", func() {
+			probe.CleanupReturns(errors.New("error in cleanup"))
+			timeout = time.Second * 0
+			RecordProbeResults(context.Background(), logger, probe, timeout, statter)
+			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
+		})
+		It("reports records incorrect probe when the probe wasn't correct", func() {
+			probe.RunReturns(false, []time.Duration{}, nil)
+			RecordProbeResults(context.Background(), logger, probe, timeout, statter)
+			Expect(statter.SendIncorrectProbeCallCount()).To(Equal(1))
+		})
+		It("records probe durations and reports correct probe when durations are valid", func() {
+			qd :=time.Millisecond*30
+			durations := []time.Duration{qd, qd, qd}
+			probe.RunReturns(true, durations, nil)
+			RecordProbeResults(context.Background(), logger, probe, timeout, statter)
+			Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
+			Expect(statter.SendCorrectProbeCallCount()).To(Equal(1))
 		})
 	})
 })

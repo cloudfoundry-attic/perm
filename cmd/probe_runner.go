@@ -6,6 +6,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	guuid "github.com/satori/go.uuid"
+	"code.cloudfoundry.org/perm/pkg/monitor"
 )
 
 //go:generate counterfeiter . Probe
@@ -16,7 +17,7 @@ type Probe interface {
 	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 }
 
-func RunProbe(
+func GetProbeResults(
 	ctx context.Context,
 	logger lager.Logger,
 	probe Probe,
@@ -39,4 +40,26 @@ func RunProbe(
 	defer cancel()
 
 	return probe.Run(cctx, logger.Session("run"), uuid.String())
+}
+
+func RecordProbeResults(
+	ctx context.Context,
+	logger lager.Logger,
+	probe Probe,
+	timeout time.Duration,
+	statter monitor.PermStatter,
+) {
+
+	correct, durations, err := GetProbeResults(ctx, logger, probe, timeout)
+
+	if err != nil {
+		statter.SendFailedProbe(logger.Session("metrics"))
+	} else if !correct {
+		statter.SendIncorrectProbe(logger.Session("metrics"))
+	} else {
+		for _, d := range durations {
+			statter.RecordProbeDuration(logger.Session("metrics"), d)
+		}
+		statter.SendCorrectProbe(logger.Session("metrics"))
+	}
 }
