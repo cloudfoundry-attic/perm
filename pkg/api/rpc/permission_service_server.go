@@ -48,7 +48,7 @@ func (s *PermissionServiceServer) HasPermission(
 
 	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)
 
-	logger := s.logger.Session("has-role").WithData(lager.Data{
+	logger := s.logger.Session("has-permission").WithData(lager.Data{
 		"actor.id":                   actor.ID,
 		"actor.issuer":               actor.Namespace,
 		"permission.action":          action,
