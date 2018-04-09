@@ -33,14 +33,26 @@ type Probe struct {
 
 func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
 	logger.Debug(starting)
+	doneChan := make(chan error)
 	defer logger.Debug(finished)
 
-	err := p.setupCreateRole(ctx, logger, uniqueSuffix)
-	if err != nil {
-		return err
-	}
+	go func() {
+		err := p.setupCreateRole(ctx, logger, uniqueSuffix)
+		if err != nil {
+			doneChan <- err
+			return
+		}
+		doneChan <- p.setupAssignRole(ctx, logger, uniqueSuffix)
+	}()
 
-	return p.setupAssignRole(ctx, logger, uniqueSuffix)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-doneChan:
+			return err
+		}
+	}
 }
 
 func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
@@ -126,78 +138,104 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 }
 
 func (p *Probe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
-	logger.Debug(starting)
-	defer logger.Debug(finished)
+	doneChan := make(chan error)
 
-	roleName := ProbeRoleName + "." + uniqueSuffix
+	go func() {
+		logger.Debug(starting)
+		defer logger.Debug(finished)
 
-	deleteRoleRequest := &protos.DeleteRoleRequest{
-		Name: roleName,
-	}
-	_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
-	s, ok := status.FromError(err)
+		roleName := ProbeRoleName + "." + uniqueSuffix
 
-	// Not a GRPC error
-	if err != nil && !ok {
-		logger.Error(failedToDeleteRole, err, lager.Data{
-			"roleName": deleteRoleRequest.GetName(),
-		})
-		return err
-	}
+		deleteRoleRequest := &protos.DeleteRoleRequest{
+			Name: roleName,
+		}
+		_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
+		s, ok := status.FromError(err)
 
-	// GRPC error
-	if err != nil && ok {
-		switch s.Code() {
-		case codes.NotFound:
-
-		default:
+		// Not a GRPC error
+		if err != nil && !ok {
 			logger.Error(failedToDeleteRole, err, lager.Data{
 				"roleName": deleteRoleRequest.GetName(),
 			})
+			doneChan <- err
+			return
+		}
+
+		// GRPC error
+		if err != nil && ok {
+			switch s.Code() {
+			case codes.NotFound:
+
+			default:
+				logger.Error(failedToDeleteRole, err, lager.Data{
+					"roleName": deleteRoleRequest.GetName(),
+				})
+				doneChan <- err
+				return
+			}
+		}
+
+		doneChan <- nil
+		return
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-doneChan:
 			return err
 		}
 	}
-
-	return nil
 }
 
 func (p *Probe) Run(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
-) (bool, []time.Duration, error) {
+) (correct bool, durations []time.Duration, err error) {
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	var (
-		correct  bool
-		duration time.Duration
-		err      error
+	//	var duration time.Duration
 
-		durations []time.Duration
-	)
-
-	correct, duration, err = p.runAssignedPermission(ctx, logger, uniqueSuffix)
-	durations = append(durations, duration)
-
-	if err != nil {
-		return false, durations, err
-	}
-	if !correct {
-		return false, durations, nil
+	type result struct {
+		Correct   bool
+		Durations []time.Duration
+		Err       error
 	}
 
-	correct, duration, err = p.runUnassignedPermission(ctx, logger, uniqueSuffix)
-	durations = append(durations, duration)
+	doneChan := make(chan result)
+	go func() {
+		correct, duration, err := p.runAssignedPermission(ctx, logger, uniqueSuffix)
+		r := result{}
+		r.Durations = append(r.Durations, duration)
+		if err != nil || !correct {
+			r.Err = err
+			r.Correct = correct
+			doneChan <- r
+			return
+		}
 
-	if err != nil {
-		return false, durations, err
-	}
-	if !correct {
-		return false, durations, nil
-	}
+		correct, duration, err = p.runUnassignedPermission(ctx, logger, uniqueSuffix)
+		r.Durations = append(r.Durations, duration)
+		r.Err = err
+		r.Correct = correct
+		doneChan <- r
+	}()
 
-	return true, durations, nil
+	for {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return
+		case result := <-doneChan:
+			correct = result.Correct
+			durations = result.Durations
+			err = result.Err
+			return
+		}
+	}
 }
 
 func (p *Probe) runAssignedPermission(

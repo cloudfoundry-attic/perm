@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	guuid "github.com/satori/go.uuid"
 	"code.cloudfoundry.org/perm/pkg/monitor"
+	guuid "github.com/satori/go.uuid"
 )
 
 //go:generate counterfeiter . Probe
@@ -25,19 +25,18 @@ func GetProbeResults(
 ) (correct bool, durations []time.Duration, err error) {
 	uuid := guuid.NewV4()
 
+	cctx, _ := context.WithTimeout(ctx, timeout)
+
 	defer func() {
-		cleanupErr := probe.Cleanup(ctx, logger.Session("cleanup"), uuid.String())
+		cleanupErr := probe.Cleanup(cctx, logger.Session("cleanup"), uuid.String())
 		if err == nil {
 			err = cleanupErr
 		}
 	}()
-	err = probe.Setup(ctx, logger.Session("setup"), uuid.String())
+	err = probe.Setup(cctx, logger.Session("setup"), uuid.String())
 	if err != nil {
 		return
 	}
-
-	cctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	return probe.Run(cctx, logger.Session("run"), uuid.String())
 }

@@ -1,6 +1,8 @@
 package monitor_test
 
 import (
+	"time"
+
 	permgofakes "code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 
@@ -67,6 +69,15 @@ var _ = Describe("Probe", func() {
 			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("probe"))
 		})
 
+		Context("when the timeout deadline is exceeded", func() {
+			It("respects the timeout and exits with an error", func() {
+				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
+				cancelFunc()
+				err := p.Setup(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
+				Expect(err).To(MatchError("context canceled"))
+			})
+		})
+
 		Context("when creating the role", func() {
 
 			Context("when the role already exists", func() {
@@ -127,6 +138,15 @@ var _ = Describe("Probe", func() {
 			Expect(deleteRoleRequest.GetName()).To(Equal("system.probe.foobar"))
 		})
 
+		Context("when the timeout deadline is exceeded", func() {
+			It("respects the timeout and exits with an error", func() {
+				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
+				cancelFunc()
+				err := p.Cleanup(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
+				Expect(err).To(MatchError("context canceled"))
+			})
+		})
+
 		Context("when the role doesn't exist", func() {
 			BeforeEach(func() {
 				fakeRoleServiceClient.DeleteRoleReturns(nil, status.Error(codes.NotFound, "role-not-found"))
@@ -175,6 +195,15 @@ var _ = Describe("Probe", func() {
 			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("probe"))
 			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.probe.unassigned-permission.name"))
 			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.probe.unassigned-permission.resource-id.foobar"))
+		})
+
+		Context("when the timeout deadline is exceeded", func() {
+			It("respects the timeout and exits with an error", func() {
+				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
+				cancelFunc()
+				_, _, err := p.Run(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
+				Expect(err).To(MatchError("context canceled"))
+			})
 		})
 
 		Context("when checking for the permission it should have errors", func() {

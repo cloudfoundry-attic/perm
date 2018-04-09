@@ -9,7 +9,6 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/cmd/cmdfakes"
 	. "github.com/onsi/ginkgo"
@@ -18,38 +17,19 @@ import (
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 )
 
-var cancellableComputation = func(ctx context.Context, timeout time.Duration) error {
-	done := make(chan struct{}, 1)
-
-	go func() {
-		time.Sleep(timeout)
-		// Run completed successfully
-		close(done)
-	}()
-	select {
-	case <-ctx.Done():
-		// Context was cancelled before computation succeeded
-		// i.e. computation was cancelled
-		return ctx.Err()
-	case <-done:
-		// Long computation succeeded
-		return nil
-	}
-}
-
 var _ = Describe("Running the Probes", func() {
 	var (
 		someErr      error
 		someOtherErr error
-					logger *lagertest.TestLogger
-					timeout time.Duration
+		logger       *lagertest.TestLogger
+		timeout      time.Duration
 	)
 
 	BeforeEach(func() {
 		someErr = errors.New("some-error")
 		someOtherErr = errors.New("some-other-error")
-	    logger = lagertest.NewTestLogger("run-probe")
-			timeout = 5 * time.Second
+		logger = lagertest.NewTestLogger("run-probe")
+		timeout = 5 * time.Second
 
 	})
 
@@ -57,13 +37,9 @@ var _ = Describe("Running the Probes", func() {
 		var (
 			probe *cmdfakes.FakeProbe
 
-			ctx    context.Context
-
-
-
+			ctx context.Context
 
 			expectedDurations []time.Duration
-
 		)
 
 		BeforeEach(func() {
@@ -96,18 +72,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("timeouts", func() {
 			It("errors if it times out", func() {
-				probe.RunStub = func(
-					ctx context.Context,
-					logger lager.Logger,
-					uniqueSuffix string,
-				) (bool, []time.Duration, error) {
-					err := cancellableComputation(ctx, 10*time.Millisecond)
-					if err != nil {
-						return false, nil, err
-					}
-
-					return true, nil, err
-				}
+				probe.RunReturns(false, nil, context.DeadlineExceeded)
 
 				_, _, err := GetProbeResults(ctx, logger, probe, 10*time.Nanosecond)
 
@@ -120,19 +85,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("succeeds if the timeout is not exceeded", func() {
-				probe.RunStub = func(
-					ctx context.Context,
-					logger lager.Logger,
-					uniqueSuffix string,
-				) (bool, []time.Duration, error) {
-					err := cancellableComputation(ctx, 10*time.Millisecond)
-					if err != nil {
-						return false, nil, err
-					}
-
-					return true, nil, err
-				}
-
+				probe.RunReturns(true, nil, nil)
 				_, _, err := GetProbeResults(ctx, logger, probe, 300*time.Millisecond)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
@@ -243,7 +196,7 @@ var _ = Describe("Running the Probes", func() {
 			Expect(statter.SendIncorrectProbeCallCount()).To(Equal(1))
 		})
 		It("records probe durations and reports correct probe when durations are valid", func() {
-			qd :=time.Millisecond*30
+			qd := time.Millisecond * 30
 			durations := []time.Duration{qd, qd, qd}
 			probe.RunReturns(true, durations, nil)
 			RecordProbeResults(context.Background(), logger, probe, timeout, statter)
