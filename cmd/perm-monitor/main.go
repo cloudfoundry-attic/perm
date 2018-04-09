@@ -130,8 +130,8 @@ func main() {
 		3,
 	)
 	statter := &monitor.Statter{
-		StatsD:    statsDClient,
-		Histogram: probeHistogram,
+		statsDClient,
+		probeHistogram,
 	}
 
 	RunProbeAtAnInterval(ctx, logger.Session("probe"), probe, statter, parserOpts.Interval, parserOpts.Timeout)

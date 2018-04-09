@@ -26,8 +26,8 @@ var _ = Describe("Statter", func() {
 		logger = lagertest.NewTestLogger("statter")
 
 		statter = &Statter{
-			StatsD:    statsd,
-			Histogram: histogram,
+			statsd,
+			histogram,
 		}
 	})
 

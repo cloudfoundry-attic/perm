@@ -34,7 +34,7 @@ type PermStatter interface {
 }
 
 type Statter struct {
-	StatsD    statsd.Statter
+	statsd.Statter
 	Histogram *ThreadSafeHistogram
 }
 
@@ -70,7 +70,7 @@ func (s *Statter) SendCorrectProbe(logger lager.Logger) {
 }
 
 func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {
-	err := s.StatsD.Gauge(name, value, AlwaysSendMetric)
+	err := s.Gauge(name, value, AlwaysSendMetric)
 	if err != nil {
 		logger.Error(failedToSendMetric, err, lager.Data{
 			"metric": name,
