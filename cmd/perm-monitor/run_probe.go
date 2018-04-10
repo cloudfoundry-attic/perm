@@ -13,6 +13,7 @@ import (
 const (
 	ProbeHistogramWindow      = 5 // Minutes
 	ProbeHistogramRefreshTime = 1 * time.Minute
+	AcceptableQueryWindow     = 100 * time.Millisecond
 )
 
 func RunProbeAtAnInterval(ctx context.Context,
@@ -36,7 +37,7 @@ func RunProbeAtAnInterval(ctx context.Context,
 		defer wg.Done()
 
 		for range time.NewTicker(probeInterval).C {
-			cmd.RecordProbeResults(ctx, logger, probe, probeTimeout, statter)
+			cmd.RecordProbeResults(ctx, logger, probe, probeTimeout, statter, AcceptableQueryWindow)
 		}
 	}()
 

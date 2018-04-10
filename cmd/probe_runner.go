@@ -47,18 +47,29 @@ func RecordProbeResults(
 	probe Probe,
 	timeout time.Duration,
 	statter monitor.PermStatter,
+	acceptableQueryWindow time.Duration,
 ) {
 
 	correct, durations, err := GetProbeResults(ctx, logger, probe, timeout)
 
 	if err != nil {
 		statter.SendFailedProbe(logger.Session("metrics"))
-	} else if !correct {
+		return
+	}
+	if !correct {
 		statter.SendIncorrectProbe(logger.Session("metrics"))
-	} else {
-		for _, d := range durations {
-			statter.RecordProbeDuration(logger.Session("metrics"), d)
+		return
+	}
+	failedQuery := false
+	for _, d := range durations {
+		if d > acceptableQueryWindow {
+			failedQuery = true
 		}
+		statter.RecordProbeDuration(logger.Session("metrics"), d)
+	}
+	if failedQuery {
+		statter.SendFailedProbe(logger.Session("metrics"))
+	} else {
 		statter.SendCorrectProbe(logger.Session("metrics"))
 	}
 }
