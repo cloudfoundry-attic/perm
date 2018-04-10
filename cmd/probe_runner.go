@@ -12,7 +12,7 @@ import (
 //go:generate counterfeiter . Probe
 
 type Probe interface {
-	Cleanup(context.Context, lager.Logger, string) error
+	Cleanup(context.Context, time.Duration, lager.Logger, string) error
 	Setup(context.Context, lager.Logger, string) error
 	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 }
@@ -28,7 +28,7 @@ func GetProbeResults(
 	cctx, _ := context.WithTimeout(ctx, timeout)
 
 	defer func() {
-		cleanupErr := probe.Cleanup(cctx, logger.Session("cleanup"), uuid.String())
+		cleanupErr := probe.Cleanup(cctx, timeout, logger.Session("cleanup"), uuid.String())
 		if err == nil {
 			err = cleanupErr
 		}

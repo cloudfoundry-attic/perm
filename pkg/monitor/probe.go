@@ -137,9 +137,10 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 	return nil
 }
 
-func (p *Probe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) error {
 	doneChan := make(chan error)
 
+	cleanupTimeoutTimer := time.After(cleanupTimeout)
 	go func() {
 		logger.Debug(starting)
 		defer logger.Debug(finished)
@@ -181,10 +182,15 @@ func (p *Probe) Cleanup(ctx context.Context, logger lager.Logger, uniqueSuffix s
 
 	for {
 		select {
-		case <-ctx.Done():
-			return ctx.Err()
+		case <-cleanupTimeoutTimer:
+			return context.DeadlineExceeded
 		case err := <-doneChan:
-			return err
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				return err
+			}
 		}
 	}
 }

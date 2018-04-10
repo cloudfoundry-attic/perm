@@ -11,12 +11,13 @@ import (
 )
 
 type FakeProbe struct {
-	CleanupStub        func(context.Context, lager.Logger, string) error
+	CleanupStub        func(context.Context, time.Duration, lager.Logger, string) error
 	cleanupMutex       sync.RWMutex
 	cleanupArgsForCall []struct {
 		arg1 context.Context
-		arg2 lager.Logger
-		arg3 string
+		arg2 time.Duration
+		arg3 lager.Logger
+		arg4 string
 	}
 	cleanupReturns struct {
 		result1 error
@@ -58,18 +59,19 @@ type FakeProbe struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 time.Duration, arg3 lager.Logger, arg4 string) error {
 	fake.cleanupMutex.Lock()
 	ret, specificReturn := fake.cleanupReturnsOnCall[len(fake.cleanupArgsForCall)]
 	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct {
 		arg1 context.Context
-		arg2 lager.Logger
-		arg3 string
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("Cleanup", []interface{}{arg1, arg2, arg3})
+		arg2 time.Duration
+		arg3 lager.Logger
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("Cleanup", []interface{}{arg1, arg2, arg3, arg4})
 	fake.cleanupMutex.Unlock()
 	if fake.CleanupStub != nil {
-		return fake.CleanupStub(arg1, arg2, arg3)
+		return fake.CleanupStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -83,10 +85,10 @@ func (fake *FakeProbe) CleanupCallCount() int {
 	return len(fake.cleanupArgsForCall)
 }
 
-func (fake *FakeProbe) CleanupArgsForCall(i int) (context.Context, lager.Logger, string) {
+func (fake *FakeProbe) CleanupArgsForCall(i int) (context.Context, time.Duration, lager.Logger, string) {
 	fake.cleanupMutex.RLock()
 	defer fake.cleanupMutex.RUnlock()
-	return fake.cleanupArgsForCall[i].arg1, fake.cleanupArgsForCall[i].arg2, fake.cleanupArgsForCall[i].arg3
+	return fake.cleanupArgsForCall[i].arg1, fake.cleanupArgsForCall[i].arg2, fake.cleanupArgsForCall[i].arg3, fake.cleanupArgsForCall[i].arg4
 }
 
 func (fake *FakeProbe) CleanupReturns(result1 error) {

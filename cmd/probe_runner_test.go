@@ -60,7 +60,7 @@ var _ = Describe("Running the Probes", func() {
 
 			_, _, setupId := probe.SetupArgsForCall(0)
 			_, _, runId := probe.RunArgsForCall(0)
-			_, _, cleanupId := probe.CleanupArgsForCall(0)
+			_, _, _, cleanupId := probe.CleanupArgsForCall(0)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
