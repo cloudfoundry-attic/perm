@@ -137,8 +137,10 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 	return nil
 }
 
-func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
 	doneChan := make(chan error)
+
+	durations := make([]time.Duration, 0)
 
 	cleanupTimeoutTimer := time.After(cleanupTimeout)
 	go func() {
@@ -146,11 +148,14 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 		defer logger.Debug(finished)
 
 		roleName := ProbeRoleName + "." + uniqueSuffix
-
 		deleteRoleRequest := &protos.DeleteRoleRequest{
 			Name: roleName,
 		}
+
+		start := time.Now()
 		_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
+		end := time.Now()
+		durations = append(durations, end.Sub(start))
 		s, ok := status.FromError(err)
 
 		// Not a GRPC error
@@ -183,13 +188,13 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 	for {
 		select {
 		case <-cleanupTimeoutTimer:
-			return context.DeadlineExceeded
+			return durations, context.DeadlineExceeded
 		case err := <-doneChan:
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return durations, ctx.Err()
 			default:
-				return err
+				return durations, err
 			}
 		}
 	}

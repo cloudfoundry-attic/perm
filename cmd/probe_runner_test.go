@@ -40,7 +40,8 @@ var _ = Describe("Running the Probes", func() {
 
 			ctx context.Context
 
-			expectedDurations []time.Duration
+			expectedRunDurations     []time.Duration
+			expectedCleanupDurations []time.Duration
 		)
 
 		BeforeEach(func() {
@@ -48,8 +49,10 @@ var _ = Describe("Running the Probes", func() {
 
 			ctx = context.Background()
 
-			expectedDurations = []time.Duration{1 * time.Second, 2 * time.Second}
-			probe.RunReturns(true, expectedDurations, nil)
+			expectedRunDurations = []time.Duration{1 * time.Second, 2 * time.Second}
+			expectedCleanupDurations = []time.Duration{3 * time.Second}
+			probe.RunReturns(true, expectedRunDurations, nil)
+			probe.CleanupReturns(expectedCleanupDurations, nil)
 		})
 
 		It("calls the setup, run, and cleanup with a uuid", func() {
@@ -65,8 +68,12 @@ var _ = Describe("Running the Probes", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
-			Expect(durations).To(Equal(expectedDurations))
-
+			for _, expectedDuration := range expectedRunDurations {
+				Expect(durations).To(ContainElement(expectedDuration))
+			}
+			for _, expectedDuration := range expectedCleanupDurations {
+				Expect(durations).To(ContainElement(expectedDuration))
+			}
 			Expect(setupId).To(Equal(runId))
 			Expect(runId).To(Equal(cleanupId))
 		})
@@ -131,7 +138,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when cleanup fails", func() {
 			BeforeEach(func() {
-				probe.CleanupReturns(someErr)
+				probe.CleanupReturns([]time.Duration{}, someErr)
 			})
 
 			It("returns the error", func() {
@@ -148,7 +155,7 @@ var _ = Describe("Running the Probes", func() {
 		Context("when setup and cleanup fail", func() {
 			BeforeEach(func() {
 				probe.SetupReturns(someErr)
-				probe.CleanupReturns(someOtherErr)
+				probe.CleanupReturns([]time.Duration{}, someOtherErr)
 			})
 
 			It("returns the setup error", func() {
@@ -162,7 +169,7 @@ var _ = Describe("Running the Probes", func() {
 		Context("when run and cleanup fail", func() {
 			BeforeEach(func() {
 				probe.RunReturns(false, nil, someErr)
-				probe.CleanupReturns(someOtherErr)
+				probe.CleanupReturns([]time.Duration{}, someOtherErr)
 			})
 
 			It("returns the run error", func() {
@@ -186,7 +193,7 @@ var _ = Describe("Running the Probes", func() {
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
 		It("reports failed probe when probe's cleanup fails", func() {
-			probe.CleanupReturns(errors.New("error in cleanup"))
+			probe.CleanupReturns([]time.Duration{}, errors.New("error in cleanup"))
 			timeout = time.Second * 0
 			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))

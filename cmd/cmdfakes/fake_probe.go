@@ -11,7 +11,7 @@ import (
 )
 
 type FakeProbe struct {
-	CleanupStub        func(context.Context, time.Duration, lager.Logger, string) error
+	CleanupStub        func(context.Context, time.Duration, lager.Logger, string) ([]time.Duration, error)
 	cleanupMutex       sync.RWMutex
 	cleanupArgsForCall []struct {
 		arg1 context.Context
@@ -20,10 +20,12 @@ type FakeProbe struct {
 		arg4 string
 	}
 	cleanupReturns struct {
-		result1 error
+		result1 []time.Duration
+		result2 error
 	}
 	cleanupReturnsOnCall map[int]struct {
-		result1 error
+		result1 []time.Duration
+		result2 error
 	}
 	SetupStub        func(context.Context, lager.Logger, string) error
 	setupMutex       sync.RWMutex
@@ -59,7 +61,7 @@ type FakeProbe struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 time.Duration, arg3 lager.Logger, arg4 string) error {
+func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 time.Duration, arg3 lager.Logger, arg4 string) ([]time.Duration, error) {
 	fake.cleanupMutex.Lock()
 	ret, specificReturn := fake.cleanupReturnsOnCall[len(fake.cleanupArgsForCall)]
 	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct {
@@ -74,9 +76,9 @@ func (fake *FakeProbe) Cleanup(arg1 context.Context, arg2 time.Duration, arg3 la
 		return fake.CleanupStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.cleanupReturns.result1
+	return fake.cleanupReturns.result1, fake.cleanupReturns.result2
 }
 
 func (fake *FakeProbe) CleanupCallCount() int {
@@ -91,23 +93,26 @@ func (fake *FakeProbe) CleanupArgsForCall(i int) (context.Context, time.Duration
 	return fake.cleanupArgsForCall[i].arg1, fake.cleanupArgsForCall[i].arg2, fake.cleanupArgsForCall[i].arg3, fake.cleanupArgsForCall[i].arg4
 }
 
-func (fake *FakeProbe) CleanupReturns(result1 error) {
+func (fake *FakeProbe) CleanupReturns(result1 []time.Duration, result2 error) {
 	fake.CleanupStub = nil
 	fake.cleanupReturns = struct {
-		result1 error
-	}{result1}
+		result1 []time.Duration
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeProbe) CleanupReturnsOnCall(i int, result1 error) {
+func (fake *FakeProbe) CleanupReturnsOnCall(i int, result1 []time.Duration, result2 error) {
 	fake.CleanupStub = nil
 	if fake.cleanupReturnsOnCall == nil {
 		fake.cleanupReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 []time.Duration
+			result2 error
 		})
 	}
 	fake.cleanupReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 []time.Duration
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {

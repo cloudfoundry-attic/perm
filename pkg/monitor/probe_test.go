@@ -129,29 +129,33 @@ var _ = Describe("Probe", func() {
 	})
 
 	Describe("Cleanup", func() {
-		It("deletes the role", func() {
-			err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
+		It("deletes the role and returns the time to complete", func() {
+			durations, err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.DeleteRoleCallCount()).To(Equal(1))
 			_, deleteRoleRequest, _ := fakeRoleServiceClient.DeleteRoleArgsForCall(0)
 			Expect(deleteRoleRequest.GetName()).To(Equal("system.probe.foobar"))
+
+			Expect(len(durations)).To(Equal(1))
 		})
 
 		Context("when the context timeout is exceeded", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
-				err := p.Cleanup(contextWithExceededDeadline, time.Second, fakeLogger, uniqueSuffix)
+				_, err := p.Cleanup(contextWithExceededDeadline, time.Second, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context canceled"))
 			})
 		})
 
 		Context("when cleanup timeout is exceeded", func() {
+			type slowClient struct {
+			}
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
-				err := p.Cleanup(contextWithExceededDeadline, time.Duration(0), fakeLogger, uniqueSuffix)
+				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(-1*time.Millisecond), fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context deadline exceeded"))
 			})
 		})
@@ -161,7 +165,7 @@ var _ = Describe("Probe", func() {
 			})
 
 			It("swallows the error", func() {
-				err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
+				_, err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -172,7 +176,7 @@ var _ = Describe("Probe", func() {
 			})
 
 			It("errors", func() {
-				err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
+				_, err := p.Cleanup(fakeContext, time.Second, fakeLogger, uniqueSuffix)
 				Expect(err).To(HaveOccurred())
 			})
 		})
