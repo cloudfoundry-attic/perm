@@ -138,12 +138,17 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 }
 
 func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
-	doneChan := make(chan error)
 
-	durations := make([]time.Duration, 0)
+	type cleanupResult struct {
+		Error     error
+		Durations []time.Duration
+	}
+
+	doneChan := make(chan cleanupResult)
 
 	cleanupTimeoutTimer := time.After(cleanupTimeout)
 	go func() {
+		result := cleanupResult{}
 		logger.Debug(starting)
 		defer logger.Debug(finished)
 
@@ -155,7 +160,7 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 		start := time.Now()
 		_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
 		end := time.Now()
-		durations = append(durations, end.Sub(start))
+		result.Durations = append(result.Durations, end.Sub(start))
 		s, ok := status.FromError(err)
 
 		// Not a GRPC error
@@ -163,7 +168,8 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 			logger.Error(failedToDeleteRole, err, lager.Data{
 				"roleName": deleteRoleRequest.GetName(),
 			})
-			doneChan <- err
+			result.Error = err
+			doneChan <- result
 			return
 		}
 
@@ -176,25 +182,26 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 				logger.Error(failedToDeleteRole, err, lager.Data{
 					"roleName": deleteRoleRequest.GetName(),
 				})
-				doneChan <- err
+				result.Error = err
+				doneChan <- result
 				return
 			}
 		}
 
-		doneChan <- nil
+		doneChan <- result
 		return
 	}()
 
 	for {
 		select {
 		case <-cleanupTimeoutTimer:
-			return durations, context.DeadlineExceeded
-		case err := <-doneChan:
+			return []time.Duration{}, context.DeadlineExceeded
+		case result := <-doneChan:
 			select {
 			case <-ctx.Done():
-				return durations, ctx.Err()
+				return []time.Duration{}, ctx.Err()
 			default:
-				return durations, err
+				return result.Durations, result.Error
 			}
 		}
 	}
