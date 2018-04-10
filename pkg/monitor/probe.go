@@ -209,8 +209,6 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 
 	for {
 		select {
-		case <-cleanupTimeoutTimer:
-			return []time.Duration{}, context.DeadlineExceeded
 		case result := <-doneChan:
 			select {
 			case <-ctx.Done():
@@ -218,6 +216,9 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 			default:
 				return result.Durations, result.Error
 			}
+		case <-cleanupTimeoutTimer:
+			return []time.Duration{}, context.DeadlineExceeded
+		default:
 		}
 	}
 }

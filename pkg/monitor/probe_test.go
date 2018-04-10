@@ -161,7 +161,6 @@ var _ = Describe("Probe", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
-				time.Sleep(1000 * time.Millisecond)
 				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(-1*time.Millisecond), fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context deadline exceeded"))
 			})
