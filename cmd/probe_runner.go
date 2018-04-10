@@ -13,7 +13,7 @@ import (
 
 type Probe interface {
 	Cleanup(context.Context, time.Duration, lager.Logger, string) ([]time.Duration, error)
-	Setup(context.Context, lager.Logger, string) error
+	Setup(context.Context, lager.Logger, string) ([]time.Duration, error)
 	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 }
 
@@ -34,12 +34,14 @@ func GetProbeResults(
 		}
 		durations = append(durations, cleanupDurations...)
 	}()
-	err = probe.Setup(cctx, logger.Session("setup"), uuid.String())
+	durations, err = probe.Setup(cctx, logger.Session("setup"), uuid.String())
 	if err != nil {
 		return
 	}
 
-	return probe.Run(cctx, logger.Session("run"), uuid.String())
+	correct, runDurations, err := probe.Run(cctx, logger.Session("run"), uuid.String())
+	durations = append(durations, runDurations...)
+	return
 }
 
 func RecordProbeResults(

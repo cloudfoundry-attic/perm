@@ -27,7 +27,7 @@ type FakeProbe struct {
 		result1 []time.Duration
 		result2 error
 	}
-	SetupStub        func(context.Context, lager.Logger, string) error
+	SetupStub        func(context.Context, lager.Logger, string) ([]time.Duration, error)
 	setupMutex       sync.RWMutex
 	setupArgsForCall []struct {
 		arg1 context.Context
@@ -35,10 +35,12 @@ type FakeProbe struct {
 		arg3 string
 	}
 	setupReturns struct {
-		result1 error
+		result1 []time.Duration
+		result2 error
 	}
 	setupReturnsOnCall map[int]struct {
-		result1 error
+		result1 []time.Duration
+		result2 error
 	}
 	RunStub        func(context.Context, lager.Logger, string) (bool, []time.Duration, error)
 	runMutex       sync.RWMutex
@@ -115,7 +117,7 @@ func (fake *FakeProbe) CleanupReturnsOnCall(i int, result1 []time.Duration, resu
 	}{result1, result2}
 }
 
-func (fake *FakeProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 string) error {
+func (fake *FakeProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 string) ([]time.Duration, error) {
 	fake.setupMutex.Lock()
 	ret, specificReturn := fake.setupReturnsOnCall[len(fake.setupArgsForCall)]
 	fake.setupArgsForCall = append(fake.setupArgsForCall, struct {
@@ -129,9 +131,9 @@ func (fake *FakeProbe) Setup(arg1 context.Context, arg2 lager.Logger, arg3 strin
 		return fake.SetupStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.setupReturns.result1
+	return fake.setupReturns.result1, fake.setupReturns.result2
 }
 
 func (fake *FakeProbe) SetupCallCount() int {
@@ -146,23 +148,26 @@ func (fake *FakeProbe) SetupArgsForCall(i int) (context.Context, lager.Logger, s
 	return fake.setupArgsForCall[i].arg1, fake.setupArgsForCall[i].arg2, fake.setupArgsForCall[i].arg3
 }
 
-func (fake *FakeProbe) SetupReturns(result1 error) {
+func (fake *FakeProbe) SetupReturns(result1 []time.Duration, result2 error) {
 	fake.SetupStub = nil
 	fake.setupReturns = struct {
-		result1 error
-	}{result1}
+		result1 []time.Duration
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeProbe) SetupReturnsOnCall(i int, result1 error) {
+func (fake *FakeProbe) SetupReturnsOnCall(i int, result1 []time.Duration, result2 error) {
 	fake.SetupStub = nil
 	if fake.setupReturnsOnCall == nil {
 		fake.setupReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 []time.Duration
+			result2 error
 		})
 	}
 	fake.setupReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 []time.Duration
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeProbe) Run(arg1 context.Context, arg2 lager.Logger, arg3 string) (bool, []time.Duration, error) {

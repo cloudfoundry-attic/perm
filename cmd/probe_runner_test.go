@@ -24,6 +24,7 @@ var _ = Describe("Running the Probes", func() {
 		someOtherErr error
 		logger       *lagertest.TestLogger
 		timeout      time.Duration
+		durations    []time.Duration
 	)
 
 	BeforeEach(func() {
@@ -40,6 +41,7 @@ var _ = Describe("Running the Probes", func() {
 
 			ctx context.Context
 
+			expectedSetupDurations   []time.Duration
 			expectedRunDurations     []time.Duration
 			expectedCleanupDurations []time.Duration
 		)
@@ -49,10 +51,12 @@ var _ = Describe("Running the Probes", func() {
 
 			ctx = context.Background()
 
-			expectedRunDurations = []time.Duration{1 * time.Second, 2 * time.Second}
-			expectedCleanupDurations = []time.Duration{3 * time.Second}
+			expectedSetupDurations = []time.Duration{1 * time.Second, 2 * time.Second}
+			expectedRunDurations = []time.Duration{3 * time.Second, 4 * time.Second}
+			expectedCleanupDurations = []time.Duration{5 * time.Second}
 			probe.RunReturns(true, expectedRunDurations, nil)
 			probe.CleanupReturns(expectedCleanupDurations, nil)
+			probe.SetupReturns(expectedSetupDurations, nil)
 		})
 
 		It("calls the setup, run, and cleanup with a uuid", func() {
@@ -68,6 +72,9 @@ var _ = Describe("Running the Probes", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(correct).To(BeTrue())
+			for _, expectedDuration := range expectedSetupDurations {
+				Expect(durations).To(ContainElement(expectedDuration))
+			}
 			for _, expectedDuration := range expectedRunDurations {
 				Expect(durations).To(ContainElement(expectedDuration))
 			}
@@ -106,7 +113,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when the setup fails", func() {
 			BeforeEach(func() {
-				probe.SetupReturns(someErr)
+				probe.SetupReturns(durations, someErr)
 			})
 
 			It("returns the error, calling cleanup, but not calling run", func() {
@@ -154,7 +161,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when setup and cleanup fail", func() {
 			BeforeEach(func() {
-				probe.SetupReturns(someErr)
+				probe.SetupReturns(durations, someErr)
 				probe.CleanupReturns([]time.Duration{}, someOtherErr)
 			})
 
@@ -188,7 +195,7 @@ var _ = Describe("Running the Probes", func() {
 			statter = new(monitorfakes.FakePermStatter)
 		})
 		It("reports failed probe when probe's setup fails", func() {
-			probe.SetupReturns(errors.New("error in setup"))
+			probe.SetupReturns(durations, errors.New("error in setup"))
 			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})

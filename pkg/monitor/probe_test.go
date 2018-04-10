@@ -51,7 +51,7 @@ var _ = Describe("Probe", func() {
 
 	Describe("Setup", func() {
 		It("creates a role with a permission and assigns it to a test user", func() {
-			err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+			_, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRoleServiceClient.CreateRoleCallCount()).To(Equal(1))
@@ -69,11 +69,17 @@ var _ = Describe("Probe", func() {
 			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("probe"))
 		})
 
+		It("records the durations of both the creation and assignments", func() {
+			durations, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(durations)).To(Equal(2))
+		})
+
 		Context("when the timeout deadline is exceeded", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
-				err := p.Setup(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
+				_, err := p.Setup(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context canceled"))
 			})
 		})
@@ -85,7 +91,7 @@ var _ = Describe("Probe", func() {
 					fakeRoleServiceClient.CreateRoleReturns(nil, status.Error(codes.AlreadyExists, "role-already-exists"))
 				})
 				It("swallows the error", func() {
-					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+					_, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -96,7 +102,7 @@ var _ = Describe("Probe", func() {
 				})
 
 				It("errors", func() {
-					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+					_, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -110,7 +116,7 @@ var _ = Describe("Probe", func() {
 				})
 
 				It("swallows the error", func() {
-					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+					_, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -121,7 +127,7 @@ var _ = Describe("Probe", func() {
 				})
 
 				It("errors", func() {
-					err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
+					_, err := p.Setup(fakeContext, fakeLogger, uniqueSuffix)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -155,6 +161,7 @@ var _ = Describe("Probe", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
+				time.Sleep(1000 * time.Millisecond)
 				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(-1*time.Millisecond), fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context deadline exceeded"))
 			})

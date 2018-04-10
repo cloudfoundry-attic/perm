@@ -31,31 +31,41 @@ type Probe struct {
 	PermissionServiceClient protos.PermissionServiceClient
 }
 
-func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
+	type setupResult struct {
+		Error     error
+		Durations []time.Duration
+	}
+
 	logger.Debug(starting)
-	doneChan := make(chan error)
+	doneChan := make(chan setupResult)
 	defer logger.Debug(finished)
 
 	go func() {
-		err := p.setupCreateRole(ctx, logger, uniqueSuffix)
+		duration, err := p.setupCreateRole(ctx, logger, uniqueSuffix)
+		result := setupResult{err, []time.Duration{duration}}
 		if err != nil {
-			doneChan <- err
+			doneChan <- result
 			return
 		}
-		doneChan <- p.setupAssignRole(ctx, logger, uniqueSuffix)
+		duration, err = p.setupAssignRole(ctx, logger, uniqueSuffix)
+		result.Error = err
+		result.Durations = append(result.Durations, duration)
+		doneChan <- result
+		return
 	}()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-doneChan:
-			return err
+			return []time.Duration{}, ctx.Err()
+		case result := <-doneChan:
+			return result.Durations, result.Error
 		}
 	}
 }
 
-func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	assignedPermission := &protos.Permission{
@@ -69,7 +79,10 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 			assignedPermission,
 		},
 	}
+	start := time.Now()
 	_, err := p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
+	end := time.Now()
+	duration := end.Sub(start)
 	s, ok := status.FromError(err)
 
 	// Not a GRPC error
@@ -78,7 +91,7 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 			"roleName":    createRoleRequest.GetName(),
 			"permissions": createRoleRequest.GetPermissions(),
 		})
-		return err
+		return duration, err
 	}
 
 	// GRPC error
@@ -91,14 +104,14 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 				"roleName":    createRoleRequest.GetName(),
 				"permissions": createRoleRequest.GetPermissions(),
 			})
-			return err
+			return duration, err
 		}
 	}
 
-	return nil
+	return duration, nil
 }
 
-func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) error {
+func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	assignRoleRequest := &protos.AssignRoleRequest{
@@ -106,7 +119,10 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 		RoleName: roleName,
 	}
 
+	start := time.Now()
 	_, err := p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
+	end := time.Now()
+	duration := end.Sub(start)
 	s, ok := status.FromError(err)
 
 	// Not a GRPC error
@@ -116,7 +132,7 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 			"actor.id":     assignRoleRequest.GetActor().GetID(),
 			"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
 		})
-		return err
+		return duration, err
 	}
 
 	// GRPC error
@@ -130,15 +146,14 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 				"actor.id":     assignRoleRequest.GetActor().GetID(),
 				"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
 			})
-			return err
+			return duration, err
 		}
 	}
 
-	return nil
+	return duration, nil
 }
 
 func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
-
 	type cleanupResult struct {
 		Error     error
 		Durations []time.Duration
