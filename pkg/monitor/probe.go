@@ -61,6 +61,7 @@ func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix str
 			return []time.Duration{}, ctx.Err()
 		case result := <-doneChan:
 			return result.Durations, result.Error
+		default:
 		}
 	}
 }
