@@ -66,7 +66,7 @@ var _ = Describe("Probe", func() {
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			_, assignRoleRequest, _ := fakeRoleServiceClient.AssignRoleArgsForCall(0)
 			Expect(assignRoleRequest.GetRoleName()).To(Equal("system.probe.foobar"))
-			Expect(assignRoleRequest.GetActor().GetIssuer()).To(Equal("system"))
+			Expect(assignRoleRequest.GetActor().GetNamespace()).To(Equal("system"))
 			Expect(assignRoleRequest.GetActor().GetID()).To(Equal("probe"))
 		})
 
@@ -214,13 +214,13 @@ var _ = Describe("Probe", func() {
 			Expect(fakePermissionsServiceClient.HasPermissionCallCount()).To(Equal(2))
 
 			_, hasPositivePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(0)
-			Expect(hasPositivePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
+			Expect(hasPositivePermissionRequest.GetActor().GetNamespace()).To(Equal("system"))
 			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("probe"))
 			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.probe.assigned-permission.name"))
 			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.probe.assigned-permission.resource-id.foobar"))
 
 			_, hasNegativePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(1)
-			Expect(hasNegativePermissionRequest.GetActor().GetIssuer()).To(Equal("system"))
+			Expect(hasNegativePermissionRequest.GetActor().GetNamespace()).To(Equal("system"))
 			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("probe"))
 			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.probe.unassigned-permission.name"))
 			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.probe.unassigned-permission.resource-id.foobar"))

@@ -109,7 +109,7 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) e
 		RoleName: roleName,
 		Actor: &protos.Actor{
 			ID:     actor.ID,
-			Issuer: actor.Namespace,
+			Namespace: actor.Namespace,
 		},
 	}
 	_, err := c.roleServiceClient.AssignRole(ctx, req)
@@ -132,7 +132,7 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 		RoleName: roleName,
 		Actor: &protos.Actor{
 			ID:     actor.ID,
-			Issuer: actor.Namespace,
+			Namespace: actor.Namespace,
 		},
 	}
 	_, err := c.roleServiceClient.UnassignRole(ctx, req)
@@ -152,7 +152,7 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 	req := &protos.HasPermissionRequest{
 		Actor: &protos.Actor{
 			ID:     actor.ID,
-			Issuer: actor.Namespace,
+			Namespace: actor.Namespace,
 		},
 		PermissionName: action,
 		ResourceId:     resourceID,
@@ -172,7 +172,7 @@ func (c *Client) ListResourcePatterns(ctx context.Context, actor Actor, action s
 	req := &protos.ListResourcePatternsRequest{
 		Actor: &protos.Actor{
 			ID:     actor.ID,
-			Issuer: actor.Namespace,
+			Namespace: actor.Namespace,
 		},
 		PermissionName: action,
 	}

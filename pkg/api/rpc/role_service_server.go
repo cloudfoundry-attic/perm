@@ -116,7 +116,7 @@ func (s *RoleServiceServer) AssignRole(
 	pActor := req.GetActor()
 
 	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	issuer := pActor.GetNamespace()
 	logExtensions := []logging.CustomExtension{
 		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
@@ -147,7 +147,7 @@ func (s *RoleServiceServer) UnassignRole(
 	pActor := req.GetActor()
 
 	domainID := pActor.GetID()
-	issuer := pActor.GetIssuer()
+	issuer := pActor.GetNamespace()
 	actor := perm.Actor{
 		ID:        domainID,
 		Namespace: issuer,
@@ -181,7 +181,7 @@ func (s *RoleServiceServer) HasRole(
 	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
-		Namespace: pActor.GetIssuer(),
+		Namespace: pActor.GetNamespace(),
 	}
 
 	logger := s.logger.Session("has-role").WithData(lager.Data{
@@ -216,7 +216,7 @@ func (s *RoleServiceServer) ListActorRoles(
 	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
-		Namespace: pActor.GetIssuer(),
+		Namespace: pActor.GetNamespace(),
 	}
 	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
 		"actor.id":        actor.ID,

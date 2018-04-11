@@ -23,7 +23,7 @@ const (
 
 var ProbeActor = &protos.Actor{
 	ID:     "probe",
-	Issuer: "system",
+	Namespace: "system",
 }
 
 type Probe struct {
@@ -131,7 +131,7 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 		logger.Error(failedToAssignRole, err, lager.Data{
 			"roleName":     assignRoleRequest.GetRoleName(),
 			"actor.id":     assignRoleRequest.GetActor().GetID(),
-			"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
+			"actor.issuer": assignRoleRequest.GetActor().GetNamespace(),
 		})
 		return duration, err
 	}
@@ -145,7 +145,7 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 			logger.Error(failedToAssignRole, err, lager.Data{
 				"roleName":     assignRoleRequest.GetRoleName(),
 				"actor.id":     assignRoleRequest.GetActor().GetID(),
-				"actor.issuer": assignRoleRequest.GetActor().GetIssuer(),
+				"actor.issuer": assignRoleRequest.GetActor().GetNamespace(),
 			})
 			return duration, err
 		}
@@ -285,7 +285,7 @@ func (p *Probe) runAssignedPermission(
 
 	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
 		"actor.id":                    ProbeActor.GetID(),
-		"actor.issuer":                ProbeActor.GetIssuer(),
+		"actor.issuer":                ProbeActor.GetNamespace(),
 		"permission.name":             assignedPermission.GetName(),
 		"permission.resource_pattern": assignedPermission.GetResourcePattern(),
 	})
@@ -328,7 +328,7 @@ func (p *Probe) runUnassignedPermission(
 
 	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
 		"actor.id":                    ProbeActor.GetID(),
-		"actor.issuer":                ProbeActor.GetIssuer(),
+		"actor.issuer":                ProbeActor.GetNamespace(),
 		"permission.name":             unassignedPermission.GetName(),
 		"permission.resource_pattern": unassignedPermission.GetResourcePattern(),
 	})

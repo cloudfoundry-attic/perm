@@ -36,7 +36,7 @@ func (s *PermissionServiceServer) HasPermission(
 	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
-		Namespace: pActor.GetIssuer(),
+		Namespace: pActor.GetNamespace(),
 	}
 	action := req.GetPermissionName()
 	resourcePattern := req.GetResourceId()
@@ -82,7 +82,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
-		Namespace: pActor.GetIssuer(),
+		Namespace: pActor.GetNamespace(),
 	}
 	action := req.GetPermissionName()
 

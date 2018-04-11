@@ -49,7 +49,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		BeforeEach(func() {
 			roleName = "role"
-			actor = &protos.Actor{ID: "actor", Issuer: "issuer"}
+			actor = &protos.Actor{ID: "actor", Namespace: "issuer"}
 			permission1 = &protos.Permission{
 				Name:            "some-permission",
 				ResourcePattern: "some-resource-ID",
@@ -190,7 +190,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			actor := &protos.Actor{
-				Issuer: "test-issuer",
+				Namespace: "test-issuer",
 				ID:     "fancy-id",
 			}
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
@@ -220,7 +220,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			req := &protos.ListResourcePatternsRequest{
 				Actor: &protos.Actor{
 					ID:     "123",
-					Issuer: "issuer34",
+					Namespace: "issuer34",
 				},
 				PermissionName: "p12",
 			}
@@ -240,7 +240,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			req := &protos.ListResourcePatternsRequest{
 				Actor: &protos.Actor{
 					ID:     "123",
-					Issuer: "issuer34",
+					Namespace: "issuer34",
 				},
 				PermissionName: "p12",
 			}
