@@ -43,8 +43,7 @@ func CreatePermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx,
-		createPermissionsTable)
+	_, err := tx.ExecContext(ctx, createPermissionsTable)
 	if err != nil {
 		return err
 	}
@@ -63,8 +62,7 @@ func CreatePermissionsTableDown(ctx context.Context, logger lager.Logger, tx *sq
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx,
-		deletePermissionsTable)
+	_, err := tx.ExecContext(ctx, deletePermissionsTable)
 
 	return err
 }

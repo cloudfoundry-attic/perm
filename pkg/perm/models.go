@@ -14,6 +14,6 @@ type Role struct {
 	Name string
 }
 
-type PermissionDefinition struct {
+type Action struct {
 	Name string
 }

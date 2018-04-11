@@ -17,7 +17,7 @@ type permission struct {
 	*perm.Permission
 }
 
-type permissionDefinition struct {
+type action struct {
 	ID int64
-	*perm.PermissionDefinition
+	*perm.Action
 }

@@ -33,4 +33,9 @@ var Migrations = []sqlx.Migration{
 		Up:   migrations.CreatePermissionsTableUp,
 		Down: migrations.CreatePermissionsTableDown,
 	},
+	{
+		Name: "rename_permission_definition_to_action",
+		Up:   migrations.RenamePermissionDefinitionToActionUp,
+		Down: migrations.RenamePermissionDefinitionToActionDown,
+	},
 }

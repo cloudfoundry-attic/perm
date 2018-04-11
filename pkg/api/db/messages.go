@@ -29,11 +29,11 @@ const (
 	failedToFindRoleAssignment   = "failed-to-find-role-assignment"
 	failedToFindRoleAssignments  = "failed-to-find-role-assignments"
 
-	errPermissionDefinitionAlreadyExists = "permission-definition-already-exists"
-	errPermissionDefinitionNotFound      = "permission-definition-not-found"
+	errActionAlreadyExists = "action-already-exists"
+	errActionNotFound      = "action-not-found"
 
-	failedToCreatePermissionDefinition = "failed-to-create-permission-definition"
-	failedToFindPermissionDefinition   = "failed-to-find-permission-definition"
+	failedToCreateAction = "failed-to-create-action"
+	failedToFindAction   = "failed-to-find-action"
 
 	errPermissionAlreadyExists = "permission-already-exists"
 

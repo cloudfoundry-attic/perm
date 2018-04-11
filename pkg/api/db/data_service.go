@@ -36,19 +36,17 @@ func createRoleAndAssignPermissions(
 	}
 
 	for _, permission := range permissions {
-		action := permission.Action
-		_, err = createPermissionDefinition(ctx, logger, conn, action)
-		if err != nil && err != errPermissionDefinitionAlreadyExistsDB {
+		_, err = createAction(ctx, logger, conn, permission.Action)
+		if err != nil && err != errActionAlreadyExistsInDB {
 			return nil, err
 		}
 
-		var p *permissionDefinition
-		p, err = findPermissionDefinition(ctx, logger, conn, action)
+		action, err := findAction(ctx, logger, conn, permission.Action)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = createPermission(ctx, logger, conn, p.ID, role.ID, permission.ResourcePattern, action)
+		_, err = createPermission(ctx, logger, conn, action.ID, role.ID, permission.ResourcePattern, permission.Action)
 		if err != nil {
 			return nil, err
 		}
@@ -524,16 +522,16 @@ func listRolePermissions(
 	return findRolePermissions(ctx, logger, conn, role.ID)
 }
 
-func createPermissionDefinition(
+func createAction(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	name string,
-) (*permissionDefinition, error) {
+) (*action, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
-	result, err := squirrel.Insert("permission_definition").
+	result, err := squirrel.Insert("action").
 		Columns("uuid", "name").
 		Values(u, name).
 		RunWith(conn).
@@ -541,67 +539,66 @@ func createPermissionDefinition(
 
 	switch e := err.(type) {
 	case nil:
-		permissionDefinitionID, err2 := result.LastInsertId()
+		actionID, err2 := result.LastInsertId()
 		if err2 != nil {
 			logger.Error(failedToRetrieveID, err2)
 			return nil, err2
 		}
 
-		permissionDefinition := &permissionDefinition{
-			ID: permissionDefinitionID,
-			PermissionDefinition: &perm.PermissionDefinition{
+		return &action{
+			ID: actionID,
+			Action: &perm.Action{
 				Name: name,
 			},
-		}
-		return permissionDefinition, nil
+		}, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(errPermissionDefinitionAlreadyExists)
-			return nil, errPermissionDefinitionAlreadyExistsDB
+			logger.Debug(errActionAlreadyExists)
+			return nil, errActionAlreadyExistsInDB
 		}
 
-		logger.Error(failedToCreatePermissionDefinition, err)
+		logger.Error(failedToCreateAction, err)
 		return nil, err
 	default:
-		logger.Error(failedToCreatePermissionDefinition, err)
+		logger.Error(failedToCreateAction, err)
 		return nil, err
 	}
 }
 
-func findPermissionDefinition(
+func findAction(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	action string,
-) (*permissionDefinition, error) {
+	actionName string,
+) (*action, error) {
 	logger = logger.Session("find-permission-definition")
 
 	var (
-		permissionDefinitionID int64
-		name                   string
+		actionID int64
+		name     string
 	)
 
 	err := squirrel.Select("id", "name").
-		From("permission_definition").
+		From("action").
 		Where(squirrel.Eq{
-			"name": action,
+			"name": actionName,
 		}).
 		RunWith(conn).
-		ScanContext(ctx, &permissionDefinitionID, &name)
+		ScanContext(ctx, &actionID, &name)
 
 	switch err {
 	case nil:
-		return &permissionDefinition{
-			ID: permissionDefinitionID,
-			PermissionDefinition: &perm.PermissionDefinition{
+		return &action{
+			ID: actionID,
+			Action: &perm.Action{
 				Name: name,
 			},
 		}, nil
 	case sql.ErrNoRows:
-		logger.Debug(errPermissionDefinitionNotFound)
-		return nil, errPermissionDefinitionNotFoundDB
+		logger.Debug(errActionNotFound)
+		return nil, errActionNotFoundDB
 	default:
-		logger.Error(failedToFindPermissionDefinition, err)
+		logger.Error(failedToFindAction, err)
 		return nil, err
 	}
 }
@@ -616,10 +613,10 @@ func findRolePermissions(
 		"role.id": roleID,
 	})
 
-	rows, err := squirrel.Select("p.id", "pd.name", "p.resource_pattern").
+	rows, err := squirrel.Select("p.id", "a.name", "p.resource_pattern").
 		From("permission p").
 		JoinClause("INNER JOIN role r ON p.role_id = r.id").
-		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
+		JoinClause("INNER JOIN action a ON p.action_id = a.id").
 		Where(squirrel.Eq{"role_id": roleID}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -676,16 +673,16 @@ func hasPermission(
 
 	var count int
 
-	err := squirrel.Select("count(ra.role_id)").
-		From("role_assignment ra").
-		JoinClause("INNER JOIN actor a ON a.id = ra.actor_id").
-		JoinClause("INNER JOIN permission p ON ra.role_id = p.role_id").
-		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
+	err := squirrel.Select("count(role_assignment.role_id)").
+		From("role_assignment").
+		JoinClause("INNER JOIN actor ON actor.id = role_assignment.actor_id").
+		JoinClause("INNER JOIN permission permission ON role_assignment.role_id = permission.role_id").
+		JoinClause("INNER JOIN action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
-			"a.namespace":           query.Actor.Namespace,
-			"a.domain_id":        query.Actor.ID,
-			"pd.name":            query.Action,
-			"p.resource_pattern": query.ResourcePattern,
+			"actor.namespace":             query.Actor.Namespace,
+			"actor.domain_id":             query.Actor.ID,
+			"action.name":                 query.Action,
+			"permission.resource_pattern": query.ResourcePattern,
 		}).
 		RunWith(conn).
 		ScanContext(ctx, &count)
@@ -706,7 +703,7 @@ func createPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	permissionDefinitionID int64,
+	actionID int64,
 	roleID int64,
 	resourcePattern string,
 	action string,
@@ -715,8 +712,8 @@ func createPermission(
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("permission").
-		Columns("uuid", "permission_definition_id", "role_id", "resource_pattern").
-		Values(u, permissionDefinitionID, roleID, resourcePattern).
+		Columns("uuid", "action_id", "role_id", "resource_pattern").
+		Values(u, actionID, roleID, resourcePattern).
 		RunWith(conn).
 		ExecContext(ctx)
 
@@ -773,11 +770,11 @@ func listResourcePatterns(
 		Join("role_assignment ON role.id = role_assignment.role_id").
 		Join("actor ON actor.id = role_assignment.actor_id").
 		Join("permission ON permission.role_id = role.id").
-		Join("permission_definition ON permission.permission_definition_id = permission_definition.id").
+		Join("action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
-			"permission_definition.name": action,
-			"actor.domain_id":            id,
-			"actor.namespace":               namespace,
+			"action.name":     action,
+			"actor.domain_id": id,
+			"actor.namespace": namespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)
