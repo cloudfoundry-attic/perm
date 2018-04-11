@@ -2,12 +2,16 @@ package rpc
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/perm"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RoleServiceServer struct {
@@ -108,10 +112,27 @@ func (s *RoleServiceServer) DeleteRole(
 	return &protos.DeleteRoleResponse{}, nil
 }
 
+func validateAssignRoleRequest(req *protos.AssignRoleRequest) error {
+
+	pActor := req.GetActor()
+	namespace := pActor.GetNamespace()
+	if strings.Trim(namespace, "\t \n") == "" {
+		return errors.New("actor namespace cannot be empty")
+	}
+
+	return nil
+}
+
 func (s *RoleServiceServer) AssignRole(
 	ctx context.Context,
 	req *protos.AssignRoleRequest,
 ) (*protos.AssignRoleResponse, error) {
+
+	err := validateAssignRoleRequest(req)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 
@@ -130,7 +151,7 @@ func (s *RoleServiceServer) AssignRole(
 	})
 	logger.Debug(starting)
 
-	err := s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
+	err = s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
