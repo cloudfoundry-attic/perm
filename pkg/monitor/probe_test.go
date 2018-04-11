@@ -14,6 +14,7 @@ import (
 	"code.cloudfoundry.org/perm-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -79,6 +80,10 @@ var _ = Describe("Probe", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
+				fakeRoleServiceClient.CreateRoleStub = func(ctx context.Context, in *protos.CreateRoleRequest, opts ...grpc.CallOption) (*protos.CreateRoleResponse, error) {
+					time.Sleep(10 * time.Millisecond)
+					return &protos.CreateRoleResponse{}, nil
+				}
 				_, err := p.Setup(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context canceled"))
 			})
@@ -150,18 +155,24 @@ var _ = Describe("Probe", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
+				fakeRoleServiceClient.DeleteRoleStub = func(ctx context.Context, in *protos.DeleteRoleRequest, opts ...grpc.CallOption) (*protos.DeleteRoleResponse, error) {
+					time.Sleep(20 * time.Millisecond)
+					return &protos.DeleteRoleResponse{}, nil
+				}
 				_, err := p.Cleanup(contextWithExceededDeadline, time.Second, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context canceled"))
 			})
 		})
 
 		Context("when cleanup timeout is exceeded", func() {
-			type slowClient struct {
-			}
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
-				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(-1*time.Millisecond), fakeLogger, uniqueSuffix)
+				fakeRoleServiceClient.DeleteRoleStub = func(ctx context.Context, in *protos.DeleteRoleRequest, opts ...grpc.CallOption) (*protos.DeleteRoleResponse, error) {
+					time.Sleep(20 * time.Millisecond)
+					return &protos.DeleteRoleResponse{}, nil
+				}
+				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(1*time.Millisecond), fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context deadline exceeded"))
 			})
 		})
@@ -219,6 +230,10 @@ var _ = Describe("Probe", func() {
 			It("respects the timeout and exits with an error", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
+				fakePermissionsServiceClient.HasPermissionStub = func(ctx context.Context, in *protos.HasPermissionRequest, opts ...grpc.CallOption) (*protos.HasPermissionResponse, error) {
+					time.Sleep(10 * time.Millisecond)
+					return &protos.HasPermissionResponse{}, nil
+				}
 				_, _, err := p.Run(contextWithExceededDeadline, fakeLogger, uniqueSuffix)
 				Expect(err).To(MatchError("context canceled"))
 			})
