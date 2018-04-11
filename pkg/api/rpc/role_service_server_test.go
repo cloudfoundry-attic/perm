@@ -494,6 +494,21 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(res).NotTo(BeNil())
 			Expect(res.GetHasRole()).To(BeFalse())
 		})
+
+		It("fails when the actor namespace is not provided", func() {
+			actor := &protos.Actor{
+				ID:        "actor",
+				Namespace: "",
+			}
+			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
+				Actor:    actor,
+				RoleName: "role",
+			})
+
+			expectedErr := status.Errorf(codes.InvalidArgument, "actor namespace cannot be empty")
+			Expect(res).To(BeNil())
+			Expect(err).To(MatchError(expectedErr))
+		})
 	})
 
 	Describe("#ListActorRoles", func() {

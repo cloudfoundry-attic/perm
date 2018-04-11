@@ -113,7 +113,16 @@ func (s *RoleServiceServer) DeleteRole(
 }
 
 func validateAssignRoleRequest(req *protos.AssignRoleRequest) error {
+	pActor := req.GetActor()
+	namespace := pActor.GetNamespace()
+	if strings.Trim(namespace, "\t \n") == "" {
+		return errors.New("actor namespace cannot be empty")
+	}
 
+	return nil
+}
+
+func validateHasRoleRequest(req *protos.HasRoleRequest) error {
 	pActor := req.GetActor()
 	namespace := pActor.GetNamespace()
 	if strings.Trim(namespace, "\t \n") == "" {
@@ -198,6 +207,11 @@ func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
 ) (*protos.HasRoleResponse, error) {
+	err := validateHasRoleRequest(req)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
 	actor := perm.Actor{
