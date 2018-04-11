@@ -112,19 +112,8 @@ func (s *RoleServiceServer) DeleteRole(
 	return &protos.DeleteRoleResponse{}, nil
 }
 
-func validateAssignRoleRequest(req *protos.AssignRoleRequest) error {
-	pActor := req.GetActor()
-	namespace := pActor.GetNamespace()
-	if strings.Trim(namespace, "\t \n") == "" {
-		return errors.New("actor namespace cannot be empty")
-	}
-
-	return nil
-}
-
-func validateHasRoleRequest(req *protos.HasRoleRequest) error {
-	pActor := req.GetActor()
-	namespace := pActor.GetNamespace()
+func validateActor(actor *protos.Actor) error {
+	namespace := actor.GetNamespace()
 	if strings.Trim(namespace, "\t \n") == "" {
 		return errors.New("actor namespace cannot be empty")
 	}
@@ -137,7 +126,7 @@ func (s *RoleServiceServer) AssignRole(
 	req *protos.AssignRoleRequest,
 ) (*protos.AssignRoleResponse, error) {
 
-	err := validateAssignRoleRequest(req)
+	err := validateActor(req.GetActor())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
@@ -207,7 +196,7 @@ func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
 ) (*protos.HasRoleResponse, error) {
-	err := validateHasRoleRequest(req)
+	err := validateActor(req.GetActor())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
