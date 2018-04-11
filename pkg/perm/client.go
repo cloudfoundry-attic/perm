@@ -3,6 +3,7 @@ package perm
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 
 	"code.cloudfoundry.org/perm-go"
 	"google.golang.org/grpc"
@@ -105,9 +106,6 @@ func (c *Client) DeleteRole(ctx context.Context, name string) error {
 }
 
 func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) error {
-	if actor.Namespace == "" {
-		return ErrActorNamespaceEmpty
-	}
 	req := &protos.AssignRoleRequest{
 		RoleName: roleName,
 		Actor: &protos.Actor{
@@ -117,16 +115,11 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) e
 	}
 	_, err := c.roleServiceClient.AssignRole(ctx, req)
 	s := status.Convert(err)
-
 	switch s.Code() {
 	case codes.OK:
 		return nil
-	case codes.NotFound:
-		return ErrRoleNotFound
-	case codes.AlreadyExists:
-		return ErrAssignmentAlreadyExists
 	default:
-		return ErrUnknown
+		return errors.New(s.Message())
 	}
 }
 
