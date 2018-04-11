@@ -105,10 +105,13 @@ func (c *Client) DeleteRole(ctx context.Context, name string) error {
 }
 
 func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) error {
+	if actor.Namespace == "" {
+		return ErrActorNamespaceEmpty
+	}
 	req := &protos.AssignRoleRequest{
 		RoleName: roleName,
 		Actor: &protos.Actor{
-			ID:     actor.ID,
+			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
 	}
@@ -131,7 +134,7 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 	req := &protos.UnassignRoleRequest{
 		RoleName: roleName,
 		Actor: &protos.Actor{
-			ID:     actor.ID,
+			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
 	}
@@ -151,7 +154,7 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourceID string) (bool, error) {
 	req := &protos.HasPermissionRequest{
 		Actor: &protos.Actor{
-			ID:     actor.ID,
+			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
 		PermissionName: action,
@@ -171,7 +174,7 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 func (c *Client) ListResourcePatterns(ctx context.Context, actor Actor, action string) ([]string, error) {
 	req := &protos.ListResourcePatternsRequest{
 		Actor: &protos.Actor{
-			ID:     actor.ID,
+			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
 		PermissionName: action,

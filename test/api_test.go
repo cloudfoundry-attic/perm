@@ -146,6 +146,19 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			err = client.AssignRole(context.Background(), role.Name, actor)
 			Expect(err).To(MatchError("assignment already exists"))
 		})
+
+		It("fails when the actor namespace has not been specified", func() {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: "",
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).To(MatchError("actor namespace cannot be empty"))
+		})
 	})
 
 	Describe("#UnassignRole", func() {

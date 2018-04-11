@@ -17,4 +17,6 @@ var (
 	ErrAssignmentNotFound      = NewErrNotFound("assignment")
 	ErrAssignmentAlreadyExists = NewErrAlreadyExists("assignment")
 	ErrActorAlreadyExists      = NewErrAlreadyExists("actor")
+
+	ErrActorNamespaceEmpty = NewErrCannotBeEmpty("actor namespace")
 )
