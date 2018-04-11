@@ -11,9 +11,9 @@ func (s *DataService) CreateActor(
 	ctx context.Context,
 	logger lager.Logger,
 	domainID string,
-	issuer string,
+	namespace string,
 ) (*perm.Actor, error) {
-	actor, err := createActor(ctx, logger.Session("data-service"), s.conn, domainID, issuer)
+	actor, err := createActor(ctx, logger.Session("data-service"), s.conn, domainID, namespace)
 	if err != nil {
 		return nil, err
 	}

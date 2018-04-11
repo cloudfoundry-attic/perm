@@ -189,7 +189,7 @@ func createActor(
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("actor").
-		Columns("uuid", "domain_id", "issuer").
+		Columns("uuid", "domain_id", "namespace").
 		Values(u, id, namespace).
 		RunWith(conn).
 		ExecContext(ctx)
@@ -236,7 +236,7 @@ func findActorID(
 		sQuery["domain_id"] = id
 	}
 	if namespace != "" {
-		sQuery["issuer"] = namespace
+		sQuery["namespace"] = namespace
 	}
 
 	var (
@@ -682,7 +682,7 @@ func hasPermission(
 		JoinClause("INNER JOIN permission p ON ra.role_id = p.role_id").
 		JoinClause("INNER JOIN permission_definition pd ON p.permission_definition_id = pd.id").
 		Where(squirrel.Eq{
-			"a.issuer":           query.Actor.Namespace,
+			"a.namespace":           query.Actor.Namespace,
 			"a.domain_id":        query.Actor.ID,
 			"pd.name":            query.Action,
 			"p.resource_pattern": query.ResourcePattern,
@@ -777,7 +777,7 @@ func listResourcePatterns(
 		Where(squirrel.Eq{
 			"permission_definition.name": action,
 			"actor.domain_id":            id,
-			"actor.issuer":               namespace,
+			"actor.namespace":               namespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)

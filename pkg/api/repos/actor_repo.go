@@ -12,6 +12,6 @@ type ActorRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		domainID,
-		issuer string,
+		namespace string,
 	) (*perm.Actor, error)
 }

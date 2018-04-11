@@ -14,7 +14,7 @@ func (s *DataService) AssignRole(
 	logger lager.Logger,
 	roleName,
 	domainID,
-	issuer string,
+	namespace string,
 ) (err error) {
 	logger = logger.Session("data-service")
 
@@ -31,7 +31,7 @@ func (s *DataService) AssignRole(
 		err = sqlx.Commit(logger, tx, err)
 	}()
 
-	err = assignRole(ctx, logger, tx, roleName, domainID, issuer)
+	err = assignRole(ctx, logger, tx, roleName, domainID, namespace)
 
 	return
 }
@@ -41,7 +41,7 @@ func (s *DataService) UnassignRole(
 	logger lager.Logger,
 	roleName,
 	domainID,
-	issuer string,
+	namespace string,
 ) (err error) {
 	logger = logger.Session("data-service")
 
@@ -58,7 +58,7 @@ func (s *DataService) UnassignRole(
 		err = sqlx.Commit(logger, tx, err)
 	}()
 
-	err = unassignRole(ctx, logger, tx, roleName, domainID, issuer)
+	err = unassignRole(ctx, logger, tx, roleName, domainID, namespace)
 
 	return
 }

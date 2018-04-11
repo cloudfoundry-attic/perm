@@ -116,7 +116,7 @@ func (s *RoleServiceServer) AssignRole(
 	pActor := req.GetActor()
 
 	domainID := pActor.GetID()
-	issuer := pActor.GetNamespace()
+	namespace := pActor.GetNamespace()
 	logExtensions := []logging.CustomExtension{
 		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
@@ -125,12 +125,12 @@ func (s *RoleServiceServer) AssignRole(
 	s.securityLogger.Log(ctx, "AssignRole", "Role assignment", logExtensions...)
 	logger := s.logger.Session("assign-role").WithData(lager.Data{
 		"actor.id":        domainID,
-		"actor.namespace": issuer,
+		"actor.namespace": namespace,
 		"role.name":       roleName,
 	})
 	logger.Debug(starting)
 
-	err := s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, issuer)
+	err := s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -147,10 +147,10 @@ func (s *RoleServiceServer) UnassignRole(
 	pActor := req.GetActor()
 
 	domainID := pActor.GetID()
-	issuer := pActor.GetNamespace()
+	namespace := pActor.GetNamespace()
 	actor := perm.Actor{
 		ID:        domainID,
-		Namespace: issuer,
+		Namespace: namespace,
 	}
 	logExtensions := []logging.CustomExtension{
 		{Key: "roleName", Value: roleName},
@@ -164,7 +164,7 @@ func (s *RoleServiceServer) UnassignRole(
 	})
 	logger.Debug(starting)
 
-	err := s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, issuer)
+	err := s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}

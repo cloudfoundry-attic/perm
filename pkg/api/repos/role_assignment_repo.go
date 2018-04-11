@@ -22,7 +22,7 @@ type RoleAssignmentRepo interface {
 		logger lager.Logger,
 		roleName,
 		domainID,
-		issuer string,
+		namespace string,
 	) error
 
 	UnassignRole(
@@ -30,7 +30,7 @@ type RoleAssignmentRepo interface {
 		logger lager.Logger,
 		roleName,
 		domainID,
-		issuer string,
+		namespace string,
 	) error
 
 	HasRole(

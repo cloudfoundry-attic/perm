@@ -149,7 +149,7 @@ var _ = Describe("RoleRepoServer", func() {
 
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 
 			_, err = subject.AssignRole(ctx, &protos.AssignRoleRequest{
@@ -205,7 +205,7 @@ var _ = Describe("RoleRepoServer", func() {
 			name := "role"
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "fake-issuer",
+				Namespace: "fake-namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
@@ -227,7 +227,7 @@ var _ = Describe("RoleRepoServer", func() {
 			name := "role"
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "fake-issuer",
+				Namespace: "fake-namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
@@ -252,7 +252,7 @@ var _ = Describe("RoleRepoServer", func() {
 		It("fails if the role does not exist", func() {
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			res, err := subject.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
@@ -266,7 +266,7 @@ var _ = Describe("RoleRepoServer", func() {
 		It("logs a security event", func() {
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "fake-issuer",
+				Namespace: "fake-namespace",
 			}
 			req := &protos.AssignRoleRequest{
 				Actor:    actor,
@@ -291,7 +291,7 @@ var _ = Describe("RoleRepoServer", func() {
 			name := "role"
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "fake-issuer",
+				Namespace: "fake-namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
@@ -320,7 +320,7 @@ var _ = Describe("RoleRepoServer", func() {
 			name := "role"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
@@ -342,7 +342,7 @@ var _ = Describe("RoleRepoServer", func() {
 			name := "fake-role"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			req := &protos.UnassignRoleRequest{
 				Actor:    actor,
@@ -357,7 +357,7 @@ var _ = Describe("RoleRepoServer", func() {
 		It("logs a security event", func() {
 			actor := &protos.Actor{
 				ID:     "actor-id",
-				Namespace: "fake-issuer",
+				Namespace: "fake-namespace",
 			}
 			req := &protos.UnassignRoleRequest{
 				Actor:    actor,
@@ -382,7 +382,7 @@ var _ = Describe("RoleRepoServer", func() {
 			roleName := "role"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
@@ -407,15 +407,15 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(res.GetHasRole()).To(BeTrue())
 		})
 
-		It("returns false if only an actor with the same name but different issuer is assigned", func() {
+		It("returns false if only an actor with the same name but different namespace is assigned", func() {
 			roleName := "role"
 			actor1 := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer1",
+				Namespace: "namespace1",
 			}
 			actor2 := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer2",
+				Namespace: "namespace2",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
@@ -444,7 +444,7 @@ var _ = Describe("RoleRepoServer", func() {
 			roleName := "role"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
@@ -466,7 +466,7 @@ var _ = Describe("RoleRepoServer", func() {
 			roleName := "role"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			res, err := subject.HasRole(ctx, &protos.HasRoleRequest{
 				Actor:    actor,
@@ -485,7 +485,7 @@ var _ = Describe("RoleRepoServer", func() {
 			role2 := "role2"
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
@@ -534,7 +534,7 @@ var _ = Describe("RoleRepoServer", func() {
 		It("returns an empty list if the actor has not been assigned to any roles", func() {
 			actor := &protos.Actor{
 				ID:     "actor",
-				Namespace: "issuer",
+				Namespace: "namespace",
 			}
 			res, err := subject.ListActorRoles(ctx, &protos.ListActorRolesRequest{
 				Actor: actor,

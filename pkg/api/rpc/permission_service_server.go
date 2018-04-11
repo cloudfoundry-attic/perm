@@ -50,7 +50,7 @@ func (s *PermissionServiceServer) HasPermission(
 
 	logger := s.logger.Session("has-permission").WithData(lager.Data{
 		"actor.id":                   actor.ID,
-		"actor.issuer":               actor.Namespace,
+		"actor.namespace":               actor.Namespace,
 		"permission.action":          action,
 		"permission.resourcePattern": resourcePattern,
 	})
@@ -89,7 +89,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
 			"actor.id":          actor.ID,
-			"actor.issuer":      actor.Namespace,
+			"actor.namespace":      actor.Namespace,
 			"permission.action": action,
 		})
 
