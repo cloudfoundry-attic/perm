@@ -150,6 +150,22 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(res.GetHasPermission()).To(BeFalse())
 		})
 
+		It("fails when the actor namespace is not provided", func() {
+			actor := &protos.Actor{
+				ID:        "actor",
+				Namespace: "",
+			}
+
+			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
+				Actor:          actor,
+				PermissionName: "some-permission",
+				ResourceId:     "some-resource-ID",
+			})
+			expectedErr := status.Errorf(codes.InvalidArgument, "actor namespace cannot be empty")
+			Expect(res).To(BeNil())
+			Expect(err).To(MatchError(expectedErr))
+		})
+
 		It("logs a security event", func() {
 			_, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
@@ -191,7 +207,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			actor := &protos.Actor{
 				Namespace: "test-namespace",
-				ID:     "fancy-id",
+				ID:        "fancy-id",
 			}
 			_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
 				Actor:    actor,
@@ -219,7 +235,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		It("returns an empty list if there are no resource patterns", func() {
 			req := &protos.ListResourcePatternsRequest{
 				Actor: &protos.Actor{
-					ID:     "123",
+					ID:        "123",
 					Namespace: "namespace34",
 				},
 				PermissionName: "p12",
@@ -239,7 +255,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			req := &protos.ListResourcePatternsRequest{
 				Actor: &protos.Actor{
-					ID:     "123",
+					ID:        "123",
 					Namespace: "namespace34",
 				},
 				PermissionName: "p12",

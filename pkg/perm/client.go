@@ -160,7 +160,7 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 	case codes.OK:
 		return res.HasPermission, nil
 	default:
-		return false, ErrUnknown
+		return false, errors.New(s.Message())
 	}
 }
 

@@ -2,9 +2,13 @@ package rpc
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
@@ -29,10 +33,24 @@ func NewPermissionServiceServer(
 	}
 }
 
+func validateHasPermissionRequest(req *protos.HasPermissionRequest) error {
+	pActor := req.GetActor()
+	namespace := pActor.GetNamespace()
+	if strings.Trim(namespace, "\t \n") == "" {
+		return errors.New("actor namespace cannot be empty")
+	}
+
+	return nil
+}
+
 func (s *PermissionServiceServer) HasPermission(
 	ctx context.Context,
 	req *protos.HasPermissionRequest,
 ) (*protos.HasPermissionResponse, error) {
+	err := validateHasPermissionRequest(req)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
 	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
@@ -50,7 +68,7 @@ func (s *PermissionServiceServer) HasPermission(
 
 	logger := s.logger.Session("has-permission").WithData(lager.Data{
 		"actor.id":                   actor.ID,
-		"actor.namespace":               actor.Namespace,
+		"actor.namespace":            actor.Namespace,
 		"permission.action":          action,
 		"permission.resourcePattern": resourcePattern,
 	})
@@ -89,7 +107,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
 			"actor.id":          actor.ID,
-			"actor.namespace":      actor.Namespace,
+			"actor.namespace":   actor.Namespace,
 			"permission.action": action,
 		})
 
