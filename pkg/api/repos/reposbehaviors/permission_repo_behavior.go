@@ -17,14 +17,12 @@ import (
 func BehavesLikeAPermissionRepo(
 	subjectCreator func() repos.PermissionRepo,
 	roleRepoCreator func() repos.RoleRepo,
-	actorRepoCreator func() repos.ActorRepo,
 	roleAssignmentRepoCreator func() repos.RoleAssignmentRepo,
 ) {
 	var (
 		subject repos.PermissionRepo
 
 		roleRepo           repos.RoleRepo
-		actorRepo          repos.ActorRepo
 		roleAssignmentRepo repos.RoleAssignmentRepo
 
 		ctx    context.Context
@@ -37,7 +35,6 @@ func BehavesLikeAPermissionRepo(
 		subject = subjectCreator()
 
 		roleRepo = roleRepoCreator()
-		actorRepo = actorRepoCreator()
 		roleAssignmentRepo = roleAssignmentRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
@@ -90,9 +87,6 @@ func BehavesLikeAPermissionRepo(
 			}
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = actorRepo.CreateActor(ctx, logger, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{

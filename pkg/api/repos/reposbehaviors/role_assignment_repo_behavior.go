@@ -17,13 +17,11 @@ import (
 func BehavesLikeARoleAssignmentRepo(
 	subjectCreator func() repos.RoleAssignmentRepo,
 	roleRepoCreator func() repos.RoleRepo,
-	actorRepoCreator func() repos.ActorRepo,
 ) {
 	var (
 		subject repos.RoleAssignmentRepo
 
-		roleRepo  repos.RoleRepo
-		actorRepo repos.ActorRepo
+		roleRepo repos.RoleRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -35,7 +33,6 @@ func BehavesLikeARoleAssignmentRepo(
 		subject = subjectCreator()
 
 		roleRepo = roleRepoCreator()
-		actorRepo = actorRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
@@ -106,10 +103,7 @@ func BehavesLikeARoleAssignmentRepo(
 			}
 			roleName := uuid.NewV4().String()
 
-			_, err := actorRepo.CreateActor(ctx, logger, actor.ID, actor.Namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = roleRepo.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
@@ -154,10 +148,7 @@ func BehavesLikeARoleAssignmentRepo(
 			namespace := uuid.NewV4().String()
 			roleName := uuid.NewV4().String()
 
-			_, err := actorRepo.CreateActor(ctx, logger, id, namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = roleRepo.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = subject.UnassignRole(ctx, logger, roleName, id, namespace)
@@ -196,10 +187,7 @@ func BehavesLikeARoleAssignmentRepo(
 			}
 			roleName := uuid.NewV4().String()
 
-			_, err := actorRepo.CreateActor(ctx, logger, actor.ID, actor.Namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = roleRepo.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasRoleQuery{
@@ -239,14 +227,11 @@ func BehavesLikeARoleAssignmentRepo(
 			}
 			roleName := uuid.NewV4().String()
 
-			_, err := actorRepo.CreateActor(ctx, logger, actor.ID, actor.Namespace)
-			Expect(err).NotTo(HaveOccurred())
-
 			query := repos.HasRoleQuery{
 				Actor:    actor,
 				RoleName: roleName,
 			}
-			_, err = subject.HasRole(ctx, logger, query)
+			_, err := subject.HasRole(ctx, logger, query)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(perm.ErrRoleNotFound))

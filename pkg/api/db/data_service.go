@@ -395,18 +395,18 @@ func hasRole(
 ) (bool, error) {
 	logger = logger.Session("has-role")
 
-	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
-	if err == errActorNotFoundDB {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-
 	findRoleQuery := repos.FindRoleQuery{
 		RoleName: query.RoleName,
 	}
 	role, err := findRole(ctx, logger, conn, findRoleQuery)
 	if err != nil {
+		return false, err
+	}
+
+	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
+	if err == errActorNotFoundDB {
+		return false, nil
+	} else if err != nil {
 		return false, err
 	}
 

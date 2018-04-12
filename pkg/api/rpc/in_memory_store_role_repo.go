@@ -204,26 +204,6 @@ func (s *InMemoryStore) ListActorRoles(
 	return roles, nil
 }
 
-func (s *InMemoryStore) CreateActor(
-	ctx context.Context,
-	logger lager.Logger,
-	id,
-	namespace string,
-) (*perm.Actor, error) {
-	actor := perm.Actor{
-		ID:        id,
-		Namespace: namespace,
-	}
-
-	if _, exists := s.assignments[actor]; exists {
-		return nil, perm.ErrActorAlreadyExists
-	}
-
-	s.assignments[actor] = []string{}
-
-	return &actor, nil
-}
-
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
