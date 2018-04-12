@@ -200,13 +200,13 @@ func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
 ) (*protos.HasRoleResponse, error) {
-	err := validateActor(req.GetActor())
+	roleName := req.GetRoleName()
+	pActor := req.GetActor()
+	err := validateActor(pActor)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	roleName := req.GetRoleName()
-	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),
