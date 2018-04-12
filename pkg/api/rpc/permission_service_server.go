@@ -2,8 +2,6 @@ package rpc
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
@@ -33,25 +31,15 @@ func NewPermissionServiceServer(
 	}
 }
 
-func validateHasPermissionRequest(req *protos.HasPermissionRequest) error {
-	pActor := req.GetActor()
-	namespace := pActor.GetNamespace()
-	if strings.Trim(namespace, "\t \n") == "" {
-		return errors.New("actor namespace cannot be empty")
-	}
-
-	return nil
-}
-
 func (s *PermissionServiceServer) HasPermission(
 	ctx context.Context,
 	req *protos.HasPermissionRequest,
 ) (*protos.HasPermissionResponse, error) {
-	err := validateHasPermissionRequest(req)
+	pActor := req.GetActor()
+	err := validateActor(pActor)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	pActor := req.GetActor()
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),

@@ -2,8 +2,6 @@ package rpc
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm-go"
@@ -112,27 +110,16 @@ func (s *RoleServiceServer) DeleteRole(
 	return &protos.DeleteRoleResponse{}, nil
 }
 
-func validateActor(actor *protos.Actor) error {
-	namespace := actor.GetNamespace()
-	if strings.Trim(namespace, "\t \n") == "" {
-		return errors.New("actor namespace cannot be empty")
-	}
-
-	return nil
-}
-
 func (s *RoleServiceServer) AssignRole(
 	ctx context.Context,
 	req *protos.AssignRoleRequest,
 ) (*protos.AssignRoleResponse, error) {
-
-	err := validateActor(req.GetActor())
+	roleName := req.GetRoleName()
+	pActor := req.GetActor()
+	err := validateActor(pActor)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-
-	roleName := req.GetRoleName()
-	pActor := req.GetActor()
 
 	domainID := pActor.GetID()
 	namespace := pActor.GetNamespace()
