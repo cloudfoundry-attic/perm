@@ -242,6 +242,11 @@ func (s *RoleServiceServer) ListActorRoles(
 	req *protos.ListActorRolesRequest,
 ) (*protos.ListActorRolesResponse, error) {
 	pActor := req.GetActor()
+	err := validateActor(pActor)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
 	actor := perm.Actor{
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),
