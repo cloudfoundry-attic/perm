@@ -51,11 +51,11 @@ var _ = Describe("PermissionServiceServer", func() {
 			roleName = "role"
 			actor = &protos.Actor{ID: "actor", Namespace: "namespace"}
 			permission1 = &protos.Permission{
-				Name:            "some-permission",
+				Action:          "some-action",
 				ResourcePattern: "some-resource-ID",
 			}
 			permission2 = &protos.Permission{
-				Name:            "some-other-permission",
+				Action:          "some-other-action",
 				ResourcePattern: "some-other-resource-ID",
 			}
 		})
@@ -78,7 +78,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
 				Actor:          actor,
-				PermissionName: "some-other-permission",
+				PermissionName: "some-other-action",
 				ResourceId:     "some-other-resource-ID",
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -189,9 +189,9 @@ var _ = Describe("PermissionServiceServer", func() {
 
 	Describe("#ListResourcePatterns", func() {
 		It("returns the list of resource patterns", func() {
-			p1 := &protos.Permission{Name: "test-permission-name", ResourcePattern: "foo"}
-			p2 := &protos.Permission{Name: "another-permission-name", ResourcePattern: "bar"}
-			p3 := &protos.Permission{Name: "test-permission-name", ResourcePattern: "baz"}
+			p1 := &protos.Permission{Action: "test-permission-action", ResourcePattern: "foo"}
+			p2 := &protos.Permission{Action: "another-permission-action", ResourcePattern: "bar"}
+			p3 := &protos.Permission{Action: "test-permission-action", ResourcePattern: "baz"}
 
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name:        "r1",
@@ -223,7 +223,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 			request := &protos.ListResourcePatternsRequest{
 				Actor:          actor,
-				PermissionName: "test-permission-name",
+				PermissionName: "test-permission-action",
 			}
 			response, err := subject.ListResourcePatterns(ctx, request)
 			Expect(err).NotTo(HaveOccurred())

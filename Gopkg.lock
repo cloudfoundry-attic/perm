@@ -17,8 +17,8 @@
     ".",
     "perm-gofakes"
   ]
-  revision = "a09ef69b2ed0a0875bd3a6c151b93e9b3a3ef0ed"
-  version = "v0.0.4"
+  revision = "3f03fdcf38abfa4cf13d68dd2f05449028c6bf9a"
+  version = "v0.0.5"
 
 [[projects]]
   name = "github.com/DATA-DOG/go-sqlmock"

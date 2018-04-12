@@ -63,7 +63,7 @@ func (c *Client) CreateRole(ctx context.Context, name string, permissions ...Per
 
 	for _, p := range permissions {
 		reqPermissions = append(reqPermissions, &protos.Permission{
-			Name:            p.Action,
+			Action:          p.Action,
 			ResourcePattern: p.ResourcePattern,
 		})
 	}

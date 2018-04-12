@@ -611,11 +611,11 @@ var _ = Describe("RoleRepoServer", func() {
 		It("returns all the permissions that the role was created with", func() {
 			roleName := "role1"
 			permission1 := &protos.Permission{
-				Name:            "permission-1",
+				Action:          "action-1",
 				ResourcePattern: "resource-pattern-1",
 			}
 			permission2 := &protos.Permission{
-				Name:            "permission-2",
+				Action:          "action-2",
 				ResourcePattern: "resource-pattern-2",
 			}
 

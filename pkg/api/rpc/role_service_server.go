@@ -42,7 +42,7 @@ func (s *RoleServiceServer) CreateRole(
 	var permissions []*perm.Permission
 	for _, p := range req.GetPermissions() {
 		permissions = append(permissions, &perm.Permission{
-			Action:          p.GetName(),
+			Action:          p.GetAction(),
 			ResourcePattern: p.GetResourcePattern(),
 		})
 	}
@@ -290,7 +290,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 
 	for _, p := range permissions {
 		pPermissions = append(pPermissions, &protos.Permission{
-			Name:            p.Action,
+			Action:          p.Action,
 			ResourcePattern: p.ResourcePattern,
 		})
 	}

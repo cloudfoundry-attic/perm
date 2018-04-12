@@ -14,10 +14,10 @@ import (
 const (
 	ProbeRoleName = "system.probe"
 
-	ProbeAssignedPermissionName       = "system.probe.assigned-permission.name"
+	ProbeAssignedPermissionAction     = "system.probe.assigned-permission.action"
 	ProbeAssignedPermissionResourceID = "system.probe.assigned-permission.resource-id"
 
-	ProbeUnassignedPermissionName       = "system.probe.unassigned-permission.name"
+	ProbeUnassignedPermissionAction     = "system.probe.unassigned-permission.action"
 	ProbeUnassignedPermissionResourceID = "system.probe.unassigned-permission.resource-id"
 )
 
@@ -70,7 +70,7 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	assignedPermission := &protos.Permission{
-		Name:            ProbeAssignedPermissionName,
+		Action:          ProbeAssignedPermissionAction,
 		ResourcePattern: ProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
@@ -279,19 +279,19 @@ func (p *Probe) runAssignedPermission(
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	assignedPermission := &protos.Permission{
-		Name:            ProbeAssignedPermissionName,
+		Action:          ProbeAssignedPermissionAction,
 		ResourcePattern: ProbeAssignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
 	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
 		"actor.id":                    ProbeActor.GetID(),
 		"actor.namespace":                ProbeActor.GetNamespace(),
-		"permission.name":             assignedPermission.GetName(),
+		"permission.name":             assignedPermission.GetAction(),
 		"permission.resource_pattern": assignedPermission.GetResourcePattern(),
 	})
 	req := &protos.HasPermissionRequest{
 		Actor:          ProbeActor,
-		PermissionName: assignedPermission.Name,
+		PermissionName: assignedPermission.Action,
 		ResourceId:     assignedPermission.ResourcePattern,
 	}
 
@@ -322,19 +322,19 @@ func (p *Probe) runUnassignedPermission(
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
 	unassignedPermission := &protos.Permission{
-		Name:            ProbeUnassignedPermissionName,
+		Action:          ProbeUnassignedPermissionAction,
 		ResourcePattern: ProbeUnassignedPermissionResourceID + "." + uniqueSuffix,
 	}
 
 	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
 		"actor.id":                    ProbeActor.GetID(),
-		"actor.namespace":                ProbeActor.GetNamespace(),
-		"permission.name":             unassignedPermission.GetName(),
+		"actor.namespace":             ProbeActor.GetNamespace(),
+		"permission.name":             unassignedPermission.GetAction(),
 		"permission.resource_pattern": unassignedPermission.GetResourcePattern(),
 	})
 	req := &protos.HasPermissionRequest{
 		Actor:          ProbeActor,
-		PermissionName: unassignedPermission.Name,
+		PermissionName: unassignedPermission.Action,
 		ResourceId:     unassignedPermission.ResourcePattern,
 	}
 
