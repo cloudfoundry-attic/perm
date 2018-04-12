@@ -164,6 +164,10 @@ func (s *RoleServiceServer) UnassignRole(
 ) (*protos.UnassignRoleResponse, error) {
 	roleName := req.GetRoleName()
 	pActor := req.GetActor()
+	err := validateActor(pActor)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
 
 	domainID := pActor.GetID()
 	namespace := pActor.GetNamespace()
@@ -183,7 +187,7 @@ func (s *RoleServiceServer) UnassignRole(
 	})
 	logger.Debug(starting)
 
-	err := s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
+	err = s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
