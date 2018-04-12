@@ -759,9 +759,9 @@ func listResourcePatterns(
 
 	logger = logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.issuer":    namespace,
-			"actor.id":        id,
-			"permission.name": action,
+			"actor.issuer":      namespace,
+			"actor.id":          id,
+			"permission.action": action,
 		})
 
 	rows, err := squirrel.Select("permission.resource_pattern").

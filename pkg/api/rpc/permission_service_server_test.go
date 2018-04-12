@@ -222,8 +222,8 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			request := &protos.ListResourcePatternsRequest{
-				Actor:          actor,
-				PermissionName: "test-permission-action",
+				Actor:  actor,
+				Action: "test-permission-action",
 			}
 			response, err := subject.ListResourcePatterns(ctx, request)
 			Expect(err).NotTo(HaveOccurred())
@@ -238,7 +238,7 @@ var _ = Describe("PermissionServiceServer", func() {
 					ID:        "123",
 					Namespace: "namespace34",
 				},
-				PermissionName: "p12",
+				Action: "p12",
 			}
 
 			response, err := subject.ListResourcePatterns(ctx, req)
@@ -258,7 +258,7 @@ var _ = Describe("PermissionServiceServer", func() {
 					ID:        "123",
 					Namespace: "namespace34",
 				},
-				PermissionName: "p12",
+				Action: "p12",
 			}
 			_, err := subject.ListResourcePatterns(ctx, req)
 			Expect(err).To(HaveOccurred())

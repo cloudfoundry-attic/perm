@@ -170,7 +170,7 @@ func (c *Client) ListResourcePatterns(ctx context.Context, actor Actor, action s
 			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
-		PermissionName: action,
+		Action: action,
 	}
 	res, err := c.permissionServiceClient.ListResourcePatterns(ctx, req)
 	s := status.Convert(err)

@@ -14,10 +14,10 @@ import (
 const (
 	ProbeRoleName = "system.probe"
 
-	ProbeAssignedPermissionAction     = "system.probe.assigned-permission.action"
+	ProbeAssignedPermissionAction   = "system.probe.assigned-permission.action"
 	ProbeAssignedPermissionResource = "system.probe.assigned-permission.resource"
 
-	ProbeUnassignedPermissionAction     = "system.probe.unassigned-permission.action"
+	ProbeUnassignedPermissionAction   = "system.probe.unassigned-permission.action"
 	ProbeUnassignedPermissionResource = "system.probe.unassigned-permission.resource"
 )
 

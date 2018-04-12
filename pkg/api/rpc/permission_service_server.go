@@ -94,7 +94,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),
 	}
-	action := req.GetPermissionName()
+	action := req.GetAction()
 
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
