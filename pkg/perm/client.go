@@ -144,14 +144,14 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 	}
 }
 
-func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourceID string) (bool, error) {
+func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resource string) (bool, error) {
 	req := &protos.HasPermissionRequest{
 		Actor: &protos.Actor{
 			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
-		PermissionName: action,
-		ResourceId:     resourceID,
+		Action:       action,
+		Resource:     resource,
 	}
 	res, err := c.permissionServiceClient.HasPermission(ctx, req)
 	s := status.Convert(err)

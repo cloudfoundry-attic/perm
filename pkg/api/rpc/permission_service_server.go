@@ -44,12 +44,12 @@ func (s *PermissionServiceServer) HasPermission(
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),
 	}
-	action := req.GetPermissionName()
-	resourcePattern := req.GetResourceId()
+	action := req.GetAction()
+	resourcePattern := req.GetResource()
 	extensions := []logging.CustomExtension{
 		{Key: "userID", Value: pActor.GetID()},
-		{Key: "permission", Value: action},
-		{Key: "resourceID", Value: resourcePattern},
+		{Key: "action", Value: action},
+		{Key: "resource", Value: resourcePattern},
 	}
 
 	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)

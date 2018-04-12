@@ -52,15 +52,15 @@ var _ = Describe("PermissionServiceServer", func() {
 			actor = &protos.Actor{ID: "actor", Namespace: "namespace"}
 			permission1 = &protos.Permission{
 				Action:          "some-action",
-				ResourcePattern: "some-resource-ID",
+				ResourcePattern: "some-resource",
 			}
 			permission2 = &protos.Permission{
 				Action:          "some-other-action",
-				ResourcePattern: "some-other-resource-ID",
+				ResourcePattern: "some-other-resource",
 			}
 		})
 
-		It("returns true when there is a matching permission name and resourceID", func() {
+		It("returns true when there is a matching permission action and resource", func() {
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 				Permissions: []*protos.Permission{
@@ -77,15 +77,15 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-other-action",
-				ResourceId:     "some-other-resource-ID",
+				Actor:    actor,
+				Action:   "some-other-action",
+				Resource: "some-other-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeTrue())
 		})
 
-		It("returns false when mismatch the permission name and resourceID", func() {
+		It("returns false when mismatch the permission action and resource", func() {
 			_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: roleName,
 				Permissions: []*protos.Permission{
@@ -102,9 +102,9 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-permission",
-				ResourceId:     "some-other-resource-ID",
+				Actor:    actor,
+				Action:   "some-permission",
+				Resource: "some-other-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
@@ -120,9 +120,9 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-permission",
-				ResourceId:     "some-resource-ID",
+				Actor:    actor,
+				Action:   "some-action",
+				Resource: "some-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
@@ -142,9 +142,9 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-permission",
-				ResourceId:     "some-resource-ID",
+				Actor:    actor,
+				Action:   "some-action",
+				Resource: "some-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.GetHasPermission()).To(BeFalse())
@@ -157,9 +157,9 @@ var _ = Describe("PermissionServiceServer", func() {
 			}
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-permission",
-				ResourceId:     "some-resource-ID",
+				Actor:    actor,
+				Action:   "some-action",
+				Resource: "some-resource",
 			})
 			expectedErr := status.Errorf(codes.InvalidArgument, "actor namespace cannot be empty")
 			Expect(res).To(BeNil())
@@ -168,15 +168,15 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("logs a security event", func() {
 			_, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:          actor,
-				PermissionName: "some-permission",
-				ResourceId:     "some-resource-ID",
+				Actor:    actor,
+				Action:   "some-action",
+				Resource: "some-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			expectedExtensions := []logging.CustomExtension{
 				{Key: "userID", Value: "actor"},
-				{Key: "permission", Value: "some-permission"},
-				{Key: "resourceID", Value: "some-resource-ID"},
+				{Key: "action", Value: "some-action"},
+				{Key: "resource", Value: "some-resource"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))

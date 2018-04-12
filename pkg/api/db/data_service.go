@@ -667,7 +667,7 @@ func hasPermission(
 	logger = logger.Session("has-permission").WithData(lager.Data{
 		"actor.issuer":               query.Actor.Namespace,
 		"actor.id":                   query.Actor.ID,
-		"permission.name":            query.Action,
+		"permission.action":          query.Action,
 		"permission.resourcePattern": query.ResourcePattern,
 	})
 

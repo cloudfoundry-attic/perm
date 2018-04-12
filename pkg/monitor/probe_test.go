@@ -61,7 +61,7 @@ var _ = Describe("Probe", func() {
 			permissions := createRoleRequest.GetPermissions()
 			Expect(permissions).To(HaveLen(1))
 			Expect(permissions[0].GetAction()).To(Equal("system.probe.assigned-permission.action"))
-			Expect(permissions[0].GetResourcePattern()).To(Equal("system.probe.assigned-permission.resource-id.foobar"))
+			Expect(permissions[0].GetResourcePattern()).To(Equal("system.probe.assigned-permission.resource.foobar"))
 
 			Expect(fakeRoleServiceClient.AssignRoleCallCount()).To(Equal(1))
 			_, assignRoleRequest, _ := fakeRoleServiceClient.AssignRoleArgsForCall(0)
@@ -216,14 +216,14 @@ var _ = Describe("Probe", func() {
 			_, hasPositivePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(0)
 			Expect(hasPositivePermissionRequest.GetActor().GetNamespace()).To(Equal("system"))
 			Expect(hasPositivePermissionRequest.GetActor().GetID()).To(Equal("probe"))
-			Expect(hasPositivePermissionRequest.GetPermissionName()).To(Equal("system.probe.assigned-permission.action"))
-			Expect(hasPositivePermissionRequest.GetResourceId()).To(Equal("system.probe.assigned-permission.resource-id.foobar"))
+			Expect(hasPositivePermissionRequest.GetAction()).To(Equal("system.probe.assigned-permission.action"))
+			Expect(hasPositivePermissionRequest.GetResource()).To(Equal("system.probe.assigned-permission.resource.foobar"))
 
 			_, hasNegativePermissionRequest, _ := fakePermissionsServiceClient.HasPermissionArgsForCall(1)
 			Expect(hasNegativePermissionRequest.GetActor().GetNamespace()).To(Equal("system"))
 			Expect(hasNegativePermissionRequest.GetActor().GetID()).To(Equal("probe"))
-			Expect(hasNegativePermissionRequest.GetPermissionName()).To(Equal("system.probe.unassigned-permission.action"))
-			Expect(hasNegativePermissionRequest.GetResourceId()).To(Equal("system.probe.unassigned-permission.resource-id.foobar"))
+			Expect(hasNegativePermissionRequest.GetAction()).To(Equal("system.probe.unassigned-permission.action"))
+			Expect(hasNegativePermissionRequest.GetResource()).To(Equal("system.probe.unassigned-permission.resource.foobar"))
 		})
 
 		Context("when the timeout deadline is exceeded", func() {

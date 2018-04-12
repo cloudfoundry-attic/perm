@@ -56,8 +56,8 @@ func BehavesLikeAPermissionRepo(
 				Namespace: uuid.NewV4().String(),
 			}
 			permission := perm.Permission{
-				Action:          "some-permission",
-				ResourcePattern: "some-resource-ID",
+				Action:          "some-action",
+				ResourcePattern: "some-resource",
 			}
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
@@ -85,8 +85,8 @@ func BehavesLikeAPermissionRepo(
 				Namespace: uuid.NewV4().String(),
 			}
 			permission := perm.Permission{
-				Action:          "some-permission",
-				ResourcePattern: "some-resource-ID",
+				Action:          "some-action",
+				ResourcePattern: "some-resource",
 			}
 
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
@@ -117,8 +117,8 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			permission := perm.Permission{
-				Action:          "some-permission",
-				ResourcePattern: "some-resource-ID",
+				Action:          "some-action",
+				ResourcePattern: "some-resource",
 			}
 
 			query := repos.HasPermissionQuery{
@@ -154,7 +154,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern2,
 			}
 			permission3 := &perm.Permission{
-				Action:          "another-permission",
+				Action:          "another-action",
 				ResourcePattern: resourcePattern3,
 			}
 

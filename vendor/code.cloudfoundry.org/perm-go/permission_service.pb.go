@@ -19,9 +19,9 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type HasPermissionRequest struct {
-	Actor          *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	PermissionName string `protobuf:"bytes,2,opt,name=permission_name,json=permissionName,proto3" json:"permission_name,omitempty"`
-	ResourceId     string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	Action   string `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	Resource string `protobuf:"bytes,3,opt,name=resource,proto3" json:"resource,omitempty"`
 }
 
 func (m *HasPermissionRequest) Reset()         { *m = HasPermissionRequest{} }
@@ -38,16 +38,16 @@ func (m *HasPermissionRequest) GetActor() *Actor {
 	return nil
 }
 
-func (m *HasPermissionRequest) GetPermissionName() string {
+func (m *HasPermissionRequest) GetAction() string {
 	if m != nil {
-		return m.PermissionName
+		return m.Action
 	}
 	return ""
 }
 
-func (m *HasPermissionRequest) GetResourceId() string {
+func (m *HasPermissionRequest) GetResource() string {
 	if m != nil {
-		return m.ResourceId
+		return m.Resource
 	}
 	return ""
 }
@@ -251,17 +251,17 @@ func (m *HasPermissionRequest) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n1
 	}
-	if len(m.PermissionName) > 0 {
+	if len(m.Action) > 0 {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintPermissionService(dAtA, i, uint64(len(m.PermissionName)))
-		i += copy(dAtA[i:], m.PermissionName)
+		i = encodeVarintPermissionService(dAtA, i, uint64(len(m.Action)))
+		i += copy(dAtA[i:], m.Action)
 	}
-	if len(m.ResourceId) > 0 {
+	if len(m.Resource) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintPermissionService(dAtA, i, uint64(len(m.ResourceId)))
-		i += copy(dAtA[i:], m.ResourceId)
+		i = encodeVarintPermissionService(dAtA, i, uint64(len(m.Resource)))
+		i += copy(dAtA[i:], m.Resource)
 	}
 	return i, nil
 }
@@ -377,11 +377,11 @@ func (m *HasPermissionRequest) Size() (n int) {
 		l = m.Actor.Size()
 		n += 1 + l + sovPermissionService(uint64(l))
 	}
-	l = len(m.PermissionName)
+	l = len(m.Action)
 	if l > 0 {
 		n += 1 + l + sovPermissionService(uint64(l))
 	}
-	l = len(m.ResourceId)
+	l = len(m.Resource)
 	if l > 0 {
 		n += 1 + l + sovPermissionService(uint64(l))
 	}
@@ -500,7 +500,7 @@ func (m *HasPermissionRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PermissionName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -525,11 +525,11 @@ func (m *HasPermissionRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PermissionName = string(dAtA[iNdEx:postIndex])
+			m.Action = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResourceId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Resource", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -554,7 +554,7 @@ func (m *HasPermissionRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ResourceId = string(dAtA[iNdEx:postIndex])
+			m.Resource = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
