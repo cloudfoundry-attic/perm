@@ -23,8 +23,7 @@ func CreatePermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx,
-		createPermissionDefinitionsTable)
+	_, err := tx.ExecContext(ctx, createPermissionDefinitionsTable)
 
 	return err
 }
@@ -34,8 +33,7 @@ func CreatePermissionDefinitionsTableDown(ctx context.Context, logger lager.Logg
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx,
-		deletePermissionDefinitionsTable)
+	_, err := tx.ExecContext(ctx, deletePermissionDefinitionsTable)
 
 	return err
 }
