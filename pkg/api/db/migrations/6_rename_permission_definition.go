@@ -1,14 +1,11 @@
 package migrations
 
 import (
+	"context"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	"context"
 )
-
-// permission_definition -> action
-// permission.permission_definition_id -> permission.action_id
-// permission.permission_permission_definition_id_fkey -> permission.permission_action_id_fkey
 
 var renamePermissionDefinitionTable = `
 ALTER TABLE
