@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS actor
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   uuid BINARY(16) NOT NULL UNIQUE,
   domain_id VARCHAR(511) NOT NULL,
-  namespace VARCHAR(2047) NOT NULL,
-  domain_id_namespace_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, namespace), 256)) STORED
+  issuer VARCHAR(2047) NOT NULL,
+  domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) STORED
 )
 `
 
@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS actor
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   uuid BINARY(16) NOT NULL UNIQUE,
   domain_id VARCHAR(511) NOT NULL,
-  namespace VARCHAR(2047) NOT NULL,
-  domain_id_namespace_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, namespace), 256)) PERSISTENT
+  issuer VARCHAR(2047) NOT NULL,
+  domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) PERSISTENT
 )
 `
 
@@ -35,8 +35,8 @@ var uniqueActorsConstraint = `
 ALTER TABLE
 	actor
 ADD CONSTRAINT
-	actor_unique_domain_id_namespace_hash
-UNIQUE(domain_id_namespace_hash)
+	actor_unique_domain_id_issuer_hash
+UNIQUE(domain_id_issuer_hash)
 `
 
 var deleteActorsTable = `DROP TABLE actor`

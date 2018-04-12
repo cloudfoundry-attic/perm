@@ -187,7 +187,7 @@ func createActor(
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("actor").
-		Columns("uuid", "domain_id", "namespace").
+		Columns("uuid", "domain_id", "issuer").
 		Values(u, id, namespace).
 		RunWith(conn).
 		ExecContext(ctx)
@@ -234,7 +234,7 @@ func findActorID(
 		sQuery["domain_id"] = id
 	}
 	if namespace != "" {
-		sQuery["namespace"] = namespace
+		sQuery["issuer"] = namespace
 	}
 
 	var (
@@ -665,7 +665,7 @@ func hasPermission(
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
-		"actor.namespace":            query.Actor.Namespace,
+		"actor.issuer":               query.Actor.Namespace,
 		"actor.id":                   query.Actor.ID,
 		"permission.name":            query.Action,
 		"permission.resourcePattern": query.ResourcePattern,
@@ -679,7 +679,7 @@ func hasPermission(
 		JoinClause("INNER JOIN permission permission ON role_assignment.role_id = permission.role_id").
 		JoinClause("INNER JOIN action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
-			"actor.namespace":             query.Actor.Namespace,
+			"actor.issuer":                query.Actor.Namespace,
 			"actor.domain_id":             query.Actor.ID,
 			"action.name":                 query.Action,
 			"permission.resource_pattern": query.ResourcePattern,
@@ -759,7 +759,7 @@ func listResourcePatterns(
 
 	logger = logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.namespace": namespace,
+			"actor.issuer":    namespace,
 			"actor.id":        id,
 			"permission.name": action,
 		})
@@ -774,7 +774,7 @@ func listResourcePatterns(
 		Where(squirrel.Eq{
 			"action.name":     action,
 			"actor.domain_id": id,
-			"actor.namespace": namespace,
+			"actor.issuer":    namespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)
