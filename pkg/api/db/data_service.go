@@ -470,9 +470,9 @@ func findActorRoleAssignments(
 		"actor.id": actorID,
 	})
 
-	rows, err := squirrel.Select("r.id", "r.name").
-		From("role_assignment ra").
-		JoinClause("INNER JOIN role r ON ra.role_id = r.id").
+	rows, err := squirrel.Select("role.id", "role.name").
+		From("role_assignment").
+		JoinClause("INNER JOIN role ON role_assignment.role_id = role.id").
 		Where(squirrel.Eq{"actor_id": actorID}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -613,10 +613,10 @@ func findRolePermissions(
 		"role.id": roleID,
 	})
 
-	rows, err := squirrel.Select("p.id", "a.name", "p.resource_pattern").
-		From("permission p").
-		JoinClause("INNER JOIN role r ON p.role_id = r.id").
-		JoinClause("INNER JOIN action a ON p.action_id = a.id").
+	rows, err := squirrel.Select("permission.id", "action.name", "permission.resource_pattern").
+		From("permission").
+		JoinClause("INNER JOIN role ON permission.role_id = role.id").
+		JoinClause("INNER JOIN action action ON permission.action_id = action.id").
 		Where(squirrel.Eq{"role_id": roleID}).
 		RunWith(conn).
 		QueryContext(ctx)
