@@ -264,6 +264,20 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(status.Errorf(codes.Unknown, "test-error")))
 		})
+
+		It("fails when the actor namespace is not provided", func() {
+			actor := &protos.Actor{
+				ID:        "actor",
+				Namespace: "",
+			}
+			res, err := subject.ListResourcePatterns(ctx, &protos.ListResourcePatternsRequest{
+				Actor: actor,
+			})
+
+			expectedErr := status.Errorf(codes.InvalidArgument, "actor namespace cannot be empty")
+			Expect(res).To(BeNil())
+			Expect(err).To(MatchError(expectedErr))
+		})
 	})
 
 })
