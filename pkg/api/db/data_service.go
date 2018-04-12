@@ -175,96 +175,13 @@ func deleteRole(
 	}
 }
 
-func createActor(
-	ctx context.Context,
-	logger lager.Logger,
-	conn squirrel.BaseRunner,
-	id string,
-	namespace string,
-) (*actor, error) {
-	logger = logger.Session("create-actor")
-
-	u := uuid.NewV4().Bytes()
-
-	result, err := squirrel.Insert("actor").
-		Columns("uuid", "domain_id", "issuer").
-		Values(u, id, namespace).
-		RunWith(conn).
-		ExecContext(ctx)
-
-	switch e := err.(type) {
-	case nil:
-		actorID, err2 := result.LastInsertId()
-		if err2 != nil {
-			logger.Error(failedToRetrieveID, err2)
-			return nil, err2
-		}
-		actor := &actor{
-			ID: actorID,
-			Actor: &perm.Actor{
-				ID:        id,
-				Namespace: namespace,
-			},
-		}
-		return actor, nil
-	case *mysql.MySQLError:
-		if e.Number == MySQLErrorCodeDuplicateKey {
-			logger.Debug(errActorAlreadyExists)
-			return nil, perm.ErrActorAlreadyExists
-		}
-		logger.Error(failedToCreateActor, err)
-		return nil, err
-	default:
-		logger.Error(failedToCreateActor, err)
-		return nil, err
-	}
-}
-
-func findActorID(
-	ctx context.Context,
-	logger lager.Logger,
-	conn squirrel.BaseRunner,
-	id string,
-	namespace string,
-) (int64, error) {
-	logger = logger.Session("find-actor")
-
-	sQuery := squirrel.Eq{}
-	if id != "" {
-		sQuery["domain_id"] = id
-	}
-	if namespace != "" {
-		sQuery["issuer"] = namespace
-	}
-
-	var (
-		actorID int64
-	)
-	err := squirrel.Select("id").
-		From("actor").
-		Where(sQuery).
-		RunWith(conn).
-		ScanContext(ctx, &actorID)
-
-	switch err {
-	case nil:
-		return actorID, nil
-	case sql.ErrNoRows:
-		logger.Debug(errActorNotFound)
-		return actorID, errActorNotFoundDB
-	default:
-		logger.Error(failedToFindActor, err)
-		return actorID, err
-	}
-}
-
 func assignRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
-	id string,
-	namespace string,
+	actorID string,
+	actorNamespace string,
 ) error {
 	logger = logger.Session("assign-role")
 
@@ -273,33 +190,27 @@ func assignRole(
 		return err
 	}
 
-	_, err = createActor(ctx, logger, conn, id, namespace)
-	if err != nil && err != perm.ErrActorAlreadyExists {
-		return err
-	}
-
-	actorID, err := findActorID(ctx, logger, conn, id, namespace)
-	if err != nil {
-		return err
-	}
-
-	return createRoleAssignment(ctx, logger, conn, role.ID, actorID)
+	return createRoleAssignment(ctx, logger, conn, role.ID, actorID, actorNamespace)
 }
 
 func createRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleID, actorID int64,
+	roleID int64,
+	actorID string,
+	actorNamespace string,
 ) error {
 	logger = logger.Session("create-role-assignment").WithData(lager.Data{
-		"role.id":  roleID,
-		"actor.id": actorID,
+		"role.id":                    roleID,
+		"assignment.actor_id":        actorID,
+		"assignment.actor_namespace": actorNamespace,
 	})
 
-	_, err := squirrel.Insert("role_assignment").
-		Columns("role_id", "actor_id").
-		Values(roleID, actorID).
+	u := uuid.NewV4().Bytes()
+	_, err := squirrel.Insert("assignment").
+		Columns("uuid", "role_id", "actor_id", "actor_namespace").
+		Values(u, roleID, actorID, actorNamespace).
 		RunWith(conn).
 		ExecContext(ctx)
 
@@ -324,8 +235,8 @@ func unassignRole(ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
-	id string,
-	namespace string,
+	actorID string,
+	actorNamespace string,
 ) error {
 	logger = logger.Session("unassign-role")
 
@@ -334,32 +245,28 @@ func unassignRole(ctx context.Context,
 		return err
 	}
 
-	actorID, err := findActorID(ctx, logger, conn, id, namespace)
-	if err == errActorNotFoundDB {
-		return perm.ErrAssignmentNotFound
-	} else if err != nil {
-		return err
-	}
-
-	return deleteRoleAssignment(ctx, logger, conn, role.ID, actorID)
+	return deleteRoleAssignment(ctx, logger, conn, role.ID, actorID, actorNamespace)
 }
 
 func deleteRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	roleID,
-	actorID int64,
+	roleID int64,
+	actorID string,
+	actorNamespace string,
 ) error {
 	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
-		"role.id":  roleID,
-		"actor.id": actorID,
+		"role.id":                    roleID,
+		"assignment.actor_id":        actorID,
+		"assignment.actor_namespace": actorNamespace,
 	})
 
-	result, err := squirrel.Delete("role_assignment").
+	result, err := squirrel.Delete("assignment").
 		Where(squirrel.Eq{
-			"role_id":  roleID,
-			"actor_id": actorID,
+			"role_id":         roleID,
+			"actor_id":        actorID,
+			"actor_namespace": actorNamespace,
 		}).
 		RunWith(conn).
 		ExecContext(ctx)
@@ -403,14 +310,7 @@ func hasRole(
 		return false, err
 	}
 
-	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
-	if err == errActorNotFoundDB {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-
-	return findRoleAssignment(ctx, logger, conn, role.ID, actorID)
+	return findRoleAssignment(ctx, logger, conn, role.ID, query.Actor.ID, query.Actor.Namespace)
 }
 
 func findRoleAssignment(
@@ -418,28 +318,32 @@ func findRoleAssignment(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
-	actorID int64,
+	actorID string,
+	actorNamespace string,
 ) (bool, error) {
 	logger = logger.Session("find-role-assignment").WithData(lager.Data{
-		"role.id":  roleID,
-		"actor.id": actorID,
+		"role.id":                    roleID,
+		"assignment.actor_id":        actorID,
+		"assignment.actor_namespace": actorNamespace,
 	})
 
-	err := squirrel.Select("actor_id").
-		From("role_assignment").
-		Where(squirrel.Eq{"actor_id": actorID, "role_id": roleID}).
-		RunWith(conn).
-		ScanContext(ctx, &actorID)
+	var count int
 
-	switch err {
-	case nil:
-		return true, nil
-	case sql.ErrNoRows:
-		return false, nil
-	default:
+	err := squirrel.Select("count(role_id)").
+		From("assignment").
+		Where(squirrel.Eq{
+			"role_id":         roleID,
+			"actor_id":        actorID,
+			"actor_namespace": actorNamespace,
+		}).
+		RunWith(conn).
+		ScanContext(ctx, &count)
+	if err != nil {
 		logger.Error(failedToFindRoleAssignment, err)
 		return false, err
 	}
+
+	return count > 0, nil
 }
 
 func listActorRoles(
@@ -448,32 +352,19 @@ func listActorRoles(
 	conn squirrel.BaseRunner,
 	query repos.ListActorRolesQuery,
 ) ([]*role, error) {
-	logger = logger.Session("list-actor-roles")
-
-	actorID, err := findActorID(ctx, logger, conn, query.Actor.ID, query.Actor.Namespace)
-	if err == errActorNotFoundDB {
-		return []*role{}, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	return findActorRoleAssignments(ctx, logger, conn, actorID)
-}
-
-func findActorRoleAssignments(
-	ctx context.Context,
-	logger lager.Logger,
-	conn squirrel.BaseRunner,
-	actorID int64,
-) ([]*role, error) {
-	logger = logger.Session("find-actor-role-assignments").WithData(lager.Data{
-		"actor.id": actorID,
-	})
+	logger = logger.Session("find-actor-role-assignments").
+		WithData(lager.Data{
+			"assignment.actor_id":        query.Actor.ID,
+			"assignment.actor_namespace": query.Actor.Namespace,
+		})
 
 	rows, err := squirrel.Select("role.id", "role.name").
-		From("role_assignment").
-		JoinClause("INNER JOIN role ON role_assignment.role_id = role.id").
-		Where(squirrel.Eq{"actor_id": actorID}).
+		From("assignment").
+		JoinClause("INNER JOIN role ON assignment.role_id = role.id").
+		Where(squirrel.Eq{
+			"assignment.actor_id":        query.Actor.ID,
+			"assignment.actor_namespace": query.Actor.Namespace,
+		}).
 		RunWith(conn).
 		QueryContext(ctx)
 	if err != nil {
@@ -666,21 +557,20 @@ func hasPermission(
 ) (bool, error) {
 	logger = logger.Session("has-permission").WithData(lager.Data{
 		"actor.issuer":               query.Actor.Namespace,
-		"actor.id":                   query.Actor.ID,
+		"assignment.actor_id":        query.Actor.ID,
 		"permission.action":          query.Action,
 		"permission.resourcePattern": query.ResourcePattern,
 	})
 
 	var count int
 
-	err := squirrel.Select("count(role_assignment.role_id)").
-		From("role_assignment").
-		JoinClause("INNER JOIN actor ON actor.id = role_assignment.actor_id").
-		JoinClause("INNER JOIN permission permission ON role_assignment.role_id = permission.role_id").
+	err := squirrel.Select("count(assignment.role_id)").
+		From("assignment").
+		JoinClause("INNER JOIN permission permission ON assignment.role_id = permission.role_id").
 		JoinClause("INNER JOIN action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
-			"actor.issuer":                query.Actor.Namespace,
-			"actor.domain_id":             query.Actor.ID,
+			"assignment.actor_id":         query.Actor.ID,
+			"assignment.actor_namespace":  query.Actor.Namespace,
 			"action.name":                 query.Action,
 			"permission.resource_pattern": query.ResourcePattern,
 		}).
@@ -692,11 +582,7 @@ func hasPermission(
 		return false, err
 	}
 
-	if count == 0 {
-		return false, nil
-	}
-
-	return true, nil
+	return count > 0, nil
 }
 
 func createPermission(
@@ -759,22 +645,21 @@ func listResourcePatterns(
 
 	logger = logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"actor.issuer":      namespace,
-			"actor.id":          id,
-			"permission.action": action,
+			"assignment.actor_namespace": namespace,
+			"assignment.actor_id":        id,
+			"permission.action":          action,
 		})
 
 	rows, err := squirrel.Select("permission.resource_pattern").
 		Distinct().
 		From("role").
-		Join("role_assignment ON role.id = role_assignment.role_id").
-		Join("actor ON actor.id = role_assignment.actor_id").
+		Join("assignment ON role.id = assignment.role_id").
 		Join("permission ON permission.role_id = role.id").
 		Join("action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
-			"action.name":     action,
-			"actor.domain_id": id,
-			"actor.issuer":    namespace,
+			"action.name":                action,
+			"assignment.actor_id":        id,
+			"assignment.actor_namespace": namespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)

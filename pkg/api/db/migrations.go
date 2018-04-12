@@ -38,4 +38,9 @@ var Migrations = []sqlx.Migration{
 		Up:   migrations.RenamePermissionDefinitionToActionUp,
 		Down: migrations.RenamePermissionDefinitionToActionDown,
 	},
+	{
+		Name: "combine_actor_and_role_assignment_tables",
+		Up:   migrations.CombineActorAndRoleAssignmentTablesUp,
+		Down: migrations.CombineActorAndRoleAssignmentTablesDown,
+	},
 }

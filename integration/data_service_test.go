@@ -43,7 +43,7 @@ var _ = Describe("DataService", func() {
 
 		err := testDB.Truncate(
 			"DELETE FROM role",
-			"DELETE FROM actor",
+			"DELETE FROM action",
 		)
 		Expect(err).NotTo(HaveOccurred())
 	})

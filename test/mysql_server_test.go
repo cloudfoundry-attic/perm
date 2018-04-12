@@ -49,7 +49,7 @@ var _ = Describe("MySQL server", func() {
 
 		err := testMySQLDB.Truncate(
 			"DELETE FROM role",
-			"DELETE FROM actor",
+			"DELETE FROM action",
 		)
 		Expect(err).NotTo(HaveOccurred())
 
