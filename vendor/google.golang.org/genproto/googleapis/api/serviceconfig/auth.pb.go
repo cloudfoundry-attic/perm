@@ -190,7 +190,7 @@ type AuthProvider struct {
 	//
 	// Example: https://securetoken.google.com
 	// Example: 1234567-compute@developer.gserviceaccount.com
-	Namespace string `protobuf:"bytes,2,opt,name=issuer" json:"issuer,omitempty"`
+	Issuer string `protobuf:"bytes,2,opt,name=issuer" json:"issuer,omitempty"`
 	// URL of the provider's public key set to validate signature of the JWT. See
 	// [OpenID Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata).
 	// Optional if the key set document:
@@ -232,9 +232,9 @@ func (m *AuthProvider) GetId() string {
 	return ""
 }
 
-func (m *AuthProvider) GetNamespace() string {
+func (m *AuthProvider) GetIssuer() string {
 	if m != nil {
-		return m.Namespace
+		return m.Issuer
 	}
 	return ""
 }
