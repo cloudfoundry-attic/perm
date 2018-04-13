@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS assignment
 	role_id BIGINT NOT NULL,
 	actor_id VARCHAR(511) NOT NULL,
 	actor_namespace VARCHAR(2047) NOT NULL,
-  role_id_actor_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, actor_id, actor_namespace), 256)) PERSISTENT
+  role_id_actor_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, actor_id, actor_namespace), 256)) PERSISTENT UNIQUE
 )
 `
 
@@ -53,7 +53,7 @@ func CombineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Log
 	var err error
 
 	if tx.Flavor() == sqlx.DBFlavorMariaDB && strings.HasPrefix(tx.Version(), "10.1") {
-		_, err = tx.ExecContext(ctx, createActorsTableMariaDB)
+		_, err = tx.ExecContext(ctx, createAssignmentTableMariaDB)
 	} else {
 		_, err = tx.ExecContext(ctx, createAssignmentTable)
 	}
