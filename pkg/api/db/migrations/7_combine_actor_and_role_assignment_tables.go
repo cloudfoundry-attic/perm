@@ -44,6 +44,8 @@ ON DELETE CASCADE
 `
 var dropActorTable = `DROP TABLE IF EXISTS actor`
 
+var dropAssignmentTable = `DROP TABLE IF EXISTS assignment`
+
 var dropRoleAssignmentTable = `DROP TABLE IF EXISTS role_assignment`
 
 func CombineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
@@ -112,6 +114,31 @@ func CombineActorAndRoleAssignmentTablesDown(ctx context.Context, logger lager.L
 	logger = logger.Session("create-actor-and-role-assignment-tables")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
+	var err error
+
+	if tx.Flavor() == sqlx.DBFlavorMariaDB && strings.HasPrefix(tx.Version(), "10.1") {
+		_, err = tx.ExecContext(ctx, createActorsTableMariaDB)
+	} else {
+		_, err = tx.ExecContext(ctx, createActorsTable)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, createRoleAssignmentsTable)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, addRoleIDForeignKey)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, dropAssignmentTable)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
