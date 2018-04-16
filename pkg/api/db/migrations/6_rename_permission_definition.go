@@ -28,6 +28,15 @@ CHANGE COLUMN
 	permission_definition_id action_id BIGINT NOT NULL
 `
 
+var addActionPermissionDefinitionIDForeignKey = `
+ALTER TABLE
+	permission
+ADD CONSTRAINT
+	permission_permission_definition_id_fkey
+FOREIGN KEY(permission_definition_id) REFERENCES action(id)
+ON DELETE CASCADE
+`
+
 var addPermissionActionIDForeignKey = `
 ALTER TABLE
 	permission
@@ -96,7 +105,7 @@ func RenamePermissionDefinitionToActionDown(ctx context.Context, logger lager.Lo
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, addPermissionRoleIDForeignKey)
+	_, err = tx.ExecContext(ctx, addActionPermissionDefinitionIDForeignKey)
 	if err != nil {
 		return err
 	}
