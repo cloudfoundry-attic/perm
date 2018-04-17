@@ -78,22 +78,27 @@ func CombineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Log
 	}
 	defer rows.Close()
 
-	for rows.Next() {
-		var (
-			roleID         int64
-			actorID        string
-			actorNamespace string
-		)
+	type roleAssignment struct {
+		RoleID         int64
+		ActorID        string
+		ActorNamespace string
+	}
 
-		err = rows.Scan(&roleID, &actorID, &actorNamespace)
+	var roleAssignments []roleAssignment
+
+	for rows.Next() {
+		ra := roleAssignment{}
+		err = rows.Scan(&ra.RoleID, &ra.ActorID, &ra.ActorNamespace)
 		if err != nil {
 			return err
 		}
-
+		roleAssignments = append(roleAssignments, ra)
+	}
+	for _, ra := range roleAssignments {
 		u := uuid.NewV4().Bytes()
 		_, err = squirrel.Insert("assignment").
 			Columns("uuid", "role_id", "actor_id", "actor_namespace").
-			Values(u, roleID, actorID, actorNamespace).
+			Values(u, ra.RoleID, ra.ActorID, ra.ActorNamespace).
 			RunWith(tx).
 			ExecContext(ctx)
 		if err != nil {
