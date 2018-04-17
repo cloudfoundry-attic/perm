@@ -1,0 +1,17 @@
+syntax = 'proto3';
+
+package cloud_foundry.perm.protos;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option go_package = "protos";
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+
+message Permission {
+  reserved 1; // for uuid
+
+  string action = 2;
+  string resource_pattern = 3;
+}
