@@ -7,10 +7,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
-type FindRoleQuery struct {
-	RoleName string
-}
-
 type ListRolePermissionsQuery struct {
 	RoleName string
 }
@@ -21,12 +17,6 @@ type RoleRepo interface {
 		logger lager.Logger,
 		name string,
 		permissions ...*perm.Permission,
-	) (*perm.Role, error)
-
-	FindRole(
-		context.Context,
-		lager.Logger,
-		FindRoleQuery,
 	) (*perm.Role, error)
 
 	DeleteRole(

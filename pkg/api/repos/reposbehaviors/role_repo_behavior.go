@@ -57,31 +57,25 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 	})
 
-	Describe("#FindRole", func() {
-		It("fails if the role does not exist", func() {
-			name := uuid.NewV4().String()
-
-			role, err := subject.FindRole(ctx, logger, repos.FindRoleQuery{RoleName: name})
-
-			Expect(role).To(BeNil())
-			Expect(err).To(Equal(perm.ErrRoleNotFound))
-		})
-	})
-
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
 			name := uuid.NewV4().String()
 
-			_, err := subject.CreateRole(ctx, logger, name)
+			permission := &perm.Permission{"a", "b"}
+			_, err := subject.CreateRole(ctx, logger, name, permission)
 			Expect(err).NotTo(HaveOccurred())
+
+			listRolePermsQuery := repos.ListRolePermissionsQuery{RoleName: name}
+			permissions, err := subject.ListRolePermissions(ctx, logger, listRolePermsQuery)
+			Expect(len(permissions)).To(Equal(1))
+			Expect(err).ToNot(HaveOccurred())
 
 			err = subject.DeleteRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
 
-			role, err := subject.FindRole(ctx, logger, repos.FindRoleQuery{RoleName: name})
-
-			Expect(role).To(BeNil())
-			Expect(err).To(Equal(perm.ErrRoleNotFound))
+			listRolePermsQuery = repos.ListRolePermissionsQuery{RoleName: name}
+			_, err = subject.ListRolePermissions(ctx, logger, listRolePermsQuery)
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("fails if the role does not exist", func() {

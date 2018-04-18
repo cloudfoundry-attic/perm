@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"code.cloudfoundry.org/perm/protos/gen"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
+	"code.cloudfoundry.org/perm/protos/gen"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -76,46 +76,22 @@ var _ = Describe("RoleRepoServer", func() {
 		})
 	})
 
-	Describe("#GetRole", func() {
-		It("returns the role if a match exists", func() {
-			name := "test"
-			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
-				Name: name,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-
-			req := &protos.GetRoleRequest{
-				Name: name,
-			}
-			res, err := subject.GetRole(ctx, req)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).NotTo(BeNil())
-
-			role := res.Role
-
-			Expect(role.Name).To(Equal(name))
-		})
-
-		It("returns an error if no match exists", func() {
-			res, err := subject.GetRole(ctx, &protos.GetRoleRequest{
-				Name: "does-not-exist",
-			})
-
-			Expect(res).To(BeNil())
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
 			name := "test-role"
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
+				Permissions: []*protos.Permission{
+					{"a", "b"},
+				},
 			})
-
 			Expect(err).NotTo(HaveOccurred())
+
+			resp, err := subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
+				RoleName: name,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(resp.GetPermissions())).To(Equal(1))
 
 			res, err := subject.DeleteRole(ctx, &protos.DeleteRoleRequest{
 				Name: name,
@@ -124,11 +100,12 @@ var _ = Describe("RoleRepoServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).NotTo(BeNil())
 
-			_, err = subject.GetRole(ctx, &protos.GetRoleRequest{
-				Name: name,
+			resp, err = subject.ListRolePermissions(ctx, &protos.ListRolePermissionsRequest{
+				RoleName: name,
 			})
-
-			Expect(err).To(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(len(resp.GetPermissions())).To(Equal(0))
 		})
 
 		It("fails if the role does not exist", func() {

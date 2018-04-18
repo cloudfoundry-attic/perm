@@ -104,7 +104,7 @@ func findRole(
 	ctx context.Context,
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
-	query repos.FindRoleQuery,
+	requestedRoleName string,
 ) (*role, error) {
 	logger = logger.Session("find-role")
 
@@ -116,7 +116,7 @@ func findRole(
 	err := squirrel.Select("id", "name").
 		From("role").
 		Where(squirrel.Eq{
-			"name": query.RoleName,
+			"name": requestedRoleName,
 		}).
 		RunWith(conn).
 		ScanContext(ctx, &roleID, &roleName)
@@ -185,7 +185,7 @@ func assignRole(
 ) error {
 	logger = logger.Session("assign-role")
 
-	role, err := findRole(ctx, logger, conn, repos.FindRoleQuery{RoleName: roleName})
+	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func unassignRole(ctx context.Context,
 ) error {
 	logger = logger.Session("unassign-role")
 
-	role, err := findRole(ctx, logger, conn, repos.FindRoleQuery{RoleName: roleName})
+	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
@@ -301,11 +301,7 @@ func hasRole(
 	query repos.HasRoleQuery,
 ) (bool, error) {
 	logger = logger.Session("has-role")
-
-	findRoleQuery := repos.FindRoleQuery{
-		RoleName: query.RoleName,
-	}
-	role, err := findRole(ctx, logger, conn, findRoleQuery)
+	role, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
 	}
@@ -405,7 +401,7 @@ func listRolePermissions(
 ) ([]*permission, error) {
 	logger = logger.Session("list-role-permissions")
 
-	role, err := findRole(ctx, logger, conn, repos.FindRoleQuery{RoleName: query.RoleName})
+	role, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return nil, err
 	}

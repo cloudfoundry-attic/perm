@@ -27,21 +27,6 @@ func (s *InMemoryStore) CreateRole(
 	return role, nil
 }
 
-func (s *InMemoryStore) FindRole(
-	ctx context.Context,
-	logger lager.Logger,
-	query repos.FindRoleQuery,
-) (*perm.Role, error) {
-	name := query.RoleName
-	role, exists := s.roles[name]
-
-	if !exists {
-		return nil, perm.ErrRoleNotFound
-	}
-
-	return role, nil
-}
-
 func (s *InMemoryStore) DeleteRole(
 	ctx context.Context,
 	logger lager.Logger,
@@ -71,7 +56,7 @@ func (s *InMemoryStore) DeleteRole(
 	}
 	// "Cascade"
 	// Remove permissions for role
-	s.permissions[roleName] = []*perm.Permission{}
+	delete(s.permissions, roleName)
 
 	logger.Debug(success)
 

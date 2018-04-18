@@ -26,21 +26,6 @@ type FakeRoleServiceClient struct {
 		result1 *protos.CreateRoleResponse
 		result2 error
 	}
-	GetRoleStub        func(ctx context.Context, in *protos.GetRoleRequest, opts ...grpc.CallOption) (*protos.GetRoleResponse, error)
-	getRoleMutex       sync.RWMutex
-	getRoleArgsForCall []struct {
-		ctx  context.Context
-		in   *protos.GetRoleRequest
-		opts []grpc.CallOption
-	}
-	getRoleReturns struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}
-	getRoleReturnsOnCall map[int]struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}
 	DeleteRoleStub        func(ctx context.Context, in *protos.DeleteRoleRequest, opts ...grpc.CallOption) (*protos.DeleteRoleResponse, error)
 	deleteRoleMutex       sync.RWMutex
 	deleteRoleArgsForCall []struct {
@@ -184,59 +169,6 @@ func (fake *FakeRoleServiceClient) CreateRoleReturnsOnCall(i int, result1 *proto
 	}
 	fake.createRoleReturnsOnCall[i] = struct {
 		result1 *protos.CreateRoleResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeRoleServiceClient) GetRole(ctx context.Context, in *protos.GetRoleRequest, opts ...grpc.CallOption) (*protos.GetRoleResponse, error) {
-	fake.getRoleMutex.Lock()
-	ret, specificReturn := fake.getRoleReturnsOnCall[len(fake.getRoleArgsForCall)]
-	fake.getRoleArgsForCall = append(fake.getRoleArgsForCall, struct {
-		ctx  context.Context
-		in   *protos.GetRoleRequest
-		opts []grpc.CallOption
-	}{ctx, in, opts})
-	fake.recordInvocation("GetRole", []interface{}{ctx, in, opts})
-	fake.getRoleMutex.Unlock()
-	if fake.GetRoleStub != nil {
-		return fake.GetRoleStub(ctx, in, opts...)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getRoleReturns.result1, fake.getRoleReturns.result2
-}
-
-func (fake *FakeRoleServiceClient) GetRoleCallCount() int {
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
-	return len(fake.getRoleArgsForCall)
-}
-
-func (fake *FakeRoleServiceClient) GetRoleArgsForCall(i int) (context.Context, *protos.GetRoleRequest, []grpc.CallOption) {
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
-	return fake.getRoleArgsForCall[i].ctx, fake.getRoleArgsForCall[i].in, fake.getRoleArgsForCall[i].opts
-}
-
-func (fake *FakeRoleServiceClient) GetRoleReturns(result1 *protos.GetRoleResponse, result2 error) {
-	fake.GetRoleStub = nil
-	fake.getRoleReturns = struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeRoleServiceClient) GetRoleReturnsOnCall(i int, result1 *protos.GetRoleResponse, result2 error) {
-	fake.GetRoleStub = nil
-	if fake.getRoleReturnsOnCall == nil {
-		fake.getRoleReturnsOnCall = make(map[int]struct {
-			result1 *protos.GetRoleResponse
-			result2 error
-		})
-	}
-	fake.getRoleReturnsOnCall[i] = struct {
-		result1 *protos.GetRoleResponse
 		result2 error
 	}{result1, result2}
 }
@@ -564,8 +496,6 @@ func (fake *FakeRoleServiceClient) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createRoleMutex.RLock()
 	defer fake.createRoleMutex.RUnlock()
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
 	fake.deleteRoleMutex.RLock()
 	defer fake.deleteRoleMutex.RUnlock()
 	fake.assignRoleMutex.RLock()

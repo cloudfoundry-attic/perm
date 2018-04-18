@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/protos/gen"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/perm"
+	"code.cloudfoundry.org/perm/protos/gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -59,30 +59,6 @@ func (s *RoleServiceServer) CreateRole(
 
 	logger.Debug(success)
 	return &protos.CreateRoleResponse{
-		Role: &protos.Role{
-			Name: role.Name,
-		},
-	}, nil
-}
-
-func (s *RoleServiceServer) GetRole(
-	ctx context.Context,
-	req *protos.GetRoleRequest,
-) (*protos.GetRoleResponse, error) {
-	name := req.GetName()
-	logger := s.logger.Session("get-role").WithData(lager.Data{"role.name": name})
-	logger.Debug(starting)
-
-	query := repos.FindRoleQuery{
-		RoleName: name,
-	}
-	role, err := s.roleRepo.FindRole(ctx, logger, query)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-
-	logger.Debug(success)
-	return &protos.GetRoleResponse{
 		Role: &protos.Role{
 			Name: role.Name,
 		},

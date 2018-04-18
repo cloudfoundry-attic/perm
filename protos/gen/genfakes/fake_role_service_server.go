@@ -24,20 +24,6 @@ type FakeRoleServiceServer struct {
 		result1 *protos.CreateRoleResponse
 		result2 error
 	}
-	GetRoleStub        func(context.Context, *protos.GetRoleRequest) (*protos.GetRoleResponse, error)
-	getRoleMutex       sync.RWMutex
-	getRoleArgsForCall []struct {
-		arg1 context.Context
-		arg2 *protos.GetRoleRequest
-	}
-	getRoleReturns struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}
-	getRoleReturnsOnCall map[int]struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}
 	DeleteRoleStub        func(context.Context, *protos.DeleteRoleRequest) (*protos.DeleteRoleResponse, error)
 	deleteRoleMutex       sync.RWMutex
 	deleteRoleArgsForCall []struct {
@@ -174,58 +160,6 @@ func (fake *FakeRoleServiceServer) CreateRoleReturnsOnCall(i int, result1 *proto
 	}
 	fake.createRoleReturnsOnCall[i] = struct {
 		result1 *protos.CreateRoleResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeRoleServiceServer) GetRole(arg1 context.Context, arg2 *protos.GetRoleRequest) (*protos.GetRoleResponse, error) {
-	fake.getRoleMutex.Lock()
-	ret, specificReturn := fake.getRoleReturnsOnCall[len(fake.getRoleArgsForCall)]
-	fake.getRoleArgsForCall = append(fake.getRoleArgsForCall, struct {
-		arg1 context.Context
-		arg2 *protos.GetRoleRequest
-	}{arg1, arg2})
-	fake.recordInvocation("GetRole", []interface{}{arg1, arg2})
-	fake.getRoleMutex.Unlock()
-	if fake.GetRoleStub != nil {
-		return fake.GetRoleStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getRoleReturns.result1, fake.getRoleReturns.result2
-}
-
-func (fake *FakeRoleServiceServer) GetRoleCallCount() int {
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
-	return len(fake.getRoleArgsForCall)
-}
-
-func (fake *FakeRoleServiceServer) GetRoleArgsForCall(i int) (context.Context, *protos.GetRoleRequest) {
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
-	return fake.getRoleArgsForCall[i].arg1, fake.getRoleArgsForCall[i].arg2
-}
-
-func (fake *FakeRoleServiceServer) GetRoleReturns(result1 *protos.GetRoleResponse, result2 error) {
-	fake.GetRoleStub = nil
-	fake.getRoleReturns = struct {
-		result1 *protos.GetRoleResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeRoleServiceServer) GetRoleReturnsOnCall(i int, result1 *protos.GetRoleResponse, result2 error) {
-	fake.GetRoleStub = nil
-	if fake.getRoleReturnsOnCall == nil {
-		fake.getRoleReturnsOnCall = make(map[int]struct {
-			result1 *protos.GetRoleResponse
-			result2 error
-		})
-	}
-	fake.getRoleReturnsOnCall[i] = struct {
-		result1 *protos.GetRoleResponse
 		result2 error
 	}{result1, result2}
 }
@@ -547,8 +481,6 @@ func (fake *FakeRoleServiceServer) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createRoleMutex.RLock()
 	defer fake.createRoleMutex.RUnlock()
-	fake.getRoleMutex.RLock()
-	defer fake.getRoleMutex.RUnlock()
 	fake.deleteRoleMutex.RLock()
 	defer fake.deleteRoleMutex.RUnlock()
 	fake.assignRoleMutex.RLock()

@@ -21,8 +21,6 @@
 		Role
 		CreateRoleRequest
 		CreateRoleResponse
-		GetRoleRequest
-		GetRoleResponse
 		DeleteRoleRequest
 		DeleteRoleResponse
 		AssignRoleRequest

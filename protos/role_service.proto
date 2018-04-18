@@ -14,7 +14,6 @@ option (gogoproto.unmarshaler_all) = true;
 
 service RoleService {
   rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
-  rpc GetRole (GetRoleRequest) returns (GetRoleResponse);
   rpc DeleteRole (DeleteRoleRequest) returns (DeleteRoleResponse);
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
@@ -29,14 +28,6 @@ message CreateRoleRequest {
 }
 
 message CreateRoleResponse {
-  Role role = 1;
-}
-
-message GetRoleRequest {
-  string name = 1;
-}
-
-message GetRoleResponse {
   Role role = 1;
 }
 
