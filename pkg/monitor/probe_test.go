@@ -3,15 +3,15 @@ package monitor_test
 import (
 	"time"
 
-	permgofakes "code.cloudfoundry.org/perm-go/perm-gofakes"
 	. "code.cloudfoundry.org/perm/pkg/monitor"
+	permgofakes "code.cloudfoundry.org/perm/protos/gen/genfakes"
 
 	"context"
 
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/protos/gen"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"

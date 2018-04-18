@@ -19,10 +19,10 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/perm-go"
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
+	"code.cloudfoundry.org/perm/protos/gen"
 )
 
 type options struct {

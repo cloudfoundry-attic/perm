@@ -5,5 +5,5 @@ Permissions Service (Perm).
 
 For clients which use these protobuf definitions:
 
-- [perm-rb](https://code.cloudfoundry.org/perm-rb)
-- [perm-go](https://code.cloudfoundry.org/perm/pkg/perm)
+- [ruby client](https://code.cloudfoundry.org/perm-rb)
+- [go client](https://code.cloudfoundry.org/perm/pkg/perm)

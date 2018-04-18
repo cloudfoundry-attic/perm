@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm-go"
+	"code.cloudfoundry.org/perm/protos/gen"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
