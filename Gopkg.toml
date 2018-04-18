@@ -76,3 +76,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/xoebus/ceflog"
+
+[[constraint]]
+  name = "github.com/gogo/protobuf"
+  version = "1.0.0"
