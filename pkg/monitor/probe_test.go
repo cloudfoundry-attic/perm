@@ -169,7 +169,7 @@ var _ = Describe("Probe", func() {
 				contextWithExceededDeadline, cancelFunc := context.WithTimeout(context.Background(), time.Second)
 				cancelFunc()
 				fakeRoleServiceClient.DeleteRoleStub = func(ctx context.Context, in *protos.DeleteRoleRequest, opts ...grpc.CallOption) (*protos.DeleteRoleResponse, error) {
-					time.Sleep(20 * time.Millisecond)
+					time.Sleep(time.Second)
 					return &protos.DeleteRoleResponse{}, nil
 				}
 				_, err := p.Cleanup(contextWithExceededDeadline, time.Duration(1*time.Millisecond), fakeLogger, uniqueSuffix)
