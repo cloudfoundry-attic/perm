@@ -32,7 +32,7 @@ type options struct {
 
 	Logger cmdflags.LagerFlag
 
-	Frequency time.Duration `long:"Frequency" description:"Frequency with which the probe is issued" default:"5s"`
+	Frequency time.Duration `long:"frequency" description:"Frequency with which the probe is issued" default:"5s"`
 	Timeout   time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
 }
 
