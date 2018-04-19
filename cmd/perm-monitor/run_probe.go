@@ -16,11 +16,11 @@ const (
 	AcceptableQueryWindow     = 100 * time.Millisecond
 )
 
-func RunProbeAtAnInterval(ctx context.Context,
+func RunProbeWithFrequency(ctx context.Context,
 	logger lager.Logger,
 	probe *monitor.Probe,
 	statter monitor.PermStatter,
-	probeInterval, probeTimeout time.Duration,
+	probeFrequency, probeTimeout time.Duration,
 ) {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -36,7 +36,7 @@ func RunProbeAtAnInterval(ctx context.Context,
 	go func() {
 		defer wg.Done()
 
-		for range time.NewTicker(probeInterval).C {
+		for range time.NewTicker(probeFrequency).C {
 			cmd.RecordProbeResults(ctx, logger, probe, probeTimeout, statter, AcceptableQueryWindow)
 		}
 	}()

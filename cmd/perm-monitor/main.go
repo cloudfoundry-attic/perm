@@ -32,8 +32,8 @@ type options struct {
 
 	Logger cmdflags.LagerFlag
 
-	Interval time.Duration `long:"interval" description:"Frequency with which the probe is issued" default:"5s"`
-	Timeout  time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
+	Frequency time.Duration `long:"Frequency" description:"Frequency with which the probe is issued" default:"5s"`
+	Timeout   time.Duration `long:"timeout" description:"Time after which the probe is considered to have failed" default:"100ms"`
 }
 
 type permOptions struct {
@@ -134,5 +134,5 @@ func main() {
 		probeHistogram,
 	}
 
-	RunProbeAtAnInterval(ctx, logger.Session("probe"), probe, statter, parserOpts.Interval, parserOpts.Timeout)
+	RunProbeWithFrequency(ctx, logger.Session("probe"), probe, statter, parserOpts.Frequency, parserOpts.Timeout)
 }
