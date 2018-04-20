@@ -6,6 +6,7 @@
 
 	It is generated from these files:
 		actor.proto
+		group.proto
 		permission.proto
 		permission_service.proto
 		role.proto
@@ -13,6 +14,7 @@
 
 	It has these top-level messages:
 		Actor
+		Group
 		Permission
 		HasPermissionRequest
 		HasPermissionResponse
@@ -25,10 +27,14 @@
 		DeleteRoleResponse
 		AssignRoleRequest
 		AssignRoleResponse
+		AssignRoleToGroupRequest
+		AssignRoleToGroupResponse
 		UnassignRoleRequest
 		UnassignRoleResponse
 		HasRoleRequest
 		HasRoleResponse
+		HasRoleForGroupRequest
+		HasRoleForGroupResponse
 		ListActorRolesRequest
 		ListActorRolesResponse
 		ListRolePermissionsRequest

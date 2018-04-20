@@ -200,6 +200,13 @@ func (s *RoleServiceServer) HasRole(
 	return &protos.HasRoleResponse{HasRole: found}, nil
 }
 
+func (s *RoleServiceServer) HasRoleForGroup(
+	ctx context.Context,
+	req *protos.HasRoleForGroupRequest,
+) (*protos.HasRoleForGroupResponse, error) {
+	return &protos.HasRoleForGroupResponse{}, nil
+}
+
 func (s *RoleServiceServer) ListActorRoles(
 	ctx context.Context,
 	req *protos.ListActorRolesRequest,

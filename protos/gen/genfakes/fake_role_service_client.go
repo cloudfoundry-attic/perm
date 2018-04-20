@@ -86,6 +86,21 @@ type FakeRoleServiceClient struct {
 		result1 *protos.HasRoleResponse
 		result2 error
 	}
+	HasRoleForGroupStub        func(ctx context.Context, in *protos.HasRoleForGroupRequest, opts ...grpc.CallOption) (*protos.HasRoleForGroupResponse, error)
+	hasRoleForGroupMutex       sync.RWMutex
+	hasRoleForGroupArgsForCall []struct {
+		ctx  context.Context
+		in   *protos.HasRoleForGroupRequest
+		opts []grpc.CallOption
+	}
+	hasRoleForGroupReturns struct {
+		result1 *protos.HasRoleForGroupResponse
+		result2 error
+	}
+	hasRoleForGroupReturnsOnCall map[int]struct {
+		result1 *protos.HasRoleForGroupResponse
+		result2 error
+	}
 	ListActorRolesStub        func(ctx context.Context, in *protos.ListActorRolesRequest, opts ...grpc.CallOption) (*protos.ListActorRolesResponse, error)
 	listActorRolesMutex       sync.RWMutex
 	listActorRolesArgsForCall []struct {
@@ -385,6 +400,59 @@ func (fake *FakeRoleServiceClient) HasRoleReturnsOnCall(i int, result1 *protos.H
 	}{result1, result2}
 }
 
+func (fake *FakeRoleServiceClient) HasRoleForGroup(ctx context.Context, in *protos.HasRoleForGroupRequest, opts ...grpc.CallOption) (*protos.HasRoleForGroupResponse, error) {
+	fake.hasRoleForGroupMutex.Lock()
+	ret, specificReturn := fake.hasRoleForGroupReturnsOnCall[len(fake.hasRoleForGroupArgsForCall)]
+	fake.hasRoleForGroupArgsForCall = append(fake.hasRoleForGroupArgsForCall, struct {
+		ctx  context.Context
+		in   *protos.HasRoleForGroupRequest
+		opts []grpc.CallOption
+	}{ctx, in, opts})
+	fake.recordInvocation("HasRoleForGroup", []interface{}{ctx, in, opts})
+	fake.hasRoleForGroupMutex.Unlock()
+	if fake.HasRoleForGroupStub != nil {
+		return fake.HasRoleForGroupStub(ctx, in, opts...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.hasRoleForGroupReturns.result1, fake.hasRoleForGroupReturns.result2
+}
+
+func (fake *FakeRoleServiceClient) HasRoleForGroupCallCount() int {
+	fake.hasRoleForGroupMutex.RLock()
+	defer fake.hasRoleForGroupMutex.RUnlock()
+	return len(fake.hasRoleForGroupArgsForCall)
+}
+
+func (fake *FakeRoleServiceClient) HasRoleForGroupArgsForCall(i int) (context.Context, *protos.HasRoleForGroupRequest, []grpc.CallOption) {
+	fake.hasRoleForGroupMutex.RLock()
+	defer fake.hasRoleForGroupMutex.RUnlock()
+	return fake.hasRoleForGroupArgsForCall[i].ctx, fake.hasRoleForGroupArgsForCall[i].in, fake.hasRoleForGroupArgsForCall[i].opts
+}
+
+func (fake *FakeRoleServiceClient) HasRoleForGroupReturns(result1 *protos.HasRoleForGroupResponse, result2 error) {
+	fake.HasRoleForGroupStub = nil
+	fake.hasRoleForGroupReturns = struct {
+		result1 *protos.HasRoleForGroupResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeRoleServiceClient) HasRoleForGroupReturnsOnCall(i int, result1 *protos.HasRoleForGroupResponse, result2 error) {
+	fake.HasRoleForGroupStub = nil
+	if fake.hasRoleForGroupReturnsOnCall == nil {
+		fake.hasRoleForGroupReturnsOnCall = make(map[int]struct {
+			result1 *protos.HasRoleForGroupResponse
+			result2 error
+		})
+	}
+	fake.hasRoleForGroupReturnsOnCall[i] = struct {
+		result1 *protos.HasRoleForGroupResponse
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeRoleServiceClient) ListActorRoles(ctx context.Context, in *protos.ListActorRolesRequest, opts ...grpc.CallOption) (*protos.ListActorRolesResponse, error) {
 	fake.listActorRolesMutex.Lock()
 	ret, specificReturn := fake.listActorRolesReturnsOnCall[len(fake.listActorRolesArgsForCall)]
@@ -504,6 +572,8 @@ func (fake *FakeRoleServiceClient) Invocations() map[string][][]interface{} {
 	defer fake.unassignRoleMutex.RUnlock()
 	fake.hasRoleMutex.RLock()
 	defer fake.hasRoleMutex.RUnlock()
+	fake.hasRoleForGroupMutex.RLock()
+	defer fake.hasRoleForGroupMutex.RUnlock()
 	fake.listActorRolesMutex.RLock()
 	defer fake.listActorRolesMutex.RUnlock()
 	fake.listRolePermissionsMutex.RLock()

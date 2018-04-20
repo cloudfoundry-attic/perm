@@ -4,6 +4,7 @@ package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actor.proto";
+import "group.proto";
 import "permission.proto";
 import "role.proto";
 
@@ -18,6 +19,7 @@ service RoleService {
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
+  rpc HasRoleForGroup (HasRoleForGroupRequest) returns (HasRoleForGroupResponse);
   rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
   rpc ListRolePermissions (ListRolePermissionsRequest) returns (ListRolePermissionsResponse);
 }
@@ -46,6 +48,14 @@ message AssignRoleRequest {
 message AssignRoleResponse {
 }
 
+message AssignRoleToGroupRequest {
+  Group group = 1;
+  string role_name = 2;
+}
+
+message AssignRoleToGroupResponse {
+}
+
 message UnassignRoleRequest {
   Actor actor = 1;
   string role_name = 2;
@@ -60,6 +70,15 @@ message HasRoleRequest {
 }
 
 message HasRoleResponse {
+  bool has_role = 1;
+}
+
+message HasRoleForGroupRequest {
+  Group group = 1;
+  string role_name = 2;
+}
+
+message HasRoleForGroupResponse {
   bool has_role = 1;
 }
 
