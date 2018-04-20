@@ -16,6 +16,11 @@ type HasRoleQuery struct {
 	RoleName string
 }
 
+type HasRoleForGroupQuery struct {
+	Group    perm.Group
+	RoleName string
+}
+
 type RoleAssignmentRepo interface {
 	AssignRole(
 		ctx context.Context,
@@ -23,6 +28,13 @@ type RoleAssignmentRepo interface {
 		roleName,
 		domainID,
 		namespace string,
+	) error
+
+	AssignRoleToGroup(
+		ctx context.Context,
+		logger lager.Logger,
+		roleName,
+		groupID string,
 	) error
 
 	UnassignRole(
@@ -37,6 +49,12 @@ type RoleAssignmentRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		query HasRoleQuery,
+	) (bool, error)
+
+	HasRoleForGroup(
+		ctx context.Context,
+		logger lager.Logger,
+		query HasRoleForGroupQuery,
 	) (bool, error)
 
 	ListActorRoles(

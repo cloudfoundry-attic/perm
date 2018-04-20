@@ -95,6 +95,56 @@ func BehavesLikeARoleAssignmentRepo(
 		})
 	})
 
+	Describe("#AssignRoleToGroup", func() {
+		It("saves the role assignment, saving the group if it does not exist", func() {
+			group := perm.Group{
+				ID: uuid.NewV4().String(),
+			}
+			roleName := uuid.NewV4().String()
+
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.AssignRoleToGroup(ctx, logger, roleName, group.ID)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			query := repos.HasRoleForGroupQuery{
+				Group:    group,
+				RoleName: roleName,
+			}
+			yes, err := subject.HasRoleForGroup(ctx, logger, query)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(yes).To(BeTrue())
+		})
+
+		It("fails if the role assignment already exists", func() {
+			group := perm.Group{
+				ID: uuid.NewV4().String(),
+			}
+			roleName := uuid.NewV4().String()
+
+			_, err := roleRepo.CreateRole(ctx, logger, roleName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.AssignRoleToGroup(ctx, logger, roleName, group.ID)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.AssignRoleToGroup(ctx, logger, roleName, group.ID)
+			Expect(err).To(Equal(perm.ErrAssignmentAlreadyExists))
+		})
+
+		It("fails if the role does not exist", func() {
+			id := uuid.NewV4().String()
+			roleName := uuid.NewV4().String()
+
+			err := subject.AssignRoleToGroup(ctx, logger, roleName, id)
+			Expect(err).To(Equal(perm.ErrRoleNotFound))
+		})
+	})
+
 	Describe("#UnassignRole", func() {
 		It("removes the role assignment", func() {
 			actor := perm.Actor{

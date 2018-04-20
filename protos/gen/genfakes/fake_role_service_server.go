@@ -52,6 +52,20 @@ type FakeRoleServiceServer struct {
 		result1 *protos.AssignRoleResponse
 		result2 error
 	}
+	AssignRoleToGroupStub        func(context.Context, *protos.AssignRoleToGroupRequest) (*protos.AssignRoleToGroupResponse, error)
+	assignRoleToGroupMutex       sync.RWMutex
+	assignRoleToGroupArgsForCall []struct {
+		arg1 context.Context
+		arg2 *protos.AssignRoleToGroupRequest
+	}
+	assignRoleToGroupReturns struct {
+		result1 *protos.AssignRoleToGroupResponse
+		result2 error
+	}
+	assignRoleToGroupReturnsOnCall map[int]struct {
+		result1 *protos.AssignRoleToGroupResponse
+		result2 error
+	}
 	UnassignRoleStub        func(context.Context, *protos.UnassignRoleRequest) (*protos.UnassignRoleResponse, error)
 	unassignRoleMutex       sync.RWMutex
 	unassignRoleArgsForCall []struct {
@@ -278,6 +292,58 @@ func (fake *FakeRoleServiceServer) AssignRoleReturnsOnCall(i int, result1 *proto
 	}
 	fake.assignRoleReturnsOnCall[i] = struct {
 		result1 *protos.AssignRoleResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeRoleServiceServer) AssignRoleToGroup(arg1 context.Context, arg2 *protos.AssignRoleToGroupRequest) (*protos.AssignRoleToGroupResponse, error) {
+	fake.assignRoleToGroupMutex.Lock()
+	ret, specificReturn := fake.assignRoleToGroupReturnsOnCall[len(fake.assignRoleToGroupArgsForCall)]
+	fake.assignRoleToGroupArgsForCall = append(fake.assignRoleToGroupArgsForCall, struct {
+		arg1 context.Context
+		arg2 *protos.AssignRoleToGroupRequest
+	}{arg1, arg2})
+	fake.recordInvocation("AssignRoleToGroup", []interface{}{arg1, arg2})
+	fake.assignRoleToGroupMutex.Unlock()
+	if fake.AssignRoleToGroupStub != nil {
+		return fake.AssignRoleToGroupStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.assignRoleToGroupReturns.result1, fake.assignRoleToGroupReturns.result2
+}
+
+func (fake *FakeRoleServiceServer) AssignRoleToGroupCallCount() int {
+	fake.assignRoleToGroupMutex.RLock()
+	defer fake.assignRoleToGroupMutex.RUnlock()
+	return len(fake.assignRoleToGroupArgsForCall)
+}
+
+func (fake *FakeRoleServiceServer) AssignRoleToGroupArgsForCall(i int) (context.Context, *protos.AssignRoleToGroupRequest) {
+	fake.assignRoleToGroupMutex.RLock()
+	defer fake.assignRoleToGroupMutex.RUnlock()
+	return fake.assignRoleToGroupArgsForCall[i].arg1, fake.assignRoleToGroupArgsForCall[i].arg2
+}
+
+func (fake *FakeRoleServiceServer) AssignRoleToGroupReturns(result1 *protos.AssignRoleToGroupResponse, result2 error) {
+	fake.AssignRoleToGroupStub = nil
+	fake.assignRoleToGroupReturns = struct {
+		result1 *protos.AssignRoleToGroupResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeRoleServiceServer) AssignRoleToGroupReturnsOnCall(i int, result1 *protos.AssignRoleToGroupResponse, result2 error) {
+	fake.AssignRoleToGroupStub = nil
+	if fake.assignRoleToGroupReturnsOnCall == nil {
+		fake.assignRoleToGroupReturnsOnCall = make(map[int]struct {
+			result1 *protos.AssignRoleToGroupResponse
+			result2 error
+		})
+	}
+	fake.assignRoleToGroupReturnsOnCall[i] = struct {
+		result1 *protos.AssignRoleToGroupResponse
 		result2 error
 	}{result1, result2}
 }
@@ -551,6 +617,8 @@ func (fake *FakeRoleServiceServer) Invocations() map[string][][]interface{} {
 	defer fake.deleteRoleMutex.RUnlock()
 	fake.assignRoleMutex.RLock()
 	defer fake.assignRoleMutex.RUnlock()
+	fake.assignRoleToGroupMutex.RLock()
+	defer fake.assignRoleToGroupMutex.RUnlock()
 	fake.unassignRoleMutex.RLock()
 	defer fake.unassignRoleMutex.RUnlock()
 	fake.hasRoleMutex.RLock()

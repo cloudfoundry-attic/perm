@@ -193,6 +193,58 @@ func assignRole(
 	return createRoleAssignment(ctx, logger, conn, role.ID, actorID, actorNamespace)
 }
 
+func createRoleAssignmentForGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID int64,
+	groupID string,
+) error {
+	logger = logger.Session("create-role-assignment-for-group").WithData(lager.Data{
+		"role.id":                   roleID,
+		"group_assignment.group_id": groupID,
+	})
+
+	u := uuid.NewV4().Bytes()
+	_, err := squirrel.Insert("group_assignment").
+		Columns("uuid", "role_id", "group_id").
+		Values(u, roleID, groupID).
+		RunWith(conn).
+		ExecContext(ctx)
+
+	switch e := err.(type) {
+	case nil:
+		return nil
+	case *mysql.MySQLError:
+		if e.Number == MySQLErrorCodeDuplicateKey {
+			logger.Debug(errRoleAssignmentAlreadyExists)
+			return perm.ErrAssignmentAlreadyExists
+		}
+
+		logger.Error(failedToCreateRoleAssignment, err)
+		return err
+	default:
+		logger.Error(failedToCreateRoleAssignment, err)
+		return err
+	}
+}
+
+func assignRoleToGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleName string,
+	groupID string,
+) error {
+	logger = logger.Session("assign-role-to-group")
+
+	role, err := findRole(ctx, logger, conn, roleName)
+	if err != nil {
+		return err
+	}
+	return createRoleAssignmentForGroup(ctx, logger, conn, role.ID, groupID)
+}
+
 func createRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
@@ -309,6 +361,21 @@ func hasRole(
 	return findRoleAssignment(ctx, logger, conn, role.ID, query.Actor.ID, query.Actor.Namespace)
 }
 
+func hasRoleForGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	query repos.HasRoleForGroupQuery,
+) (bool, error) {
+	logger = logger.Session("has-role-for-group")
+	role, err := findRole(ctx, logger, conn, query.RoleName)
+	if err != nil {
+		return false, err
+	}
+
+	return findRoleAssignmentForGroup(ctx, logger, conn, role.ID, query.Group.ID)
+}
+
 func findRoleAssignment(
 	ctx context.Context,
 	logger lager.Logger,
@@ -331,6 +398,36 @@ func findRoleAssignment(
 			"role_id":         roleID,
 			"actor_id":        actorID,
 			"actor_namespace": actorNamespace,
+		}).
+		RunWith(conn).
+		ScanContext(ctx, &count)
+	if err != nil {
+		logger.Error(failedToFindRoleAssignment, err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func findRoleAssignmentForGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID int64,
+	groupID string,
+) (bool, error) {
+	logger = logger.Session("find-role-assignment-for-group").WithData(lager.Data{
+		"role.id":                   roleID,
+		"group_assignment.group_id": groupID,
+	})
+
+	var count int
+
+	err := squirrel.Select("count(role_id)").
+		From("group_assignment").
+		Where(squirrel.Eq{
+			"role_id":  roleID,
+			"group_id": groupID,
 		}).
 		RunWith(conn).
 		ScanContext(ctx, &count)

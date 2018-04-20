@@ -386,72 +386,6 @@ var _ = Describe("RoleRepoServer", func() {
 		})
 	})
 
-	FDescribe("#HasRoleForGroup", func() {
-		//It("returns true if the group has the role", func() {
-		//	roleName := "role"
-		//	group := &protos.Group{
-		//		ID: "group",
-		//	}
-		//	_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
-		//		Name: roleName,
-		//	})
-
-		//	Expect(err).NotTo(HaveOccurred())
-
-		//	_, err = subject.AssignRoleForGroup(ctx, &protos.AssignRoleForGroupRequest{
-		//		Group:    group,
-		//		RoleName: roleName,
-		//	})
-
-		//	Expect(err).NotTo(HaveOccurred())
-
-		//	res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
-		//		Group:    group,
-		//		RoleName: roleName,
-		//	})
-
-		//	Expect(err).NotTo(HaveOccurred())
-		//	Expect(res).NotTo(BeNil())
-		//	Expect(res.GetHasRole()).To(BeTrue())
-		//})
-
-		It("returns false if the group is not assigned", func() {
-			roleName := "role"
-			group := &protos.Group{
-				ID: "group",
-			}
-			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
-				Name: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-
-			res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
-				Group:    group,
-				RoleName: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).NotTo(BeNil())
-			Expect(res.GetHasRole()).To(BeFalse())
-		})
-
-		It("returns false if the role does not exist", func() {
-			roleName := "role"
-			group := &protos.Group{
-				ID: "group",
-			}
-			res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
-				Group:    group,
-				RoleName: roleName,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).NotTo(BeNil())
-			Expect(res.GetHasRole()).To(BeFalse())
-		})
-	})
-
 	Describe("#HasRole", func() {
 		It("returns true if the actor has the role", func() {
 			roleName := "role"
@@ -566,6 +500,154 @@ var _ = Describe("RoleRepoServer", func() {
 			expectedErr := status.Errorf(codes.InvalidArgument, "actor namespace cannot be empty")
 			Expect(res).To(BeNil())
 			Expect(err).To(MatchError(expectedErr))
+		})
+	})
+
+	Describe("#AssignRoleToGroup", func() {
+		It("succeeds if the role exists", func() {
+			name := "role"
+			group := &protos.Group{
+				ID: "group-id",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			req := &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: name,
+			}
+			res, err := subject.AssignRoleToGroup(ctx, req)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+		})
+
+		It("fails if the user has already been assigned the role", func() {
+			name := "role"
+			group := &protos.Group{
+				ID: "group-id",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			req := &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: name,
+			}
+			_, err = subject.AssignRoleToGroup(ctx, req)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.AssignRoleToGroup(ctx, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
+		})
+
+		It("fails if the role does not exist", func() {
+			group := &protos.Group{
+				ID: "group",
+			}
+			res, err := subject.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: "does-not-exist",
+			})
+
+			Expect(res).To(BeNil())
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("logs a security event", func() {
+			group := &protos.Group{
+				ID: "group-id",
+			}
+			req := &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: "role",
+			}
+			subject.AssignRoleToGroup(ctx, req)
+			expectedExtensions := []logging.CustomExtension{
+				{Key: "roleName", Value: "role"},
+				{Key: "groupID", Value: "group-id"},
+			}
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("AssignRoleToGroup"))
+			Expect(name).To(Equal("Role assignment"))
+			Expect(extensions).To(Equal(expectedExtensions))
+		})
+	})
+
+	Describe("#HasRoleForGroup", func() {
+		It("returns true if the group has the role", func() {
+			roleName := "role"
+			group := &protos.Group{
+				ID: "group",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = subject.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
+				Group:    group,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(res.GetHasRole()).To(BeTrue())
+		})
+
+		It("returns false if the group is not assigned", func() {
+			roleName := "role"
+			group := &protos.Group{
+				ID: "group",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
+				Group:    group,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(res.GetHasRole()).To(BeFalse())
+		})
+
+		It("returns false if the role does not exist", func() {
+			roleName := "role"
+			group := &protos.Group{
+				ID: "group",
+			}
+			res, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
+				Group:    group,
+				RoleName: roleName,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+			Expect(res.GetHasRole()).To(BeFalse())
 		})
 	})
 

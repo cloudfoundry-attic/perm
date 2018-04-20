@@ -43,4 +43,9 @@ var Migrations = []sqlx.Migration{
 		Up:   migrations.CombineActorAndRoleAssignmentTablesUp,
 		Down: migrations.CombineActorAndRoleAssignmentTablesDown,
 	},
+	{
+		Name: "create_group_assignment_table",
+		Up:   migrations.CreateGroupAssignmentTableUp,
+		Down: migrations.CreateGroupAssignmentTableDown,
+	},
 }

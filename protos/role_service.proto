@@ -17,6 +17,7 @@ service RoleService {
   rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
   rpc DeleteRole (DeleteRoleRequest) returns (DeleteRoleResponse);
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
+  rpc AssignRoleToGroup (AssignRoleToGroupRequest) returns (AssignRoleToGroupResponse);
   rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc HasRoleForGroup (HasRoleForGroupRequest) returns (HasRoleForGroupResponse);

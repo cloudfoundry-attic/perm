@@ -5,6 +5,10 @@ type Actor struct {
 	Namespace string
 }
 
+type Group struct {
+	ID string
+}
+
 type Permission struct {
 	Action          string
 	ResourcePattern string

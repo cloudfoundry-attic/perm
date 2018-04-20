@@ -121,6 +121,35 @@ func (s *RoleServiceServer) AssignRole(
 	return &protos.AssignRoleResponse{}, nil
 }
 
+func (s *RoleServiceServer) AssignRoleToGroup(
+	ctx context.Context,
+	req *protos.AssignRoleToGroupRequest,
+) (*protos.AssignRoleToGroupResponse, error) {
+	roleName := req.GetRoleName()
+	pGroup := req.GetGroup()
+
+	groupID := pGroup.GetID()
+	logExtensions := []logging.CustomExtension{
+		{Key: "roleName", Value: roleName},
+		{Key: "groupID", Value: pGroup.ID},
+	}
+
+	s.securityLogger.Log(ctx, "AssignRoleToGroup", "Role assignment", logExtensions...)
+	logger := s.logger.Session("assign-role").WithData(lager.Data{
+		"actor.id":  groupID,
+		"role.name": roleName,
+	})
+	logger.Debug(starting)
+
+	err := s.roleAssignmentRepo.AssignRoleToGroup(ctx, logger, roleName, groupID)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+
+	logger.Debug(success)
+	return &protos.AssignRoleToGroupResponse{}, nil
+}
+
 func (s *RoleServiceServer) UnassignRole(
 	ctx context.Context,
 	req *protos.UnassignRoleRequest,
@@ -204,7 +233,35 @@ func (s *RoleServiceServer) HasRoleForGroup(
 	ctx context.Context,
 	req *protos.HasRoleForGroupRequest,
 ) (*protos.HasRoleForGroupResponse, error) {
-	return &protos.HasRoleForGroupResponse{}, nil
+	roleName := req.GetRoleName()
+	pGroup := req.GetGroup()
+
+	group := perm.Group{
+		ID: pGroup.GetID(),
+	}
+
+	logger := s.logger.Session("has-role").WithData(lager.Data{
+		"group.id":  group.ID,
+		"role.name": roleName,
+	})
+	logger.Debug(starting)
+
+	query := repos.HasRoleForGroupQuery{
+		Group:    group,
+		RoleName: roleName,
+	}
+
+	found, err := s.roleAssignmentRepo.HasRoleForGroup(ctx, logger, query)
+	if err != nil {
+		if err == perm.ErrRoleNotFound {
+			return &protos.HasRoleForGroupResponse{HasRole: false}, nil
+		}
+
+		return nil, togRPCError(err)
+	}
+
+	logger.Debug(success)
+	return &protos.HasRoleForGroupResponse{HasRole: found}, nil
 }
 
 func (s *RoleServiceServer) ListActorRoles(

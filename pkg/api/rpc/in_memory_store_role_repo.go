@@ -97,6 +97,38 @@ func (s *InMemoryStore) AssignRole(
 	return nil
 }
 
+func (s *InMemoryStore) AssignRoleToGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName,
+	id string,
+) error {
+	if _, exists := s.roles[roleName]; !exists {
+		return perm.ErrRoleNotFound
+	}
+	group := perm.Group{
+		ID: id,
+	}
+
+	groupAssignments, ok := s.groupAssignments[group]
+	if !ok {
+		groupAssignments = []string{}
+	}
+
+	for _, role := range groupAssignments {
+		if role == roleName {
+			err := perm.ErrAssignmentAlreadyExists
+			logger.Error(errRoleAssignmentAlreadyExists, err)
+			return err
+		}
+	}
+
+	groupAssignments = append(groupAssignments, roleName)
+
+	s.groupAssignments[group] = groupAssignments
+	return nil
+}
+
 func (s *InMemoryStore) UnassignRole(
 	ctx context.Context,
 	logger lager.Logger,
@@ -154,6 +186,35 @@ func (s *InMemoryStore) HasRole(
 	var found bool
 
 	for _, name := range assignments {
+		if name == roleName {
+			found = true
+			break
+		}
+	}
+
+	return found, nil
+}
+
+func (s *InMemoryStore) HasRoleForGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	query repos.HasRoleForGroupQuery,
+) (bool, error) {
+	roleName := query.RoleName
+
+	_, ok := s.roles[roleName]
+	if !ok {
+		return false, perm.ErrRoleNotFound
+	}
+
+	groupAssignments, ok := s.groupAssignments[query.Group]
+	if !ok {
+		return false, nil
+	}
+
+	var found bool
+
+	for _, name := range groupAssignments {
 		if name == roleName {
 			found = true
 			break
