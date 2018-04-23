@@ -13,11 +13,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/protos/gen"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
+	"code.cloudfoundry.org/perm/protos/gen"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
@@ -69,7 +69,7 @@ func NewServer(conn *sqlx.DB, opts ...ServerOption) *Server {
 
 	securityLogger := config.securityLogger
 
-	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store, store)
+	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store)
 	protos.RegisterRoleServiceServer(server, roleServiceServer)
 
 	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, store)

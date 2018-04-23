@@ -16,21 +16,18 @@ type RoleServiceServer struct {
 	logger         lager.Logger
 	securityLogger SecurityLogger
 
-	roleRepo           repos.RoleRepo
-	roleAssignmentRepo repos.RoleAssignmentRepo
+	roleRepo repos.RoleRepo
 }
 
 func NewRoleServiceServer(
 	logger lager.Logger,
 	securityLogger SecurityLogger,
 	roleRepo repos.RoleRepo,
-	roleAssignmentRepo repos.RoleAssignmentRepo,
 ) *RoleServiceServer {
 	return &RoleServiceServer{
-		logger:             logger,
-		securityLogger:     securityLogger,
-		roleRepo:           roleRepo,
-		roleAssignmentRepo: roleAssignmentRepo,
+		logger:         logger,
+		securityLogger: securityLogger,
+		roleRepo:       roleRepo,
 	}
 }
 
@@ -112,7 +109,7 @@ func (s *RoleServiceServer) AssignRole(
 	})
 	logger.Debug(starting)
 
-	err = s.roleAssignmentRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
+	err = s.roleRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -141,7 +138,7 @@ func (s *RoleServiceServer) AssignRoleToGroup(
 	})
 	logger.Debug(starting)
 
-	err := s.roleAssignmentRepo.AssignRoleToGroup(ctx, logger, roleName, groupID)
+	err := s.roleRepo.AssignRoleToGroup(ctx, logger, roleName, groupID)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -179,7 +176,7 @@ func (s *RoleServiceServer) UnassignRole(
 	})
 	logger.Debug(starting)
 
-	err = s.roleAssignmentRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
+	err = s.roleRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -216,7 +213,7 @@ func (s *RoleServiceServer) HasRole(
 		RoleName: roleName,
 	}
 
-	found, err := s.roleAssignmentRepo.HasRole(ctx, logger, query)
+	found, err := s.roleRepo.HasRole(ctx, logger, query)
 	if err != nil {
 		if err == perm.ErrRoleNotFound {
 			return &protos.HasRoleResponse{HasRole: false}, nil
@@ -251,7 +248,7 @@ func (s *RoleServiceServer) HasRoleForGroup(
 		RoleName: roleName,
 	}
 
-	found, err := s.roleAssignmentRepo.HasRoleForGroup(ctx, logger, query)
+	found, err := s.roleRepo.HasRoleForGroup(ctx, logger, query)
 	if err != nil {
 		if err == perm.ErrRoleNotFound {
 			return &protos.HasRoleForGroupResponse{HasRole: false}, nil
@@ -285,7 +282,7 @@ func (s *RoleServiceServer) ListActorRoles(
 	logger.Debug(starting)
 
 	query := repos.ListActorRolesQuery{Actor: actor}
-	roles, err := s.roleAssignmentRepo.ListActorRoles(ctx, logger, query)
+	roles, err := s.roleRepo.ListActorRoles(ctx, logger, query)
 	if err != nil {
 		return nil, togRPCError(err)
 	}

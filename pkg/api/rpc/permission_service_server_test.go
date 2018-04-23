@@ -9,9 +9,9 @@ import (
 
 	"errors"
 
-	"code.cloudfoundry.org/perm/protos/gen"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
+	"code.cloudfoundry.org/perm/protos/gen"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"
@@ -36,7 +36,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		inMemoryStore = rpc.NewInMemoryStore()
 
 		ctx = context.Background()
-		roleServiceServer = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore, inMemoryStore)
+		roleServiceServer = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore)
 		subject = rpc.NewPermissionServiceServer(logger, securityLogger, inMemoryStore)
 	})
 

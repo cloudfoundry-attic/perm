@@ -17,13 +17,11 @@ import (
 func BehavesLikeAPermissionRepo(
 	subjectCreator func() repos.PermissionRepo,
 	roleRepoCreator func() repos.RoleRepo,
-	roleAssignmentRepoCreator func() repos.RoleAssignmentRepo,
 ) {
 	var (
 		subject repos.PermissionRepo
 
-		roleRepo           repos.RoleRepo
-		roleAssignmentRepo repos.RoleAssignmentRepo
+		roleRepo repos.RoleRepo
 
 		ctx    context.Context
 		logger *lagertest.TestLogger
@@ -35,7 +33,6 @@ func BehavesLikeAPermissionRepo(
 		subject = subjectCreator()
 
 		roleRepo = roleRepoCreator()
-		roleAssignmentRepo = roleAssignmentRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
@@ -60,7 +57,7 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{
@@ -155,7 +152,7 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2, permission3)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			permission4 := &perm.Permission{
@@ -196,7 +193,7 @@ func BehavesLikeAPermissionRepo(
 			_, err := roleRepo.CreateRole(ctx, logger, roleName1, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName1, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(ctx, logger, roleName1, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := uuid.NewV4().String()
@@ -208,7 +205,7 @@ func BehavesLikeAPermissionRepo(
 			_, err = roleRepo.CreateRole(ctx, logger, roleName2, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleAssignmentRepo.AssignRole(ctx, logger, roleName2, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(ctx, logger, roleName2, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.ListResourcePatternsQuery{

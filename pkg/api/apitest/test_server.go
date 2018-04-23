@@ -39,7 +39,7 @@ func NewTestServer(opts ...TestServerOption) *TestServer {
 	logger := config.logger
 	securityLogger := config.securityLogger
 
-	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store, store)
+	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store)
 	protos.RegisterRoleServiceServer(server, roleServiceServer)
 
 	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, store)

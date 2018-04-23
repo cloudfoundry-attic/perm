@@ -54,6 +54,5 @@ var _ = Describe("DataService", func() {
 	})
 
 	BehavesLikeARoleRepo(func() repos.RoleRepo { return store })
-	BehavesLikeARoleAssignmentRepo(func() repos.RoleAssignmentRepo { return store }, func() repos.RoleRepo { return store })
-	BehavesLikeAPermissionRepo(func() repos.PermissionRepo { return store }, func() repos.RoleRepo { return store }, func() repos.RoleAssignmentRepo { return store })
+	BehavesLikeAPermissionRepo(func() repos.PermissionRepo { return store }, func() repos.RoleRepo { return store })
 })

@@ -33,7 +33,7 @@ var _ = Describe("RoleRepoServer", func() {
 
 		ctx = context.Background()
 
-		subject = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore, inMemoryStore)
+		subject = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore)
 	})
 
 	Describe("#CreateRole", func() {
