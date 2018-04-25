@@ -13,7 +13,6 @@ const (
 	LogLevelDebug LogLevel = "debug"
 	LogLevelInfo  LogLevel = "info"
 	LogLevelError LogLevel = "error"
-	LogLevelFatal LogLevel = "fatal"
 )
 
 type LagerFlag struct {
@@ -29,8 +28,6 @@ func (f LagerFlag) Logger(component string) (lager.Logger, *lager.Reconfigurable
 		minLagerLogLevel = lager.INFO
 	case LogLevelError:
 		minLagerLogLevel = lager.ERROR
-	case LogLevelFatal:
-		minLagerLogLevel = lager.FATAL
 	default:
 		panic(fmt.Sprintf("unknown log level: %s", f.LogLevel))
 	}

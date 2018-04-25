@@ -71,7 +71,7 @@ func main() {
 	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
 	statsDClient, err := statsd.NewBufferedClient(statsDAddr, "", 0, 0)
 	if err != nil {
-		logger.Fatal(failedToConnectToStatsD, err, lager.Data{
+		logger.Error(failedToConnectToStatsD, err, lager.Data{
 			"addr": statsDAddr,
 		})
 		os.Exit(1)
@@ -88,14 +88,14 @@ func main() {
 	for _, certPath := range parserOpts.Perm.CACertificate {
 		caPem, e := certPath.Bytes(ioutilx.InjectableOS{}, ioutilx.InjectableIOReader{})
 		if e != nil {
-			logger.Fatal(failedToReadCertificate, e, lager.Data{
+			logger.Error(failedToReadCertificate, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
 		}
 
 		if ok := pool.AppendCertsFromPEM(caPem); !ok {
-			logger.Fatal(failedToAppendCertToPool, e, lager.Data{
+			logger.Error(failedToAppendCertToPool, e, lager.Data{
 				"location": certPath,
 			})
 			os.Exit(1)
@@ -108,7 +108,7 @@ func main() {
 	//// Setup GRPC connection
 	g, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		logger.Fatal(failedToGRPCDial, err, lager.Data{
+		logger.Error(failedToGRPCDial, err, lager.Data{
 			"addr": addr,
 		})
 		os.Exit(1)
