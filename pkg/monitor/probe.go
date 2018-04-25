@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/protos/gen"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 const (
@@ -21,14 +19,28 @@ const (
 	ProbeUnassignedPermissionResource = "system.probe.unassigned-permission.resource"
 )
 
-var ProbeActor = &protos.Actor{
-	ID:     "probe",
+//go:generate counterfeiter . Client
+
+type Client interface {
+	CreateRole(ctx context.Context, name string, permissions ...perm.Permission) (perm.Role, error)
+	DeleteRole(ctx context.Context, name string) error
+	AssignRole(ctx context.Context, roleName string, actor perm.Actor) error
+	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
+}
+
+var ProbeActor = perm.Actor{
+	ID:        "probe",
 	Namespace: "system",
 }
 
 type Probe struct {
-	RoleServiceClient       protos.RoleServiceClient
-	PermissionServiceClient protos.PermissionServiceClient
+	client Client
+}
+
+func NewProbe(client Client) *Probe {
+	return &Probe{
+		client: client,
+	}
 }
 
 func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
@@ -69,44 +81,27 @@ func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix str
 func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
 
-	assignedPermission := &protos.Permission{
-		Action:          ProbeAssignedPermissionAction,
-		ResourcePattern: ProbeAssignedPermissionResource + "." + uniqueSuffix,
-	}
+	start := time.Now()
 
-	createRoleRequest := &protos.CreateRoleRequest{
-		Name: roleName,
-		Permissions: []*protos.Permission{
-			assignedPermission,
+	permissions := []perm.Permission{
+		perm.Permission{
+			Action:          ProbeAssignedPermissionAction,
+			ResourcePattern: ProbeAssignedPermissionResource,
 		},
 	}
-	start := time.Now()
-	_, err := p.RoleServiceClient.CreateRole(ctx, createRoleRequest)
+	_, err := p.client.CreateRole(ctx, roleName, permissions...)
+
 	end := time.Now()
+
 	duration := end.Sub(start)
-	s, ok := status.FromError(err)
 
-	// Not a GRPC error
-	if err != nil && !ok {
+	if err != nil && err != perm.ErrRoleAlreadyExists {
 		logger.Error(failedToCreateRole, err, lager.Data{
-			"roleName":    createRoleRequest.GetName(),
-			"permissions": createRoleRequest.GetPermissions(),
+			"roleName":    roleName,
+			"permissions": permissions,
 		})
+
 		return duration, err
-	}
-
-	// GRPC error
-	if err != nil && ok {
-		switch s.Code() {
-		case codes.AlreadyExists:
-
-		default:
-			logger.Error(failedToCreateRole, err, lager.Data{
-				"roleName":    createRoleRequest.GetName(),
-				"permissions": createRoleRequest.GetPermissions(),
-			})
-			return duration, err
-		}
 	}
 
 	return duration, nil
@@ -114,41 +109,21 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 
 func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
-
-	assignRoleRequest := &protos.AssignRoleRequest{
-		Actor:    ProbeActor,
-		RoleName: roleName,
-	}
-
 	start := time.Now()
-	_, err := p.RoleServiceClient.AssignRole(ctx, assignRoleRequest)
+
+	err := p.client.AssignRole(ctx, roleName, ProbeActor)
+
 	end := time.Now()
 	duration := end.Sub(start)
-	s, ok := status.FromError(err)
 
-	// Not a GRPC error
-	if err != nil && !ok {
+	if err != nil && err != perm.ErrAssignmentAlreadyExists {
 		logger.Error(failedToAssignRole, err, lager.Data{
-			"roleName":     assignRoleRequest.GetRoleName(),
-			"actor.id":     assignRoleRequest.GetActor().GetID(),
-			"actor.namespace": assignRoleRequest.GetActor().GetNamespace(),
+			"roleName":        roleName,
+			"actor.id":        ProbeActor.ID,
+			"actor.namespace": ProbeActor.Namespace,
 		})
+
 		return duration, err
-	}
-
-	// GRPC error
-	if err != nil && ok {
-		switch s.Code() {
-		case codes.AlreadyExists:
-
-		default:
-			logger.Error(failedToAssignRole, err, lager.Data{
-				"roleName":     assignRoleRequest.GetRoleName(),
-				"actor.id":     assignRoleRequest.GetActor().GetID(),
-				"actor.namespace": assignRoleRequest.GetActor().GetNamespace(),
-			})
-			return duration, err
-		}
 	}
 
 	return duration, nil
@@ -169,39 +144,19 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 		defer logger.Debug(finished)
 
 		roleName := ProbeRoleName + "." + uniqueSuffix
-		deleteRoleRequest := &protos.DeleteRoleRequest{
-			Name: roleName,
-		}
 
 		start := time.Now()
-		_, err := p.RoleServiceClient.DeleteRole(ctx, deleteRoleRequest)
+		err := p.client.DeleteRole(ctx, roleName)
 		end := time.Now()
 		result.Durations = append(result.Durations, end.Sub(start))
-		s, ok := status.FromError(err)
 
-		// Not a GRPC error
-		if err != nil && !ok {
+		if err != nil && err != perm.ErrRoleNotFound {
 			logger.Error(failedToDeleteRole, err, lager.Data{
-				"roleName": deleteRoleRequest.GetName(),
+				"roleName": roleName,
 			})
 			result.Error = err
 			doneChan <- result
 			return
-		}
-
-		// GRPC error
-		if err != nil && ok {
-			switch s.Code() {
-			case codes.NotFound:
-
-			default:
-				logger.Error(failedToDeleteRole, err, lager.Data{
-					"roleName": deleteRoleRequest.GetName(),
-				})
-				result.Error = err
-				doneChan <- result
-				return
-			}
 		}
 
 		doneChan <- result
@@ -231,8 +186,6 @@ func (p *Probe) Run(
 ) (correct bool, durations []time.Duration, err error) {
 	logger.Debug(starting)
 	defer logger.Debug(finished)
-
-	//	var duration time.Duration
 
 	type result struct {
 		Correct   bool
@@ -278,25 +231,15 @@ func (p *Probe) runAssignedPermission(
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
-	assignedPermission := &protos.Permission{
-		Action:          ProbeAssignedPermissionAction,
-		ResourcePattern: ProbeAssignedPermissionResource + "." + uniqueSuffix,
-	}
-
 	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
-		"actor.id":                    ProbeActor.GetID(),
-		"actor.namespace":             ProbeActor.GetNamespace(),
-		"permission.action":           assignedPermission.GetAction(),
-		"permission.resource_pattern": assignedPermission.GetResourcePattern(),
+		"actor.id":                   ProbeActor.ID,
+		"actor.namespace":            ProbeActor.Namespace,
+		"permission.action":          ProbeAssignedPermissionAction,
+		"permission.resourcePattern": ProbeAssignedPermissionResource,
 	})
-	req := &protos.HasPermissionRequest{
-		Actor:    ProbeActor,
-		Action:   assignedPermission.Action,
-		Resource: assignedPermission.ResourcePattern,
-	}
 
 	start := time.Now()
-	res, err := p.PermissionServiceClient.HasPermission(ctx, req)
+	hasPermission, err := p.client.HasPermission(ctx, ProbeActor, ProbeAssignedPermissionAction, ProbeAssignedPermissionResource)
 	end := time.Now()
 	duration := end.Sub(start)
 
@@ -305,8 +248,8 @@ func (p *Probe) runAssignedPermission(
 		return false, duration, err
 	}
 
-	if !res.GetHasPermission() {
-		logger.Debug("incorrect-response", lager.Data{
+	if !hasPermission {
+		logger.Info("incorrect-response", lager.Data{
 			"expected": "true",
 			"got":      "false",
 		})
@@ -321,25 +264,15 @@ func (p *Probe) runUnassignedPermission(
 	logger lager.Logger,
 	uniqueSuffix string,
 ) (bool, time.Duration, error) {
-	unassignedPermission := &protos.Permission{
-		Action:          ProbeUnassignedPermissionAction,
-		ResourcePattern: ProbeUnassignedPermissionResource + "." + uniqueSuffix,
-	}
-
 	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
-		"actor.id":                    ProbeActor.GetID(),
-		"actor.namespace":             ProbeActor.GetNamespace(),
-		"permission.action":           unassignedPermission.GetAction(),
-		"permission.resource_pattern": unassignedPermission.GetResourcePattern(),
+		"actor.id":                   ProbeActor.ID,
+		"actor.namespace":            ProbeActor.Namespace,
+		"permission.action":          ProbeUnassignedPermissionAction,
+		"permission.resourcePattern": ProbeUnassignedPermissionResource,
 	})
-	req := &protos.HasPermissionRequest{
-		Actor:    ProbeActor,
-		Action:   unassignedPermission.Action,
-		Resource: unassignedPermission.ResourcePattern,
-	}
 
 	start := time.Now()
-	res, err := p.PermissionServiceClient.HasPermission(ctx, req)
+	hasPermission, err := p.client.HasPermission(ctx, ProbeActor, ProbeUnassignedPermissionAction, ProbeUnassignedPermissionResource)
 	end := time.Now()
 	duration := end.Sub(start)
 
@@ -348,8 +281,8 @@ func (p *Probe) runUnassignedPermission(
 		return false, duration, err
 	}
 
-	if res.GetHasPermission() {
-		logger.Debug("incorrect-response", lager.Data{
+	if hasPermission {
+		logger.Info("incorrect-response", lager.Data{
 			"expected": "false",
 			"got":      "true",
 		})

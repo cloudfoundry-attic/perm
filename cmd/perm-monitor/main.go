@@ -6,11 +6,10 @@ import (
 
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	"code.cloudfoundry.org/lager"
 
+	"crypto/tls"
 	"crypto/x509"
 
 	"strconv"
@@ -20,7 +19,7 @@ import (
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
-	"code.cloudfoundry.org/perm/protos/gen"
+	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type options struct {
@@ -101,26 +100,15 @@ func main() {
 	}
 
 	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
-	creds := credentials.NewClientTLSFromCert(pool, parserOpts.Perm.Hostname)
-
-	//// Setup GRPC connection
-	g, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+	client, err := perm.Dial(addr, perm.WithTLSConfig(&tls.Config{
+		RootCAs: pool,
+	}))
 	if err != nil {
-		logger.Error(failedToGRPCDial, err, lager.Data{
-			"addr": addr,
-		})
-		os.Exit(1)
+		logger.Error(failedToCreatePermClient, err)
 	}
-	defer g.Close()
+	defer client.Close()
 
-	roleServiceClient := protos.NewRoleServiceClient(g)
-	permissionServiceClient := protos.NewPermissionServiceClient(g)
-	//////////////////////
-
-	probe := &monitor.Probe{
-		RoleServiceClient:       roleServiceClient,
-		PermissionServiceClient: permissionServiceClient,
-	}
+	probe := monitor.NewProbe(client)
 
 	probeHistogram := monitor.NewThreadSafeHistogram(
 		ProbeHistogramWindow,
