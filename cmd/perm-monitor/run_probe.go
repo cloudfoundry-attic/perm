@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -15,7 +14,7 @@ const (
 	ProbeHistogramRefreshTime = 1 * time.Minute
 )
 
-func RunProbeWithFrequency(ctx context.Context,
+func RunProbeWithFrequency(
 	logger lager.Logger,
 	probe *monitor.Probe,
 	statter monitor.PermStatter,
@@ -38,7 +37,7 @@ func RunProbeWithFrequency(ctx context.Context,
 		defer wg.Done()
 
 		for range time.NewTicker(frequency).C {
-			cmd.RecordProbeResults(ctx, logger, probe, statter, requestDuration, timeout)
+			cmd.RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 		}
 	}()
 

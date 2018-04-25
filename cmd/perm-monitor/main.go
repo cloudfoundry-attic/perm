@@ -13,8 +13,6 @@ import (
 
 	"crypto/x509"
 
-	"context"
-
 	"strconv"
 
 	"time"
@@ -119,8 +117,6 @@ func main() {
 	permissionServiceClient := protos.NewPermissionServiceClient(g)
 	//////////////////////
 
-	ctx := context.Background()
-
 	probe := &monitor.Probe{
 		RoleServiceClient:       roleServiceClient,
 		PermissionServiceClient: permissionServiceClient,
@@ -135,5 +131,5 @@ func main() {
 		probeHistogram,
 	}
 
-	RunProbeWithFrequency(ctx, logger.Session("probe"), probe, statter, parserOpts.Frequency, parserOpts.RequestDuration, parserOpts.Timeout)
+	RunProbeWithFrequency(logger.Session("probe"), probe, statter, parserOpts.Frequency, parserOpts.RequestDuration, parserOpts.Timeout)
 }

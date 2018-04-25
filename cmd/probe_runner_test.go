@@ -39,8 +39,6 @@ var _ = Describe("Running the Probes", func() {
 		var (
 			probe *cmdfakes.FakeProbe
 
-			ctx context.Context
-
 			expectedSetupDurations   []time.Duration
 			expectedRunDurations     []time.Duration
 			expectedCleanupDurations []time.Duration
@@ -48,8 +46,6 @@ var _ = Describe("Running the Probes", func() {
 
 		BeforeEach(func() {
 			probe = new(cmdfakes.FakeProbe)
-
-			ctx = context.Background()
 
 			expectedSetupDurations = []time.Duration{1 * time.Second, 2 * time.Second}
 			expectedRunDurations = []time.Duration{3 * time.Second, 4 * time.Second}
@@ -60,7 +56,7 @@ var _ = Describe("Running the Probes", func() {
 		})
 
 		It("calls the setup, run, and cleanup with a uuid", func() {
-			correct, durations, err := GetProbeResults(ctx, logger, probe, timeout)
+			correct, durations, err := GetProbeResults(logger, probe, timeout)
 
 			Expect(probe.SetupCallCount()).To(Equal(1))
 			Expect(probe.RunCallCount()).To(Equal(1))
@@ -89,7 +85,7 @@ var _ = Describe("Running the Probes", func() {
 			It("errors if it times out", func() {
 				probe.RunReturns(false, nil, context.DeadlineExceeded)
 
-				_, _, err := GetProbeResults(ctx, logger, probe, 10*time.Nanosecond)
+				_, _, err := GetProbeResults(logger, probe, 10*time.Nanosecond)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -101,7 +97,7 @@ var _ = Describe("Running the Probes", func() {
 
 			It("succeeds if the timeout is not exceeded", func() {
 				probe.RunReturns(true, nil, nil)
-				_, _, err := GetProbeResults(ctx, logger, probe, 300*time.Millisecond)
+				_, _, err := GetProbeResults(logger, probe, 300*time.Millisecond)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -117,7 +113,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the error, calling cleanup, but not calling run", func() {
-				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(0))
@@ -133,7 +129,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("still runs cleanup, but returns the error", func() {
-				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -149,7 +145,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the error", func() {
-				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(logger, probe, timeout)
 
 				Expect(probe.SetupCallCount()).To(Equal(1))
 				Expect(probe.RunCallCount()).To(Equal(1))
@@ -166,7 +162,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the setup error", func() {
-				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))
@@ -180,7 +176,7 @@ var _ = Describe("Running the Probes", func() {
 			})
 
 			It("returns the run error", func() {
-				_, _, err := GetProbeResults(ctx, logger, probe, timeout)
+				_, _, err := GetProbeResults(logger, probe, timeout)
 
 				Expect(err).To(MatchError(someErr))
 				Expect(err).NotTo(MatchError(someOtherErr))
@@ -199,20 +195,20 @@ var _ = Describe("Running the Probes", func() {
 
 		It("reports failed probe when probe's setup fails", func() {
 			probe.SetupReturns(durations, errors.New("error in setup"))
-			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
+			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
 
 		It("reports failed probe when probe's cleanup fails", func() {
 			probe.CleanupReturns([]time.Duration{}, errors.New("error in cleanup"))
 			timeout = time.Second * 0
-			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
+			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
 
 		It("reports incorrect probe when the probe wasn't correct", func() {
 			probe.RunReturns(false, []time.Duration{}, nil)
-			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
+			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendIncorrectProbeCallCount()).To(Equal(1))
 		})
 
@@ -220,7 +216,7 @@ var _ = Describe("Running the Probes", func() {
 			qd := time.Millisecond * 30
 			durations := []time.Duration{qd, qd, qd}
 			probe.RunReturns(true, durations, nil)
-			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
+			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
 			Expect(statter.SendCorrectProbeCallCount()).To(Equal(1))
 		})
@@ -230,7 +226,7 @@ var _ = Describe("Running the Probes", func() {
 				qd := time.Millisecond * 130
 				durations := []time.Duration{qd, qd, qd}
 				probe.RunReturns(true, durations, nil)
-				RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
+				RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 				Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
 				Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 				Expect(statter.SendCorrectProbeCallCount()).To(Equal(0))
