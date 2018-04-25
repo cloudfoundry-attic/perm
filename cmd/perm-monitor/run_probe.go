@@ -13,14 +13,15 @@ import (
 const (
 	ProbeHistogramWindow      = 5 // Minutes
 	ProbeHistogramRefreshTime = 1 * time.Minute
-	AcceptableQueryWindow     = 100 * time.Millisecond
 )
 
 func RunProbeWithFrequency(ctx context.Context,
 	logger lager.Logger,
 	probe *monitor.Probe,
 	statter monitor.PermStatter,
-	probeFrequency, probeTimeout time.Duration,
+	frequency time.Duration,
+	requestDuration time.Duration,
+	timeout time.Duration,
 ) {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -36,8 +37,8 @@ func RunProbeWithFrequency(ctx context.Context,
 	go func() {
 		defer wg.Done()
 
-		for range time.NewTicker(probeFrequency).C {
-			cmd.RecordProbeResults(ctx, logger, probe, probeTimeout, statter, AcceptableQueryWindow)
+		for range time.NewTicker(frequency).C {
+			cmd.RecordProbeResults(ctx, logger, probe, statter, requestDuration, timeout)
 		}
 	}()
 

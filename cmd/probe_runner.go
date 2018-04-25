@@ -48,11 +48,10 @@ func RecordProbeResults(
 	ctx context.Context,
 	logger lager.Logger,
 	probe Probe,
-	timeout time.Duration,
 	statter monitor.PermStatter,
-	acceptableQueryWindow time.Duration,
+	requestDuration time.Duration,
+	timeout time.Duration,
 ) {
-
 	correct, durations, err := GetProbeResults(ctx, logger, probe, timeout)
 
 	if err != nil {
@@ -65,7 +64,7 @@ func RecordProbeResults(
 	}
 	failedQuery := false
 	for _, d := range durations {
-		if d > acceptableQueryWindow {
+		if d > requestDuration {
 			failedQuery = true
 		}
 		statter.RecordProbeDuration(logger.Session("metrics"), d)

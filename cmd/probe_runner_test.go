@@ -18,21 +18,21 @@ import (
 )
 
 var _ = Describe("Running the Probes", func() {
-	const AcceptableQueryWindow time.Duration = 100 * time.Millisecond
 	var (
-		someErr      error
-		someOtherErr error
-		logger       *lagertest.TestLogger
-		timeout      time.Duration
-		durations    []time.Duration
+		someErr         error
+		someOtherErr    error
+		logger          *lagertest.TestLogger
+		requestDuration time.Duration
+		timeout         time.Duration
+		durations       []time.Duration
 	)
 
 	BeforeEach(func() {
 		someErr = errors.New("some-error")
 		someOtherErr = errors.New("some-other-error")
 		logger = lagertest.NewTestLogger("run-probe")
+		requestDuration = 100 * time.Millisecond
 		timeout = 5 * time.Second
-
 	})
 
 	Describe(".GetProbeResults", func() {
@@ -187,43 +187,50 @@ var _ = Describe("Running the Probes", func() {
 			})
 		})
 	})
+
 	Describe(".RecordProbeResults", func() {
 		var probe *cmdfakes.FakeProbe
 		var statter *monitorfakes.FakePermStatter
+
 		BeforeEach(func() {
 			probe = new(cmdfakes.FakeProbe)
 			statter = new(monitorfakes.FakePermStatter)
 		})
+
 		It("reports failed probe when probe's setup fails", func() {
 			probe.SetupReturns(durations, errors.New("error in setup"))
-			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
+			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
+
 		It("reports failed probe when probe's cleanup fails", func() {
 			probe.CleanupReturns([]time.Duration{}, errors.New("error in cleanup"))
 			timeout = time.Second * 0
-			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
+			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
+
 		It("reports incorrect probe when the probe wasn't correct", func() {
 			probe.RunReturns(false, []time.Duration{}, nil)
-			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
+			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendIncorrectProbeCallCount()).To(Equal(1))
 		})
+
 		It("records probe durations and reports correct probe when durations are valid", func() {
 			qd := time.Millisecond * 30
 			durations := []time.Duration{qd, qd, qd}
 			probe.RunReturns(true, durations, nil)
-			RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
+			RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
 			Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
 			Expect(statter.SendCorrectProbeCallCount()).To(Equal(1))
 		})
+
 		Context("when there is a duration that exceeds the query time window", func() {
 			It("records the durations but also records a failure", func() {
 				qd := time.Millisecond * 130
 				durations := []time.Duration{qd, qd, qd}
 				probe.RunReturns(true, durations, nil)
-				RecordProbeResults(context.Background(), logger, probe, timeout, statter, AcceptableQueryWindow)
+				RecordProbeResults(context.Background(), logger, probe, statter, requestDuration, timeout)
 				Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
 				Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 				Expect(statter.SendCorrectProbeCallCount()).To(Equal(0))
