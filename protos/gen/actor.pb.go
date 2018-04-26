@@ -29,6 +29,8 @@
 		AssignRoleResponse
 		AssignRoleToGroupRequest
 		AssignRoleToGroupResponse
+		UnassignRoleFromGroupRequest
+		UnassignRoleFromGroupResponse
 		UnassignRoleRequest
 		UnassignRoleResponse
 		HasRoleRequest

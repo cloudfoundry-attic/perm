@@ -19,6 +19,7 @@ service RoleService {
   rpc AssignRole (AssignRoleRequest) returns (AssignRoleResponse);
   rpc AssignRoleToGroup (AssignRoleToGroupRequest) returns (AssignRoleToGroupResponse);
   rpc UnassignRole (UnassignRoleRequest) returns (UnassignRoleResponse);
+  rpc UnassignRoleFromGroup (UnassignRoleFromGroupRequest) returns (UnassignRoleFromGroupResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc HasRoleForGroup (HasRoleForGroupRequest) returns (HasRoleForGroupResponse);
   rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
@@ -55,6 +56,14 @@ message AssignRoleToGroupRequest {
 }
 
 message AssignRoleToGroupResponse {
+}
+
+message UnassignRoleFromGroupRequest {
+  Group group = 1;
+  string role_name = 2;
+}
+
+message UnassignRoleFromGroupResponse {
 }
 
 message UnassignRoleRequest {

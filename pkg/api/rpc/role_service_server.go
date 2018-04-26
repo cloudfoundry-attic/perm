@@ -185,6 +185,13 @@ func (s *RoleServiceServer) UnassignRole(
 	return &protos.UnassignRoleResponse{}, nil
 }
 
+func (s *RoleServiceServer) UnassignRoleFromGroup(
+	ctx context.Context,
+	req *protos.UnassignRoleFromGroupRequest,
+) (*protos.UnassignRoleFromGroupResponse, error) {
+	return &protos.UnassignRoleFromGroupResponse{}, nil
+}
+
 func (s *RoleServiceServer) HasRole(
 	ctx context.Context,
 	req *protos.HasRoleRequest,
