@@ -189,6 +189,30 @@ func (s *RoleServiceServer) UnassignRoleFromGroup(
 	ctx context.Context,
 	req *protos.UnassignRoleFromGroupRequest,
 ) (*protos.UnassignRoleFromGroupResponse, error) {
+	roleName := req.GetRoleName()
+	pGroup := req.GetGroup()
+
+	domainID := pGroup.GetID()
+	group := perm.Group{
+		ID: domainID,
+	}
+	logExtensions := []logging.CustomExtension{
+		{Key: "roleName", Value: roleName},
+		{Key: "userID", Value: pGroup.ID},
+	}
+	s.securityLogger.Log(ctx, "UnassignRoleFromGroup", "Role group unassignment", logExtensions...)
+	logger := s.logger.Session("unassign-role-from-group").WithData(lager.Data{
+		"group.id":  group.ID,
+		"role.name": roleName,
+	})
+	logger.Debug(starting)
+
+	err := s.roleRepo.UnassignRoleFromGroup(ctx, logger, roleName, pGroup.ID)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+
+	logger.Debug(success)
 	return &protos.UnassignRoleFromGroupResponse{}, nil
 }
 

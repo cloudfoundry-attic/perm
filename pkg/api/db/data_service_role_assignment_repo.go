@@ -89,6 +89,31 @@ func (s *DataService) UnassignRole(
 	return
 }
 
+func (s *DataService) UnassignRoleFromGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName,
+	groupID string,
+) (err error) {
+	logger = logger.Session("data-service")
+
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error(failedToStartTransaction, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = sqlx.Commit(logger, tx, err)
+	}()
+
+	err = unassignRoleFromGroup(ctx, logger, tx, roleName, groupID)
+	return
+}
+
 func (s *DataService) HasRole(
 	ctx context.Context,
 	logger lager.Logger,

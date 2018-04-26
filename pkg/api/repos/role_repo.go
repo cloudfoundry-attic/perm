@@ -68,6 +68,13 @@ type RoleRepo interface {
 		namespace string,
 	) error
 
+	UnassignRoleFromGroup(
+		ctx context.Context,
+		logger lager.Logger,
+		roleName,
+		groupID string,
+	) error
+
 	HasRole(
 		ctx context.Context,
 		logger lager.Logger,

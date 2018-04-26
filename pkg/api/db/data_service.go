@@ -346,6 +346,65 @@ func deleteRoleAssignment(
 	}
 }
 
+func unassignRoleFromGroup(ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleName string,
+	groupID string,
+) error {
+	logger = logger.Session("unassign-role-from-group")
+
+	role, err := findRole(ctx, logger, conn, roleName)
+	if err != nil {
+		return err
+	}
+
+	return deleteGroupRoleAssignment(ctx, logger, conn, role.ID, groupID)
+}
+
+func deleteGroupRoleAssignment(
+	ctx context.Context,
+	logger lager.Logger,
+	conn squirrel.BaseRunner,
+	roleID int64,
+	groupID string,
+) error {
+	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
+		"role.id":                   roleID,
+		"group_assignment.group_id": groupID,
+	})
+
+	result, err := squirrel.Delete("group_assignment").
+		Where(squirrel.Eq{
+			"role_id":  roleID,
+			"group_id": groupID,
+		}).
+		RunWith(conn).
+		ExecContext(ctx)
+
+	switch err {
+	case nil:
+		n, e := result.RowsAffected()
+		if e != nil {
+			logger.Error(failedToDeleteRoleAssignment, e)
+			return e
+		}
+
+		if n == 0 {
+			logger.Debug(errRoleAssignmentNotFound)
+			return perm.ErrAssignmentNotFound
+		}
+
+		return nil
+	case sql.ErrNoRows:
+		logger.Debug(errRoleAssignmentNotFound)
+		return perm.ErrAssignmentNotFound
+	default:
+		logger.Error(failedToDeleteRoleAssignment, err)
+		return err
+	}
+}
+
 func hasRole(
 	ctx context.Context,
 	logger lager.Logger,

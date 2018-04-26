@@ -166,6 +166,41 @@ func (s *InMemoryStore) UnassignRole(
 	return err
 }
 
+func (s *InMemoryStore) UnassignRoleFromGroup(
+	ctx context.Context,
+	logger lager.Logger,
+	roleName,
+	groupID string,
+) error {
+	if _, exists := s.roles[roleName]; !exists {
+		return perm.ErrRoleNotFound
+	}
+
+	group := perm.Group{
+		ID: groupID,
+	}
+
+	groupAssignments, ok := s.groupAssignments[group]
+	if !ok {
+		err := perm.ErrAssignmentNotFound
+		logger.Error(errRoleAssignmentNotFound, err)
+		return err
+	}
+
+	for i, assignment := range groupAssignments {
+		if assignment == roleName {
+			s.groupAssignments[group] = append(groupAssignments[:i], groupAssignments[i+1:]...)
+			logger.Debug(success)
+			return nil
+		}
+	}
+
+	err := perm.ErrAssignmentNotFound
+	logger.Error(errRoleAssignmentNotFound, err)
+
+	return err
+}
+
 func (s *InMemoryStore) HasRole(
 	ctx context.Context,
 	logger lager.Logger,

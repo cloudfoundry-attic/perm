@@ -386,6 +386,107 @@ var _ = Describe("RoleRepoServer", func() {
 		})
 	})
 
+	Describe("#UnassignRoleFromGroup", func() {
+		It("removes role binding if the group has that role", func() {
+			name := "role"
+			group := &protos.Group{
+				ID: "group-id",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = subject.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+				Group:    group,
+				RoleName: name,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			hasRoleResp, err := subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
+				Group:    group,
+				RoleName: name,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(hasRoleResp.GetHasRole()).To(BeTrue())
+
+			req := &protos.UnassignRoleFromGroupRequest{
+				Group:    group,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRoleFromGroup(ctx, req)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			hasRoleResp, err = subject.HasRoleForGroup(ctx, &protos.HasRoleForGroupRequest{
+				Group:    group,
+				RoleName: name,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(hasRoleResp.GetHasRole()).To(BeFalse())
+
+		})
+
+		It("fails if the user is not assigned to the role", func() {
+			name := "role"
+			group := &protos.Group{
+				ID: "group",
+			}
+			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
+				Name: name,
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			req := &protos.UnassignRoleFromGroupRequest{
+				Group:    group,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRoleFromGroup(ctx, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
+		})
+
+		It("fails if the role does not exist", func() {
+			name := "fake-role"
+			group := &protos.Group{
+				ID: "group",
+			}
+			req := &protos.UnassignRoleFromGroupRequest{
+				Group:    group,
+				RoleName: name,
+			}
+			res, err := subject.UnassignRoleFromGroup(ctx, req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(res).To(BeNil())
+		})
+
+		It("logs a security event", func() {
+			group := &protos.Group{
+				ID: "group-id",
+			}
+			req := &protos.UnassignRoleFromGroupRequest{
+				Group:    group,
+				RoleName: "role",
+			}
+			subject.UnassignRoleFromGroup(ctx, req)
+			expectedExtensions := []logging.CustomExtension{
+				{Key: "roleName", Value: "role"},
+				{Key: "userID", Value: "group-id"},
+			}
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("UnassignRoleFromGroup"))
+			Expect(name).To(Equal("Role group unassignment"))
+			Expect(extensions).To(Equal(expectedExtensions))
+		})
+	})
+
 	Describe("#HasRole", func() {
 		It("returns true if the actor has the role", func() {
 			roleName := "role"
