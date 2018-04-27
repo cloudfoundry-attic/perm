@@ -4,6 +4,7 @@ package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "actor.proto";
+import "group.proto";
 
 option go_package = "protos";
 option (gogoproto.marshaler_all) = true;
@@ -19,6 +20,7 @@ message HasPermissionRequest {
   Actor actor = 1;
   string action = 2;
   string resource = 3;
+  repeated Group groups = 4;
 }
 
 message HasPermissionResponse {
