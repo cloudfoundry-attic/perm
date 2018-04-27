@@ -122,6 +122,70 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 			Expect(yes).To(BeFalse())
 		})
+
+		Context("when the actor doesn't have permission but groups are supplied", func() {
+			It("returns true if a group is assigned to a role with permission", func() {
+				roleName := uuid.NewV4().String()
+				actor := perm.Actor{
+					ID:        uuid.NewV4().String(),
+					Namespace: uuid.NewV4().String(),
+				}
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+				permission := perm.Permission{
+					Action:          "some-action",
+					ResourcePattern: "some-resource",
+				}
+
+				_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, group.ID)
+				Expect(err).NotTo(HaveOccurred())
+
+				query := repos.HasPermissionQuery{
+					Actor:           actor,
+					Action:          permission.Action,
+					ResourcePattern: permission.ResourcePattern,
+					Groups:          []perm.Group{group},
+				}
+
+				yes, err := subject.HasPermission(ctx, logger, query)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(yes).To(BeTrue())
+			})
+
+			It("returns false if the group is not assigned to a role with permission", func() {
+				roleName := uuid.NewV4().String()
+				actor := perm.Actor{
+					ID:        uuid.NewV4().String(),
+					Namespace: uuid.NewV4().String(),
+				}
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+				permission := perm.Permission{
+					Action:          "some-action",
+					ResourcePattern: "some-resource",
+				}
+
+				_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+				Expect(err).NotTo(HaveOccurred())
+
+				query := repos.HasPermissionQuery{
+					Actor:           actor,
+					Action:          permission.Action,
+					ResourcePattern: permission.ResourcePattern,
+					Groups:          []perm.Group{group},
+				}
+				yes, err := subject.HasPermission(ctx, logger, query)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(yes).To(BeFalse())
+			})
+		})
 	})
 
 	Describe("#ListResourcePatterns", func() {

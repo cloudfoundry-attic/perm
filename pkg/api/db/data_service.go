@@ -712,10 +712,12 @@ func hasPermission(
 		"assignment.actor_id":        query.Actor.ID,
 		"permission.action":          query.Action,
 		"permission.resourcePattern": query.ResourcePattern,
+		"group_assignment.groups":    query.Groups,
 	})
 
 	var count int
 
+	// Actor-based access grant.
 	err := squirrel.Select("count(assignment.role_id)").
 		From("assignment").
 		JoinClause("INNER JOIN permission permission ON assignment.role_id = permission.role_id").
@@ -734,7 +736,33 @@ func hasPermission(
 		return false, err
 	}
 
-	return count > 0, nil
+	if count > 0 {
+		return true, nil
+	}
+	// Group-based access grant.
+	for _, group := range query.Groups {
+		err := squirrel.Select("count(group_assignment.role_id)").
+			From("group_assignment").
+			JoinClause("INNER JOIN permission permission ON group_assignment.role_id = permission.role_id").
+			JoinClause("INNER JOIN action ON permission.action_id = action.id").
+			Where(squirrel.Eq{
+				"group_assignment.group_id":   group.ID,
+				"action.name":                 query.Action,
+				"permission.resource_pattern": query.ResourcePattern,
+			}).
+			RunWith(conn).
+			ScanContext(ctx, &count)
+
+		if err != nil {
+			logger.Error(failedToFindPermissions, err)
+			return false, err
+		}
+
+		if count > 0 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func createPermission(

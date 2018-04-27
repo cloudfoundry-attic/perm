@@ -11,6 +11,7 @@ type HasPermissionQuery struct {
 	Actor           perm.Actor
 	Action          string
 	ResourcePattern string
+	Groups          []perm.Group
 }
 
 type ListResourcePatternsQuery struct {

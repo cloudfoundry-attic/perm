@@ -45,6 +45,12 @@ func (s *PermissionServiceServer) HasPermission(
 		Namespace: pActor.GetNamespace(),
 	}
 	action := req.GetAction()
+	groups := make([]perm.Group, 0)
+	for _, group := range req.GetGroups() {
+		groups = append(groups, perm.Group{
+			ID: group.GetID(),
+		})
+	}
 	resourcePattern := req.GetResource()
 	extensions := []logging.CustomExtension{
 		{Key: "userID", Value: pActor.GetID()},
@@ -66,6 +72,7 @@ func (s *PermissionServiceServer) HasPermission(
 		Actor:           actor,
 		Action:          action,
 		ResourcePattern: resourcePattern,
+		Groups:          groups,
 	}
 
 	found, err := s.permissionRepo.HasPermission(ctx, logger, query)

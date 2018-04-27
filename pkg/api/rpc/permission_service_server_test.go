@@ -185,6 +185,67 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(name).To(Equal("Permission check"))
 			Expect(extensions).To(Equal(expectedExtensions))
 		})
+
+		Context("when there are groups provided to the request", func() {
+			var groups []*protos.Group
+
+			Context("when the actor does not permission", func() {
+				It("returns true when the group has a matching permission action and resource", func() {
+					_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+						Name: roleName,
+						Permissions: []*protos.Permission{
+							permission1,
+							permission2,
+						},
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					group := protos.Group{ID: "some-group-id"}
+					groups = append(groups, &group)
+					_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+						Group:    &group,
+						RoleName: roleName,
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
+						Actor:    actor,
+						Action:   "some-other-action",
+						Resource: "some-other-resource",
+						Groups:   groups,
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Expect(res.GetHasPermission()).To(BeTrue())
+				})
+
+				It("returns false when the group does not have a matching permission action and resource", func() {
+					_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+						Name: roleName,
+						Permissions: []*protos.Permission{
+							permission1,
+						},
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					group := protos.Group{ID: "some-group-id"}
+					groups = append(groups, &group)
+					_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+						Group:    &group,
+						RoleName: roleName,
+					})
+					Expect(err).NotTo(HaveOccurred())
+
+					res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
+						Actor:    actor,
+						Action:   "some-other-action",
+						Resource: "some-other-resource",
+						Groups:   groups,
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Expect(res.GetHasPermission()).To(BeFalse())
+				})
+			})
+		})
 	})
 
 	Describe("#ListResourcePatterns", func() {

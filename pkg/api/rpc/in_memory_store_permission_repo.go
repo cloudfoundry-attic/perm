@@ -13,10 +13,8 @@ func (s *InMemoryStore) HasPermission(
 	logger lager.Logger,
 	query repos.HasPermissionQuery,
 ) (bool, error) {
-	assignments, ok := s.assignments[query.Actor]
-	if !ok {
-		return false, nil
-	}
+	// Actor-based check
+	assignments, _ := s.assignments[query.Actor]
 
 	var permissions []*perm.Permission
 	action := query.Action
@@ -38,6 +36,30 @@ func (s *InMemoryStore) HasPermission(
 		}
 	}
 
+	// Group-based check
+	for _, group := range query.Groups {
+		assignments, _ := s.groupAssignments[group]
+
+		var permissions []*perm.Permission
+		action := query.Action
+
+		for _, roleName := range assignments {
+			p, ok := s.permissions[roleName]
+			if !ok {
+				continue
+			}
+
+			permissions = append(permissions, p...)
+		}
+
+		resourcePattern := query.ResourcePattern
+
+		for _, permission := range permissions {
+			if permission.Action == action && permission.ResourcePattern == resourcePattern {
+				return true, nil
+			}
+		}
+	}
 	return false, nil
 }
 
