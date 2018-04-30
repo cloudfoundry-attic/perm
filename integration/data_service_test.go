@@ -1,33 +1,21 @@
 package integration_test
 
 import (
-	. "code.cloudfoundry.org/perm/pkg/api/db"
-	"code.cloudfoundry.org/perm/pkg/api/repos"
-	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
+	"code.cloudfoundry.org/perm/pkg/api/db"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
+
+	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
 )
 
 var _ = Describe("DataService", func() {
 	var (
-		testDB *sqlxtest.TestMySQLDB
-
-		store *DataService
-
-		conn *sqlx.DB
+		store *db.DataService
+		conn  *sqlx.DB
 	)
-
-	BeforeSuite(func() {
-		var err error
-
-		testDB = sqlxtest.NewTestMySQLDB()
-		err = testDB.Create(Migrations...)
-		Expect(err).NotTo(HaveOccurred())
-	})
 
 	BeforeEach(func() {
 		var err error
@@ -35,7 +23,7 @@ var _ = Describe("DataService", func() {
 		conn, err = testDB.Connect()
 		Expect(err).NotTo(HaveOccurred())
 
-		store = NewDataService(conn)
+		store = db.NewDataService(conn)
 	})
 
 	AfterEach(func() {
@@ -45,11 +33,6 @@ var _ = Describe("DataService", func() {
 			"DELETE FROM role",
 			"DELETE FROM action",
 		)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	AfterSuite(func() {
-		err := testDB.Drop()
 		Expect(err).NotTo(HaveOccurred())
 	})
 
