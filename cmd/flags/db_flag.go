@@ -2,6 +2,8 @@ package flags
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -31,7 +33,19 @@ type SQLTuningFlag struct {
 	ConnMaxLifetime int `long:"connection-max-lifetime" description:"Limit the lifetime in milliseconds of a SQL connection"`
 }
 
+func (o *DBFlag) IsInMemory() bool {
+	return o.Driver == "in-memory"
+}
+
 func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, error) {
+	if o.IsInMemory() {
+		return nil, errors.New("Connect() unsupported for in-memory driver")
+	}
+
+	if err := o.validate(); err != nil {
+		return nil, err
+	}
+
 	logger = logger.WithData(lager.Data{
 		"db_driver":   o.Driver,
 		"db_host":     o.Host,
@@ -79,4 +93,31 @@ func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, er
 	}
 
 	return conn, nil
+}
+
+func (flag *DBFlag) validate() error {
+	if flag.Host == "" {
+		return &missingFlagError{flag: "--db-host"}
+	}
+	if flag.Port == 0 {
+		return &missingFlagError{flag: "--db-port"}
+	}
+	if flag.Schema == "" {
+		return &missingFlagError{flag: "--db-schema"}
+	}
+	if flag.Username == "" {
+		return &missingFlagError{flag: "--db-user"}
+	}
+	if flag.Password == "" {
+		return &missingFlagError{flag: "--db-password"}
+	}
+	return nil
+}
+
+type missingFlagError struct {
+	flag string
+}
+
+func (e *missingFlagError) Error() string {
+	return fmt.Sprintf("the required flag `%s' was not specified", e.flag)
 }

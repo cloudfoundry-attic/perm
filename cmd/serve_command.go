@@ -18,6 +18,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
@@ -29,7 +30,7 @@ type ServeCommand struct {
 	MaxConnectionIdle time.Duration `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
 	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	SQL               flags.DBFlag  `group:"DB" namespace:"db"`
+	DB                flags.DBFlag  `group:"DB" namespace:"db"`
 	AuditFilePath     string        `long:"audit-file-path" default:""`
 }
 
@@ -65,22 +66,30 @@ func (cmd ServeCommand) Execute([]string) error {
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
-	conn, err := cmd.SQL.Connect(context.Background(), logger)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
 
-	migrationLogger := logger.Session("verify-migrations")
-	err = sqlx.VerifyAppliedMigrations(
-		context.Background(),
-		migrationLogger,
-		conn,
-		db.MigrationsTableName,
-		db.Migrations,
-	)
-	if err != nil {
-		return err
+	var store api.Store
+
+	if cmd.DB.IsInMemory() {
+		store = rpc.NewInMemoryStore()
+	} else {
+		conn, err := cmd.DB.Connect(context.Background(), logger)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		migrationLogger := logger.Session("verify-migrations")
+		if err := sqlx.VerifyAppliedMigrations(
+			context.Background(),
+			migrationLogger,
+			conn,
+			db.MigrationsTableName,
+			db.Migrations,
+		); err != nil {
+			return err
+		}
+
+		store = db.NewDataService(conn)
 	}
 
 	maxConnectionIdle := cmd.MaxConnectionIdle
@@ -91,7 +100,6 @@ func (cmd ServeCommand) Execute([]string) error {
 		api.WithMaxConnectionIdle(maxConnectionIdle),
 	}
 
-	store := db.NewDataService(conn)
 	server := api.NewServer(store, serverOpts...)
 
 	listenInterface := cmd.Hostname
