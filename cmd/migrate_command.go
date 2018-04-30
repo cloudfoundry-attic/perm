@@ -24,13 +24,13 @@ type MigrateCommand struct {
 type UpCommand struct {
 	Logger flags.LagerFlag
 
-	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
+	DB flags.DBFlag `group:"DB" namespace:"db"`
 }
 
 type DownCommand struct {
 	Logger flags.LagerFlag
 
-	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
+	DB flags.DBFlag `group:"DB" namespace:"db"`
 
 	All bool `long:"all" description:"Revert all migrations"`
 }
@@ -38,7 +38,7 @@ type DownCommand struct {
 type StatusCommand struct {
 	Logger flags.LagerFlag
 
-	SQL flags.SQLFlag `group:"SQL" namespace:"sql"`
+	DB flags.DBFlag `group:"DB" namespace:"db"`
 }
 
 func (cmd UpCommand) Execute([]string) error {
@@ -47,7 +47,7 @@ func (cmd UpCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Connect(ctx, logger)
+	conn, err := cmd.DB.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (cmd DownCommand) Execute([]string) error {
 
 	ctx := context.Background()
 
-	conn, err := cmd.SQL.Connect(ctx, logger)
+	conn, err := cmd.DB.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	logger = logger.Session("migrate-status")
 
 	ctx := context.Background()
-	conn, err := cmd.SQL.Connect(ctx, logger)
+	conn, err := cmd.DB.Connect(ctx, logger)
 	if err != nil {
 		return err
 	}

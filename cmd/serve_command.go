@@ -29,7 +29,7 @@ type ServeCommand struct {
 	MaxConnectionIdle time.Duration `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
 	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	SQL               flags.SQLFlag `group:"SQL" namespace:"sql"`
+	SQL               flags.DBFlag  `group:"DB" namespace:"db"`
 	AuditFilePath     string        `long:"audit-file-path" default:""`
 }
 
