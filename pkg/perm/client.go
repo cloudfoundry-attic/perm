@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 
-	"code.cloudfoundry.org/perm/protos/gen"
+	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"

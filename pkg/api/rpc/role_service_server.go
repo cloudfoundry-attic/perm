@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/perm"
-	"code.cloudfoundry.org/perm/protos/gen"
+	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

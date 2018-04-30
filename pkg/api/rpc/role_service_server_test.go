@@ -10,7 +10,7 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
-	"code.cloudfoundry.org/perm/protos/gen"
+	"code.cloudfoundry.org/perm/pkg/api/protos"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
