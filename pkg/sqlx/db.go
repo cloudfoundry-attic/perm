@@ -78,12 +78,11 @@ func Connect(driver DBDriver, options ...DBOption) (*DB, error) {
 	}
 
 	db, err := open(driver, cfg)
-
-	db.Conn.SetConnMaxLifetime(cfg.connMaxLifetime)
-
 	if err != nil {
 		return nil, err
 	}
+
+	db.Conn.SetConnMaxLifetime(cfg.connMaxLifetime)
 
 	for attempt := 0; attempt < 10; attempt++ {
 		err = db.Ping()
