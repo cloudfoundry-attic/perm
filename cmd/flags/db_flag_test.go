@@ -72,12 +72,5 @@ var _ = Describe("DBFlag", func() {
 			_, err := flag.Connect(ctx, logger)
 			Expect(err).To(MatchError("the required flag `--db-user' was not specified"))
 		})
-
-		It("requires a password", func() {
-			flag.Password = ""
-
-			_, err := flag.Connect(ctx, logger)
-			Expect(err).To(MatchError("the required flag `--db-password' was not specified"))
-		})
 	})
 })

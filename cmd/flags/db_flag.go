@@ -108,9 +108,6 @@ func (flag *DBFlag) validate() error {
 	if flag.Username == "" {
 		return &missingFlagError{flag: "--db-user"}
 	}
-	if flag.Password == "" {
-		return &missingFlagError{flag: "--db-password"}
-	}
 	return nil
 }
 
