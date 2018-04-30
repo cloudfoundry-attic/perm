@@ -150,8 +150,8 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 			ID:        actor.ID,
 			Namespace: actor.Namespace,
 		},
-		Action:       action,
-		Resource:     resource,
+		Action:   action,
+		Resource: resource,
 	}
 	res, err := c.permissionServiceClient.HasPermission(ctx, req)
 	s := status.Convert(err)

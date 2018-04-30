@@ -2,14 +2,15 @@ package logging
 
 import (
 	"bytes"
-	"code.cloudfoundry.org/perm/cmd/contextx"
 	"context"
 	"fmt"
-	"github.com/xoebus/ceflog"
-	"google.golang.org/grpc/peer"
 	"io"
 	"net"
 	"strconv"
+
+	"code.cloudfoundry.org/perm/cmd/contextx"
+	"github.com/xoebus/ceflog"
+	"google.golang.org/grpc/peer"
 )
 
 type Vendor string

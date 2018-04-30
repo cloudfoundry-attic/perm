@@ -10,8 +10,8 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc/codes"

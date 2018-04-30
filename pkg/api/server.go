@@ -15,9 +15,9 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
-	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
