@@ -13,23 +13,26 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
 
 type Server struct {
-	conn           *sqlx.DB
 	logger         lager.Logger
 	securityLogger rpc.SecurityLogger
 	server         *grpc.Server
 }
 
-func NewServer(conn *sqlx.DB, opts ...ServerOption) *Server {
+type Store interface {
+	repos.PermissionRepo
+	repos.RoleRepo
+}
+
+func NewServer(store Store, opts ...ServerOption) *Server {
 	config := &options{
 		logger:         &emptyLogger{},
 		securityLogger: &emptySecurityLogger{},
@@ -65,7 +68,6 @@ func NewServer(conn *sqlx.DB, opts ...ServerOption) *Server {
 	}
 
 	server := grpc.NewServer(serverOpts...)
-	store := db.NewDataService(conn)
 
 	securityLogger := config.securityLogger
 
@@ -76,7 +78,6 @@ func NewServer(conn *sqlx.DB, opts ...ServerOption) *Server {
 	protos.RegisterPermissionServiceServer(server, permissionServiceServer)
 
 	return &Server{
-		conn:           conn,
 		logger:         logger,
 		securityLogger: config.securityLogger,
 		server:         server,

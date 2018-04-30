@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"code.cloudfoundry.org/perm/pkg/api"
+	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 
 	. "github.com/onsi/ginkgo"
@@ -36,7 +37,8 @@ var _ = Describe("MySQL server", func() {
 		tlsConfig := &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
-		subject = api.NewServer(conn, api.WithTLSConfig(tlsConfig))
+		store := db.NewDataService(conn)
+		subject = api.NewServer(store, api.WithTLSConfig(tlsConfig))
 
 		go func() {
 			err = subject.Serve(listener)

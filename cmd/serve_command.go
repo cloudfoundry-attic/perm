@@ -65,7 +65,6 @@ func (cmd ServeCommand) Execute([]string) error {
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
-
 	conn, err := cmd.SQL.Connect(context.Background(), logger)
 	if err != nil {
 		return err
@@ -92,7 +91,8 @@ func (cmd ServeCommand) Execute([]string) error {
 		api.WithMaxConnectionIdle(maxConnectionIdle),
 	}
 
-	server := api.NewServer(conn, serverOpts...)
+	store := db.NewDataService(conn)
+	server := api.NewServer(store, serverOpts...)
 
 	listenInterface := cmd.Hostname
 	port := cmd.Port
