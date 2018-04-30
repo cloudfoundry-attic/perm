@@ -22,7 +22,6 @@ service RoleService {
   rpc UnassignRoleFromGroup (UnassignRoleFromGroupRequest) returns (UnassignRoleFromGroupResponse);
   rpc HasRole (HasRoleRequest) returns (HasRoleResponse);
   rpc HasRoleForGroup (HasRoleForGroupRequest) returns (HasRoleForGroupResponse);
-  rpc ListActorRoles (ListActorRolesRequest) returns (ListActorRolesResponse);
   rpc ListRolePermissions (ListRolePermissionsRequest) returns (ListRolePermissionsResponse);
 }
 
@@ -90,18 +89,6 @@ message HasRoleForGroupRequest {
 
 message HasRoleForGroupResponse {
   bool has_role = 1;
-}
-
-message ListActorRolesRequest {
-  reserved 1; // for pagination
-
-  Actor actor = 2;
-}
-
-message ListActorRolesResponse {
-  reserved 1; // for pagination metadata
-
-  repeated Role roles = 2;
 }
 
 message ListRolePermissionsRequest {

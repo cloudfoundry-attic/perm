@@ -37,8 +37,6 @@
 		HasRoleResponse
 		HasRoleForGroupRequest
 		HasRoleForGroupResponse
-		ListActorRolesRequest
-		ListActorRolesResponse
 		ListRolePermissionsRequest
 		ListRolePermissionsResponse
 */

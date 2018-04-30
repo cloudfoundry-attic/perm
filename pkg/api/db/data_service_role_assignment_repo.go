@@ -5,7 +5,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -128,22 +127,4 @@ func (s *DataService) HasRoleForGroup(
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
 	return hasRoleForGroup(ctx, logger.Session("data-service"), s.conn, query)
-}
-
-func (s *DataService) ListActorRoles(
-	ctx context.Context,
-	logger lager.Logger,
-	query repos.ListActorRolesQuery,
-) ([]*perm.Role, error) {
-	r, err := listActorRoles(ctx, logger.Session("data-service"), s.conn, query)
-	if err != nil {
-		return nil, err
-	}
-
-	var roles []*perm.Role
-	for _, role := range r {
-		roles = append(roles, role.Role)
-	}
-
-	return roles, nil
 }

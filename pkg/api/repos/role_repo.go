@@ -11,10 +11,6 @@ type ListRolePermissionsQuery struct {
 	RoleName string
 }
 
-type ListActorRolesQuery struct {
-	Actor perm.Actor
-}
-
 type HasRoleQuery struct {
 	Actor    perm.Actor
 	RoleName string
@@ -86,10 +82,4 @@ type RoleRepo interface {
 		logger lager.Logger,
 		query HasRoleForGroupQuery,
 	) (bool, error)
-
-	ListActorRoles(
-		ctx context.Context,
-		logger lager.Logger,
-		query ListActorRolesQuery,
-	) ([]*perm.Role, error)
 }

@@ -498,57 +498,6 @@ func findRoleAssignmentForGroup(
 	return count > 0, nil
 }
 
-func listActorRoles(
-	ctx context.Context,
-	logger lager.Logger,
-	conn squirrel.BaseRunner,
-	query repos.ListActorRolesQuery,
-) ([]*role, error) {
-	logger = logger.Session("find-actor-role-assignments").
-		WithData(lager.Data{
-			"assignment.actor_id":        query.Actor.ID,
-			"assignment.actor_namespace": query.Actor.Namespace,
-		})
-
-	rows, err := squirrel.Select("role.id", "role.name").
-		From("assignment").
-		JoinClause("INNER JOIN role ON assignment.role_id = role.id").
-		Where(squirrel.Eq{
-			"assignment.actor_id":        query.Actor.ID,
-			"assignment.actor_namespace": query.Actor.Namespace,
-		}).
-		RunWith(conn).
-		QueryContext(ctx)
-	if err != nil {
-		logger.Error(failedToFindRoleAssignments, err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var roles []*role
-	for rows.Next() {
-		var (
-			roleID int64
-			action string
-		)
-		e := rows.Scan(&roleID, &action)
-		if e != nil {
-			logger.Error(failedToScanRow, e)
-			return nil, e
-		}
-
-		roles = append(roles, &role{ID: roleID, Role: &perm.Role{Name: action}})
-	}
-
-	err = rows.Err()
-	if err != nil {
-		logger.Error(failedToIterateOverRows, err)
-		return nil, err
-	}
-
-	return roles, nil
-}
-
 func listRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,

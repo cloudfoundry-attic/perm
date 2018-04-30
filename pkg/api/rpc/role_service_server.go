@@ -292,46 +292,6 @@ func (s *RoleServiceServer) HasRoleForGroup(
 	return &protos.HasRoleForGroupResponse{HasRole: found}, nil
 }
 
-func (s *RoleServiceServer) ListActorRoles(
-	ctx context.Context,
-	req *protos.ListActorRolesRequest,
-) (*protos.ListActorRolesResponse, error) {
-	pActor := req.GetActor()
-	err := validateActor(pActor)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, err.Error())
-	}
-
-	actor := perm.Actor{
-		ID:        pActor.GetID(),
-		Namespace: pActor.GetNamespace(),
-	}
-	logger := s.logger.Session("list-actor-roles").WithData(lager.Data{
-		"actor.id":        actor.ID,
-		"actor.namespace": actor.Namespace,
-	})
-	logger.Debug(starting)
-
-	query := repos.ListActorRolesQuery{Actor: actor}
-	roles, err := s.roleRepo.ListActorRoles(ctx, logger, query)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-
-	var pRoles []*protos.Role
-
-	for _, r := range roles {
-		pRoles = append(pRoles, &protos.Role{
-			Name: r.Name,
-		})
-	}
-
-	logger.Debug(success)
-	return &protos.ListActorRolesResponse{
-		Roles: pRoles,
-	}, nil
-}
-
 func (s *RoleServiceServer) ListRolePermissions(
 	ctx context.Context,
 	req *protos.ListRolePermissionsRequest,

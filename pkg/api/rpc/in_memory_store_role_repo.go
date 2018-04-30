@@ -259,32 +259,6 @@ func (s *InMemoryStore) HasRoleForGroup(
 	return found, nil
 }
 
-func (s *InMemoryStore) ListActorRoles(
-	ctx context.Context,
-	logger lager.Logger,
-	query repos.ListActorRolesQuery,
-) ([]*perm.Role, error) {
-	actor := query.Actor
-
-	var roles []*perm.Role
-
-	assignments, ok := s.assignments[actor]
-	if !ok {
-		return roles, nil
-	}
-
-	for _, name := range assignments {
-		role, found := s.roles[name]
-		if !found {
-			return nil, perm.ErrRoleNotFound
-		}
-
-		roles = append(roles, role)
-	}
-
-	return roles, nil
-}
-
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,

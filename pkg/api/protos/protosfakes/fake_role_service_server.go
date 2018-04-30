@@ -122,20 +122,6 @@ type FakeRoleServiceServer struct {
 		result1 *protos.HasRoleForGroupResponse
 		result2 error
 	}
-	ListActorRolesStub        func(context.Context, *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error)
-	listActorRolesMutex       sync.RWMutex
-	listActorRolesArgsForCall []struct {
-		arg1 context.Context
-		arg2 *protos.ListActorRolesRequest
-	}
-	listActorRolesReturns struct {
-		result1 *protos.ListActorRolesResponse
-		result2 error
-	}
-	listActorRolesReturnsOnCall map[int]struct {
-		result1 *protos.ListActorRolesResponse
-		result2 error
-	}
 	ListRolePermissionsStub        func(context.Context, *protos.ListRolePermissionsRequest) (*protos.ListRolePermissionsResponse, error)
 	listRolePermissionsMutex       sync.RWMutex
 	listRolePermissionsArgsForCall []struct {
@@ -570,58 +556,6 @@ func (fake *FakeRoleServiceServer) HasRoleForGroupReturnsOnCall(i int, result1 *
 	}{result1, result2}
 }
 
-func (fake *FakeRoleServiceServer) ListActorRoles(arg1 context.Context, arg2 *protos.ListActorRolesRequest) (*protos.ListActorRolesResponse, error) {
-	fake.listActorRolesMutex.Lock()
-	ret, specificReturn := fake.listActorRolesReturnsOnCall[len(fake.listActorRolesArgsForCall)]
-	fake.listActorRolesArgsForCall = append(fake.listActorRolesArgsForCall, struct {
-		arg1 context.Context
-		arg2 *protos.ListActorRolesRequest
-	}{arg1, arg2})
-	fake.recordInvocation("ListActorRoles", []interface{}{arg1, arg2})
-	fake.listActorRolesMutex.Unlock()
-	if fake.ListActorRolesStub != nil {
-		return fake.ListActorRolesStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.listActorRolesReturns.result1, fake.listActorRolesReturns.result2
-}
-
-func (fake *FakeRoleServiceServer) ListActorRolesCallCount() int {
-	fake.listActorRolesMutex.RLock()
-	defer fake.listActorRolesMutex.RUnlock()
-	return len(fake.listActorRolesArgsForCall)
-}
-
-func (fake *FakeRoleServiceServer) ListActorRolesArgsForCall(i int) (context.Context, *protos.ListActorRolesRequest) {
-	fake.listActorRolesMutex.RLock()
-	defer fake.listActorRolesMutex.RUnlock()
-	return fake.listActorRolesArgsForCall[i].arg1, fake.listActorRolesArgsForCall[i].arg2
-}
-
-func (fake *FakeRoleServiceServer) ListActorRolesReturns(result1 *protos.ListActorRolesResponse, result2 error) {
-	fake.ListActorRolesStub = nil
-	fake.listActorRolesReturns = struct {
-		result1 *protos.ListActorRolesResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeRoleServiceServer) ListActorRolesReturnsOnCall(i int, result1 *protos.ListActorRolesResponse, result2 error) {
-	fake.ListActorRolesStub = nil
-	if fake.listActorRolesReturnsOnCall == nil {
-		fake.listActorRolesReturnsOnCall = make(map[int]struct {
-			result1 *protos.ListActorRolesResponse
-			result2 error
-		})
-	}
-	fake.listActorRolesReturnsOnCall[i] = struct {
-		result1 *protos.ListActorRolesResponse
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeRoleServiceServer) ListRolePermissions(arg1 context.Context, arg2 *protos.ListRolePermissionsRequest) (*protos.ListRolePermissionsResponse, error) {
 	fake.listRolePermissionsMutex.Lock()
 	ret, specificReturn := fake.listRolePermissionsReturnsOnCall[len(fake.listRolePermissionsArgsForCall)]
@@ -693,8 +627,6 @@ func (fake *FakeRoleServiceServer) Invocations() map[string][][]interface{} {
 	defer fake.hasRoleMutex.RUnlock()
 	fake.hasRoleForGroupMutex.RLock()
 	defer fake.hasRoleForGroupMutex.RUnlock()
-	fake.listActorRolesMutex.RLock()
-	defer fake.listActorRolesMutex.RUnlock()
 	fake.listRolePermissionsMutex.RLock()
 	defer fake.listRolePermissionsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
