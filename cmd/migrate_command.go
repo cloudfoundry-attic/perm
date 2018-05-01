@@ -45,6 +45,10 @@ func (cmd UpCommand) Execute([]string) error {
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("migrate-up")
 
+	if cmd.DB.IsInMemory() {
+		return nil
+	}
+
 	ctx := context.Background()
 
 	conn, err := cmd.DB.Connect(ctx, logger)
@@ -61,6 +65,10 @@ func (cmd DownCommand) Execute([]string) error {
 	logger = logger.Session("migrate-down").WithData(lager.Data{
 		"all": cmd.All,
 	})
+
+	if cmd.DB.IsInMemory() {
+		return nil
+	}
 
 	ctx := context.Background()
 
