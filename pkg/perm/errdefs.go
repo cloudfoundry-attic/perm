@@ -1,6 +1,11 @@
 package perm
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+
+	"google.golang.org/grpc/status"
+)
 
 type ErrNotFound struct {
 	model string
@@ -38,6 +43,11 @@ func NewErrCannotBeEmpty(model string) ErrCannotBeEmpty {
 	return ErrCannotBeEmpty{
 		model: model,
 	}
+}
+
+func NewErrorFromStatus(s *status.Status) error {
+	message := fmt.Sprintf("%s", s.Message())
+	return errors.New(message)
 }
 
 func (err ErrCannotBeEmpty) Error() string {

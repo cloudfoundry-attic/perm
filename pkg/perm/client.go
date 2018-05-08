@@ -3,7 +3,6 @@ package perm
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"google.golang.org/grpc"
@@ -84,7 +83,7 @@ func (c *Client) CreateRole(ctx context.Context, name string, permissions ...Per
 	case codes.AlreadyExists:
 		return Role{}, ErrRoleAlreadyExists
 	default:
-		return Role{}, ErrUnknown
+		return Role{}, NewErrorFromStatus(s)
 	}
 }
 
@@ -101,7 +100,7 @@ func (c *Client) DeleteRole(ctx context.Context, name string) error {
 	case codes.NotFound:
 		return ErrRoleNotFound
 	default:
-		return ErrUnknown
+		return NewErrorFromStatus(s)
 	}
 }
 
@@ -119,7 +118,7 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) e
 	case codes.OK:
 		return nil
 	default:
-		return errors.New(s.Message())
+		return NewErrorFromStatus(s)
 	}
 }
 
@@ -140,7 +139,7 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 	case codes.NotFound:
 		return ErrAssignmentNotFound
 	default:
-		return ErrUnknown
+		return NewErrorFromStatus(s)
 	}
 }
 
@@ -160,7 +159,7 @@ func (c *Client) HasPermission(ctx context.Context, actor Actor, action, resourc
 	case codes.OK:
 		return res.HasPermission, nil
 	default:
-		return false, errors.New(s.Message())
+		return false, NewErrorFromStatus(s)
 	}
 }
 
@@ -184,7 +183,7 @@ func (c *Client) ListResourcePatterns(ctx context.Context, actor Actor, action s
 
 		return resourcePatterns, nil
 	default:
-		return nil, ErrUnknown
+		return nil, NewErrorFromStatus(s)
 	}
 }
 
