@@ -81,7 +81,7 @@ func createMigrationsTable(
 	}()
 
 	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+
-		"` (version INTEGER, name VARCHAR(255), applied_at DATETIME)")
+		"` (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, version INTEGER, name VARCHAR(255), applied_at DATETIME)")
 
 	return
 }
