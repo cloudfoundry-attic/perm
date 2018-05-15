@@ -54,7 +54,7 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("creates the table if not exists", func() {
 		mock.ExpectBegin()
 		mock.ExpectExec("CREATE TABLE IF NOT EXISTS `" + migrationTableName +
-			"` \\(version INTEGER, name VARCHAR\\(255\\), applied_at DATETIME\\)").
+			"` \\(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, version INTEGER, name VARCHAR\\(255\\), applied_at DATETIME\\)").
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
