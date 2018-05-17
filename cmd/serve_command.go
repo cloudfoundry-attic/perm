@@ -32,6 +32,8 @@ type ServeCommand struct {
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
 	DB                flags.DBFlag  `group:"DB" namespace:"db"`
 	AuditFilePath     string        `long:"audit-file-path" default:""`
+	UAAHostname       string        `long:"uaa-hostname" description:"UAA hostname"`
+	UAAPort           int           `long:"uaa-port" description:"UAA port" default:"443"`
 }
 
 func (cmd ServeCommand) Execute([]string) error {
