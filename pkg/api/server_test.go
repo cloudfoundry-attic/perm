@@ -41,5 +41,13 @@ var _ = Describe("Server", func() {
 			err = subject.Serve(listener)
 			Expect(err).To(MatchError("perm: the server failed to start"))
 		})
+
+		Context("when auth is required", func() {
+
+		})
+		Context("when no auth is required", func() {
+
+		})
 	})
+
 })
