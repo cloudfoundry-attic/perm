@@ -34,7 +34,7 @@ type ServeCommand struct {
 	AuditFilePath     string        `long:"audit-file-path" default:""`
 	UAAHostname       string        `long:"uaa-hostname" description:"UAA hostname"`
 	UAAPort           int           `long:"uaa-port" description:"UAA port" default:"443"`
-	RequireAuth       bool          `long:"require-auth" description:"Require auth" default:"false"`
+	RequireAuth       bool          `long:"require-auth" description:"Require auth"`
 }
 
 func (cmd ServeCommand) Execute([]string) error {
