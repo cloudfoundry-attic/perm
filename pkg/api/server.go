@@ -17,6 +17,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
+	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
@@ -51,7 +52,8 @@ func NewServer(store Store, opts ...ServerOption) *Server {
 			return grpcErr
 		}),
 	}
-	unaryMiddleware := grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...))
+	unaryAuthMiddleware := permauth.Middleware(config.requireAuth)
+	unaryMiddleware := grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...), unaryAuthMiddleware)
 	streamMiddleware := grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))
 
 	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
@@ -131,12 +133,20 @@ func WithMaxConnectionIdle(duration time.Duration) ServerOption {
 	}
 }
 
+func WithRequireAuth(required bool) ServerOption {
+	return func(o *options) {
+		o.requireAuth = required
+	}
+}
+
 type options struct {
 	logger         lager.Logger
 	securityLogger rpc.SecurityLogger
 
 	credentials credentials.TransportCredentials
 	keepalive   keepalive.ServerParameters
+
+	requireAuth bool
 }
 
 type emptyLogger struct{}

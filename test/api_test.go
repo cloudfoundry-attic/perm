@@ -10,9 +10,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func testAPI(serverConfigFactory func() serverConfig) {
+func testAPI(serverConfigFactory func() serverConfig, serverConfigWithAuthFactory func() serverConfig) {
 	var (
-		client *perm.Client
+		client                *perm.Client
+		unauthenticatedClient *perm.Client
 	)
 
 	BeforeEach(func() {
@@ -21,6 +22,11 @@ func testAPI(serverConfigFactory func() serverConfig) {
 		serverConfig := serverConfigFactory()
 
 		client, err = perm.Dial(serverConfig.addr, perm.WithTLSConfig(serverConfig.tlsConfig))
+		Expect(err).NotTo(HaveOccurred())
+
+		serverConfig = serverConfigWithAuthFactory()
+
+		unauthenticatedClient, err = perm.Dial(serverConfig.addr, perm.WithTLSConfig(serverConfig.tlsConfig))
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -48,6 +54,11 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			_, err = client.CreateRole(context.Background(), name)
 			Expect(err).To(MatchError("role already exists"))
 		})
+
+		testRequiresAuth(func() error {
+			_, err := unauthenticatedClient.CreateRole(context.Background(), uuid.NewV4().String())
+			return err
+		})
 	})
 
 	Describe("#DeleteRole", func() {
@@ -62,6 +73,10 @@ func testAPI(serverConfigFactory func() serverConfig) {
 		It("fails when the role does not exist", func() {
 			err := client.DeleteRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("role not found"))
+		})
+
+		testRequiresAuth(func() error {
+			return unauthenticatedClient.DeleteRole(context.Background(), uuid.NewV4().String())
 		})
 	})
 
@@ -159,6 +174,10 @@ func testAPI(serverConfigFactory func() serverConfig) {
 			err = client.AssignRole(context.Background(), role.Name, actor)
 			Expect(err).To(MatchError("actor namespace cannot be empty"))
 		})
+
+		testRequiresAuth(func() error {
+			return unauthenticatedClient.AssignRole(context.Background(), uuid.NewV4().String(), perm.Actor{})
+		})
 	})
 
 	Describe("#UnassignRole", func() {
@@ -218,6 +237,10 @@ func testAPI(serverConfigFactory func() serverConfig) {
 
 			err = client.UnassignRole(context.Background(), role.Name, actor)
 			Expect(err).To(MatchError("assignment not found"))
+		})
+
+		testRequiresAuth(func() error {
+			return unauthenticatedClient.AssignRole(context.Background(), uuid.NewV4().String(), perm.Actor{})
 		})
 	})
 
@@ -347,6 +370,11 @@ func testAPI(serverConfigFactory func() serverConfig) {
 
 			Expect(hasPermission).To(Equal(false))
 		})
+
+		testRequiresAuth(func() error {
+			_, err := unauthenticatedClient.HasPermission(context.Background(), perm.Actor{}, uuid.NewV4().String(), uuid.NewV4().String())
+			return err
+		})
 	})
 
 	Describe("#ListResourcePatterns", func() {
@@ -465,10 +493,24 @@ func testAPI(serverConfigFactory func() serverConfig) {
 
 			Expect(resourcePatterns).To(BeEmpty())
 		})
+
+		testRequiresAuth(func() error {
+			_, err := unauthenticatedClient.ListResourcePatterns(context.Background(), perm.Actor{}, uuid.NewV4().String())
+			return err
+		})
 	})
 }
 
 type serverConfig struct {
 	addr      string
 	tlsConfig *tls.Config
+}
+
+func testRequiresAuth(method func() error) {
+	Describe("when auth is required", func() {
+		It("fails when the client is not authenticated", func() {
+			err := method()
+			Expect(err).To(MatchError("perm: unauthenticated"))
+		})
+	})
 }
