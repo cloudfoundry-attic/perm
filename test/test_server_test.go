@@ -5,7 +5,8 @@ import (
 	"crypto/x509"
 	"net"
 
-	"code.cloudfoundry.org/perm/pkg/api/apitest"
+	"code.cloudfoundry.org/perm/pkg/api"
+	"code.cloudfoundry.org/perm/pkg/api/rpc"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,7 +16,7 @@ var _ = Describe("Test server", func() {
 	var (
 		listener net.Listener
 
-		subject *apitest.TestServer
+		subject *api.Server
 	)
 
 	BeforeEach(func() {
@@ -31,7 +32,10 @@ var _ = Describe("Test server", func() {
 		tlsConfig := &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
-		subject = apitest.NewTestServer(apitest.WithTLSConfig(tlsConfig))
+
+		store := rpc.NewInMemoryStore()
+
+		subject = api.NewServer(store, api.WithTLSConfig(tlsConfig))
 
 		go func() {
 			err = subject.Serve(listener)
