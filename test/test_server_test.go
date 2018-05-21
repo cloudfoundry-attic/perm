@@ -42,7 +42,7 @@ var _ = Describe("Test server", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		go func() {
-			err = subject.Serve(listener)
+			err := subject.Serve(listener)
 			Expect(err).NotTo(HaveOccurred())
 		}()
 
@@ -52,13 +52,14 @@ var _ = Describe("Test server", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		go func() {
-			err = subjectWithAuth.Serve(listenerWithAuth)
+			err := subjectWithAuth.Serve(listenerWithAuth)
 			Expect(err).NotTo(HaveOccurred())
 		}()
 	})
 
 	AfterEach(func() {
 		subject.Stop()
+		subjectWithAuth.Stop()
 	})
 
 	testAPI(func() serverConfig {
