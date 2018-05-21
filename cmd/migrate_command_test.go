@@ -13,7 +13,7 @@ var _ = Describe("perm migrate", func() {
 		var downCmd DownCommand
 		It("performs a no-op down-migration for in-memory driver", func() {
 			downCmd = DownCommand{
-				Logger: flags.LagerFlag{LogLevel: "debug"},
+				Logger: flags.LagerFlag{LogLevel: "fatal"},
 				DB: flags.DBFlag{
 					Driver: "in-memory",
 				},
@@ -23,7 +23,7 @@ var _ = Describe("perm migrate", func() {
 		})
 		It("performs errors out on unsupported driver", func() {
 			downCmd = DownCommand{
-				Logger: flags.LagerFlag{LogLevel: "debug"},
+				Logger: flags.LagerFlag{LogLevel: "fatal"},
 				DB: flags.DBFlag{
 					Driver:   "unsupported-driver",
 					Host:     "host",
@@ -41,7 +41,7 @@ var _ = Describe("perm migrate", func() {
 		var upCmd UpCommand
 		It("performs a no-op up-migration for in-memory driver", func() {
 			upCmd = UpCommand{
-				Logger: flags.LagerFlag{LogLevel: "debug"},
+				Logger: flags.LagerFlag{LogLevel: "fatal"},
 				DB: flags.DBFlag{
 					Driver: "in-memory",
 				},
@@ -51,7 +51,7 @@ var _ = Describe("perm migrate", func() {
 		})
 		It("performs errors out on unsupported driver", func() {
 			upCmd = UpCommand{
-				Logger: flags.LagerFlag{LogLevel: "debug"},
+				Logger: flags.LagerFlag{LogLevel: "fatal"},
 				DB: flags.DBFlag{
 					Driver:   "unsupported-driver",
 					Host:     "host",
