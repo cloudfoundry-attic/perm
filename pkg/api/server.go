@@ -34,7 +34,7 @@ type Store interface {
 }
 
 func NewServer(store Store, opts ...ServerOption) *Server {
-	config := &options{
+	config := &serverConfig{
 		logger:         &emptyLogger{},
 		securityLogger: &emptySecurityLogger{},
 	}
@@ -107,39 +107,39 @@ func (s *Server) Stop() {
 	s.server.Stop()
 }
 
-type ServerOption func(*options)
+type ServerOption func(*serverConfig)
 
 func WithLogger(logger lager.Logger) ServerOption {
-	return func(o *options) {
+	return func(o *serverConfig) {
 		o.logger = logger
 	}
 }
 
 func WithSecurityLogger(logger rpc.SecurityLogger) ServerOption {
-	return func(o *options) {
+	return func(o *serverConfig) {
 		o.securityLogger = logger
 	}
 }
 
 func WithTLSConfig(config *tls.Config) ServerOption {
-	return func(o *options) {
+	return func(o *serverConfig) {
 		o.credentials = credentials.NewTLS(config)
 	}
 }
 
 func WithMaxConnectionIdle(duration time.Duration) ServerOption {
-	return func(o *options) {
+	return func(o *serverConfig) {
 		o.keepalive.MaxConnectionIdle = duration
 	}
 }
 
 func WithRequireAuth(required bool) ServerOption {
-	return func(o *options) {
+	return func(o *serverConfig) {
 		o.requireAuth = required
 	}
 }
 
-type options struct {
+type serverConfig struct {
 	logger         lager.Logger
 	securityLogger rpc.SecurityLogger
 

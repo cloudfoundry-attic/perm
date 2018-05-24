@@ -18,18 +18,18 @@ type Client struct {
 	permissionServiceClient protos.PermissionServiceClient
 }
 
-func Dial(addr string, opts ...DialOption) (*Client, error) {
-	config := &options{}
+func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
+	opts := &options{}
 
-	for _, opt := range opts {
-		opt(config)
+	for _, dialOpt := range dialOpts {
+		dialOpt(opts)
 	}
 
 	var grpcOpts []grpc.DialOption
 
-	if config.transportCredentials != nil {
-		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(config.transportCredentials))
-	} else if config.insecure {
+	if opts.transportCredentials != nil {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(opts.transportCredentials))
+	} else if opts.insecure {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	} else {
 		return nil, ErrNoTransportSecurity
