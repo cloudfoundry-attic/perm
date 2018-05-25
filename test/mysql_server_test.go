@@ -94,10 +94,7 @@ func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (
 	"cid": "cf",
 	"azp": "cf",
 	"grant_type": "password",
-	"user_id": "99d2075c-6137-4d0a-bc3f-f781e5e1b8b1",
 	"origin": "uaa",
-	"user_name": "nwei@pivotal.io",
-	"email": "nwei@pivotal.io",
 	"auth_time": %d,
 	"rev_sig": "f68745c9",
 	"iat": %d,
@@ -151,7 +148,7 @@ var _ = Describe("MySQL server", func() {
 		subjectWithAuth *api.Server
 		uaaServer       *httptest.Server
 
-		testSecurityLogger *rpcfakes.FakeSecurityLogger
+		fakeSecurityLogger *rpcfakes.FakeSecurityLogger
 	)
 
 	BeforeEach(func() {
@@ -257,8 +254,8 @@ var _ = Describe("MySQL server", func() {
 
 		oidcProvider, err := oidc.NewProvider(context.Background(), fmt.Sprintf("%s/oauth/token", uaaServer.URL))
 		Expect(err).NotTo(HaveOccurred())
-		testSecurityLogger = new(rpcfakes.FakeSecurityLogger)
-		subjectWithAuth = api.NewServer(store, api.WithTLSConfig(tlsConfig), api.WithOIDCProvider(oidcProvider), api.WithSecurityLogger(testSecurityLogger))
+		fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
+		subjectWithAuth = api.NewServer(store, api.WithTLSConfig(tlsConfig), api.WithOIDCProvider(oidcProvider), api.WithSecurityLogger(fakeSecurityLogger))
 
 		listenerWithAuth, err = net.Listen("tcp", "localhost:0")
 		Expect(err).NotTo(HaveOccurred())
@@ -362,8 +359,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).ToNot(HaveOccurred())
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, _ := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, _ := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("CreateRole"))
 						Expect(logName).To(Equal("Role creation"))
 					})
@@ -374,8 +371,8 @@ var _ = Describe("MySQL server", func() {
 
 						_, err = unauthenticatedClient.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))
@@ -389,8 +386,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))
@@ -405,8 +402,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))
@@ -421,8 +418,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))
@@ -437,8 +434,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))
@@ -453,8 +450,8 @@ var _ = Describe("MySQL server", func() {
 						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
 						Expect(err).To(MatchError("perm: unauthenticated"))
 
-						Expect(testSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := testSecurityLogger.LogArgsForCall(0)
+						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 						Expect(logID).To(Equal("Auth"))
 						Expect(logName).To(Equal("Auth"))
 						Expect(extension).To(HaveLen(1))

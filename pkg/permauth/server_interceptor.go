@@ -54,6 +54,7 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 		claims := Claims{}
 		err = idToken.Claims(&claims)
 		if err != nil {
+			// This should never occur because Verify would have failed first.
 			securityLogger.Log(ctx, "Auth", "Auth", extErr(err.Error()))
 			return nil, perm.ErrUnauthenticated
 		}
