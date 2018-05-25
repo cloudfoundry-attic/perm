@@ -263,10 +263,10 @@ var _ = Describe("MySQL server", func() {
 		listenerWithAuth, err = net.Listen("tcp", "localhost:0")
 		Expect(err).NotTo(HaveOccurred())
 
-		go func() {
-			err := subjectWithAuth.Serve(listenerWithAuth)
+		go func(s *api.Server, l net.Listener) {
+			err := s.Serve(l)
 			Expect(err).NotTo(HaveOccurred())
-		}()
+		}(subjectWithAuth, listenerWithAuth)
 	})
 
 	AfterEach(func() {
