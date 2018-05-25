@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
+	oidc "github.com/coreos/go-oidc"
 )
 
 type ServeCommand struct {
@@ -101,7 +103,20 @@ func (cmd ServeCommand) Execute([]string) error {
 		api.WithSecurityLogger(securityLogger),
 		api.WithTLSConfig(tlsConfig),
 		api.WithMaxConnectionIdle(maxConnectionIdle),
-		api.WithRequireAuth(cmd.RequireAuth),
+	}
+
+	if cmd.RequireAuth {
+		var oidcIssuer string
+		if cmd.UAAPort == 443 {
+			oidcIssuer = fmt.Sprintf("https://%s/oauth/token", cmd.UAAHostname)
+		} else {
+			oidcIssuer = fmt.Sprintf("https://%s:%d/oauth/token", cmd.UAAHostname, cmd.UAAPort)
+		}
+		provider, err := oidc.NewProvider(context.Background(), oidcIssuer)
+		if err != nil {
+			return err
+		}
+		serverOpts = append(serverOpts, api.WithOIDCProvider(provider))
 	}
 
 	server := api.NewServer(store, serverOpts...)

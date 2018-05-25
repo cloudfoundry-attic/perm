@@ -52,8 +52,15 @@ func NewServer(store Store, opts ...ServerOption) *Server {
 			return grpcErr
 		}),
 	}
-	unaryAuthMiddleware := permauth.Middleware(config.requireAuth)
-	unaryMiddleware := grpc_middleware.ChainUnaryServer(grpc_recovery.UnaryServerInterceptor(recoveryOpts...), unaryAuthMiddleware)
+	unaryServerInterceptors := []grpc.UnaryServerInterceptor{
+		grpc_recovery.UnaryServerInterceptor(recoveryOpts...),
+	}
+
+	if config.oidcProvider != nil {
+		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider, config.securityLogger))
+	}
+
+	unaryMiddleware := grpc_middleware.ChainUnaryServer(unaryServerInterceptors...)
 	streamMiddleware := grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))
 
 	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
@@ -133,9 +140,9 @@ func WithMaxConnectionIdle(duration time.Duration) ServerOption {
 	}
 }
 
-func WithRequireAuth(required bool) ServerOption {
+func WithOIDCProvider(provider permauth.OIDCProvider) ServerOption {
 	return func(o *serverConfig) {
-		o.requireAuth = required
+		o.oidcProvider = provider
 	}
 }
 
@@ -146,7 +153,7 @@ type serverConfig struct {
 	credentials credentials.TransportCredentials
 	keepalive   keepalive.ServerParameters
 
-	requireAuth bool
+	oidcProvider permauth.OIDCProvider
 }
 
 type emptyLogger struct{}
