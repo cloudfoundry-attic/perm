@@ -18,16 +18,15 @@ type Client struct {
 	permissionServiceClient protos.PermissionServiceClient
 }
 
-// opts.token
-type perRpcCredentials struct {
+type perRPCCredentials struct {
 	token string
 }
 
-func (c perRpcCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (c perRPCCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{"token": c.token}, nil
 }
 
-func (c perRpcCredentials) RequireTransportSecurity() bool {
+func (c perRPCCredentials) RequireTransportSecurity() bool {
 	return false
 }
 
@@ -48,7 +47,7 @@ func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
 		return nil, ErrNoTransportSecurity
 	}
 
-	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRpcCredentials{token: opts.token}))
+	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPCCredentials{token: opts.token}))
 
 	conn, err := grpc.Dial(addr, grpcOpts...)
 	if err != nil {

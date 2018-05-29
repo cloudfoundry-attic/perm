@@ -26,7 +26,12 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var validPrivateKey = fmt.Sprintf(`
+const (
+	RSABitLength = 2048
+)
+
+var (
+	validPrivateKey = fmt.Sprintf(`
 -----BEGIN RSA %s-----
 MIIEpAIBAAKCAQEA918Nv+kmlGF1uz2MMJaJ8TFXzV9E5bFVVotKHxHl1HEQhjxF
 FVLkBiagjh61pu/eC5tjDdyA0gkYWpLfEvAnAatV/t+HxggjGb8fpA0babKztGfz
@@ -55,7 +60,7 @@ LG3ujlOKoS6FpkV1mH+D6GsfNwnbP9JrtXoBwMaQIGHQtTI7Tdxe4GFPgBcXq+ZH
 89SLmAbBj+ca9wx0YTo6/isBzMJNLPFThbscXjReS1K5UZ/EN87uFw==
 -----END RSA %s-----`, "PRIVATE KEY", "PRIVATE KEY")
 
-var foreignPrivateKey = fmt.Sprintf(`
+	foreignPrivateKey = fmt.Sprintf(`
 -----BEGIN RSA %s-----
 MIICXAIBAAKBgQDQCRZ9s6DCFpp6rk+wZJ7mrkCby8r+h9oY/7ouc7VK6hp88nw7
 J9y3xqaIQSu/Tg8Wx6+ShuR9QM3yFajxs0t+xeEhrOkQvPJ0lxwdDdT1nSwC9xiY
@@ -71,9 +76,6 @@ xgCnf0mAwtgXnxSe4UudByj+/ZqrRU+o0FP+sEXx+wdmFrUOUCI2C8jIQcAXGv5O
 5GPP6d8eh+Missb8RyECQFCbPrZx7SSAulFsZyF61RBR3tIP8tvzkGq9ZqTzC0U/
 d7awuT2TT95mId/sDODb2YftWPnH76RBDwl4QhTJJU4=
 -----END RSA %s-----`, "PRIVATE KEY", "PRIVATE KEY")
-
-const (
-	RSABitLength = 2048
 )
 
 type serverConfig struct {
@@ -140,27 +142,57 @@ func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (
 
 var _ = Describe("MySQL server", func() {
 	var (
-		conn             *sqlx.DB
-		listener         net.Listener
-		listenerWithAuth net.Listener
-
-		subject         *api.Server
-		subjectWithAuth *api.Server
-		uaaServer       *httptest.Server
-
-		fakeSecurityLogger *rpcfakes.FakeSecurityLogger
+		conn                *sqlx.DB
+		store               api.Store
+		permServerTLSConfig *tls.Config
 	)
 
 	BeforeEach(func() {
 		var err error
+		conn, err = testMySQLDB.Connect()
+		Expect(err).NotTo(HaveOccurred())
 
-		uaaServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			switch req.URL.Path {
-			case "/oauth/token/.well-known/openid-configuration":
-				w.Write([]byte(fmt.Sprintf(`
+		store = db.NewDataService(conn)
+
+		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
+		Expect(err).NotTo(HaveOccurred())
+
+		permServerTLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{permServerCert},
+		}
+	})
+
+	AfterEach(func() {
+		err := testMySQLDB.Truncate(
+			"DELETE FROM role",
+			"DELETE FROM action",
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = conn.Close()
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	Describe("With Authentication", func() {
+		var (
+			oauthServer *httptest.Server
+			subject     *api.Server
+
+			validIssuer string
+			sConfig     serverConfig
+			client      *perm.Client
+
+			fakeSecurityLogger *rpcfakes.FakeSecurityLogger
+		)
+
+		BeforeEach(func() {
+			oauthServer = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch req.URL.Path {
+				case "/oauth/token/.well-known/openid-configuration":
+					w.Write([]byte(fmt.Sprintf(`
 {
-  "issuer": "http://%s/oauth/token",
+  "issuer": "https://%s/oauth/token",
   "authorization_endpoint": "https://login.run.pivotal.io/oauth/authorize",
   "token_endpoint": "https://login.run.pivotal.io/oauth/token",
   "token_endpoint_auth_methods_supported": [
@@ -172,7 +204,7 @@ var _ = Describe("MySQL server", func() {
     "HS256"
   ],
   "userinfo_endpoint": "https://login.run.pivotal.io/userinfo",
-  "jwks_uri": "http://%s/token_keys",
+  "jwks_uri": "https://%s/token_keys",
   "scopes_supported": [
     "openid",
     "profile",
@@ -210,8 +242,8 @@ var _ = Describe("MySQL server", func() {
     "en-US"
   ]
 }`, req.Host, req.Host)))
-			case "/token_keys":
-				w.Write([]byte(`
+				case "/token_keys":
+					w.Write([]byte(`
 {
 	"keys": [
 		{
@@ -224,102 +256,212 @@ var _ = Describe("MySQL server", func() {
 		}
 	]
 }`))
-			default:
-				out, err := httputil.DumpRequest(req, true)
-				Expect(err).NotTo(HaveOccurred())
-				Fail(fmt.Sprintf("unexpected request: %s", out))
-			}
-		}))
+				default:
+					out, err := httputil.DumpRequest(req, true)
+					Expect(err).NotTo(HaveOccurred())
+					Fail(fmt.Sprintf("unexpected request: %s", out))
+				}
+			}))
 
-		conn, err = testMySQLDB.Connect()
-		Expect(err).NotTo(HaveOccurred())
+			oauthServer.StartTLS()
 
-		cert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
-		Expect(err).NotTo(HaveOccurred())
-
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-		}
-		store := db.NewDataService(conn)
-		subject = api.NewServer(store, api.WithTLSConfig(tlsConfig))
-
-		// Port 0 should find a random open port
-		listener, err = net.Listen("tcp", "localhost:0")
-		Expect(err).NotTo(HaveOccurred())
-
-		go func() {
-			err := subject.Serve(listener)
-			Expect(err).NotTo(HaveOccurred())
-		}()
-
-		oidcProvider, err := oidc.NewProvider(context.Background(), fmt.Sprintf("%s/oauth/token", uaaServer.URL))
-		Expect(err).NotTo(HaveOccurred())
-		fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
-		subjectWithAuth = api.NewServer(store, api.WithTLSConfig(tlsConfig), api.WithOIDCProvider(oidcProvider), api.WithSecurityLogger(fakeSecurityLogger))
-
-		listenerWithAuth, err = net.Listen("tcp", "localhost:0")
-		Expect(err).NotTo(HaveOccurred())
-
-		go func(s *api.Server, l net.Listener) {
-			err := s.Serve(l)
-			Expect(err).NotTo(HaveOccurred())
-		}(subjectWithAuth, listenerWithAuth)
-	})
-
-	AfterEach(func() {
-		subject.Stop()
-
-		err := testMySQLDB.Truncate(
-			"DELETE FROM role",
-			"DELETE FROM action",
-		)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = conn.Close()
-		Expect(err).NotTo(HaveOccurred())
-
-		uaaServer.Close()
-	})
-
-	Describe("API tests", func() {
-		var (
-			client               *perm.Client
-			serverConfigWithAuth serverConfig
-			validIssuer          string
-		)
+			validIssuer = fmt.Sprintf("%s/oauth/token", oauthServer.URL)
+		})
 
 		BeforeEach(func() {
-			var err error
-			validIssuer = fmt.Sprintf("%s/oauth/token", uaaServer.URL)
+			serverCert, err := x509.ParseCertificate(oauthServer.TLS.Certificates[0].Certificate[0])
+			Expect(err).NotTo(HaveOccurred())
+			certpool := x509.NewCertPool()
+			certpool.AddCert(serverCert)
+			clientTransport := &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: certpool,
+				},
+			}
+
+			oidcContext := oidc.ClientContext(context.Background(), &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: clientTransport.TLSClientConfig,
+				},
+			})
+			oidcProvider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauthServer.URL))
+			Expect(err).NotTo(HaveOccurred())
+			fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
+			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig), api.WithOIDCProvider(oidcProvider), api.WithSecurityLogger(fakeSecurityLogger))
+
+			listener, err := net.Listen("tcp", "localhost:0")
+			Expect(err).NotTo(HaveOccurred())
 
 			rootCAPool := x509.NewCertPool()
-
 			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
 			Expect(ok).To(BeTrue())
 
-			serverConfigNoAuth := serverConfig{
+			sConfig = serverConfig{
 				addr: listener.Addr().String(),
 				tlsConfig: &tls.Config{
 					RootCAs: rootCAPool,
 				},
 			}
-			client, err = perm.Dial(serverConfigNoAuth.addr, perm.WithTLSConfig(serverConfigNoAuth.tlsConfig))
+
+			// TODO: race condition here
+			go func(s *api.Server, l net.Listener) {
+				err := s.Serve(l)
+				Expect(err).NotTo(HaveOccurred())
+			}(subject, listener)
+		})
+
+		AfterEach(func() {
+			oauthServer.Close()
+			subject.Stop()
+			err := client.Close()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		// TODO: move the client creation to a justbeforeeach
+		It("creates the new role when no errors occur during authentication", func() {
+			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
+			Expect(err).ToNot(HaveOccurred())
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, _ := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("CreateRole"))
+			Expect(logName).To(Equal("Role creation"))
+		})
+
+		It("returns a unauthenticated error when the client does not send a JWT token", func() {
+			var err error
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 
-			rootCAPool = x509.NewCertPool()
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
+		})
 
-			ok = rootCAPool.AppendCertsFromPEM([]byte(testCA))
+		It("returns a malformed token error when the client's token is malformed", func() {
+			malformedJWTToken := "hello, world"
+			var err error
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(malformedJWTToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
+		})
+
+		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
+			signedToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
+			Expect(err).ToNot(HaveOccurred())
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("failed to verify signature: failed to verify id token signature"))
+		})
+
+		It("returns a token invalid error when the client's token is expired", func() {
+			expiredToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, 1527115085)
+			Expect(err).NotTo(HaveOccurred())
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(expiredToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("oidc: token is expired"))
+		})
+
+		It("returns an unauthenticated error when the perm.admin scope is missing", func() {
+			signedToken, err := getSignedToken(validPrivateKey, "unknown", validIssuer, time.Now().Unix())
+			Expect(err).NotTo(HaveOccurred())
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("token not issued with the perm.admin scope"))
+		})
+
+		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
+			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
+			Expect(err).NotTo(HaveOccurred())
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).To(MatchError("perm: unauthenticated"))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
+			Expect(logID).To(Equal("Auth"))
+			Expect(logName).To(Equal("Auth"))
+			Expect(extension).To(HaveLen(1))
+			Expect(extension[0].Value).To(ContainSubstring("oidc: id token issued by a different provider"))
+		})
+	})
+
+	Describe("Without Authentication", func() {
+		var (
+			subject *api.Server
+			client  *perm.Client
+		)
+
+		BeforeEach(func() {
+			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig))
+
+			listener, err := net.Listen("tcp", "localhost:0")
+			Expect(err).NotTo(HaveOccurred())
+
+			rootCAPool := x509.NewCertPool()
+			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
 			Expect(ok).To(BeTrue())
 
-			serverConfigWithAuth = serverConfig{
-				addr: listenerWithAuth.Addr().String(),
+			sConfig := serverConfig{
+				addr: listener.Addr().String(),
 				tlsConfig: &tls.Config{
 					RootCAs: rootCAPool,
 				},
 			}
+
+			go func() {
+				err := subject.Serve(listener)
+				Expect(err).NotTo(HaveOccurred())
+			}()
+
+			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig))
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
+			subject.Stop()
 			err := client.Close()
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -342,122 +484,6 @@ var _ = Describe("MySQL server", func() {
 
 				_, err = client.CreateRole(context.Background(), name)
 				Expect(err).To(MatchError("role already exists"))
-			})
-
-			Describe("authentication", func() {
-				var (
-					clientWithAuth *perm.Client
-					err            error
-				)
-
-				Context("when auth is required", func() {
-					It("creates the new role when no errors occur during authentication", func() {
-						signedToken, err := getSignedToken(validPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
-						Expect(err).ToNot(HaveOccurred())
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(signedToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).ToNot(HaveOccurred())
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, _ := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("CreateRole"))
-						Expect(logName).To(Equal("Role creation"))
-					})
-
-					It("returns a unauthenticated error when the client does not send a JWT token", func() {
-						unauthenticatedClient, err := perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig))
-						Expect(err).NotTo(HaveOccurred())
-
-						_, err = unauthenticatedClient.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
-					})
-
-					It("returns a malformed token error when the client's token is malformed", func() {
-						malformedJWTToken := "hello, world"
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(malformedJWTToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
-					})
-
-					It("returns a token invalid error when the client's token is signed by an unknown key", func() {
-						signedToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
-						Expect(err).ToNot(HaveOccurred())
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(signedToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("failed to verify signature: failed to verify id token signature"))
-					})
-
-					It("returns a token invalid error when the client's token is expired", func() {
-						expiredToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, 1527115085)
-						Expect(err).NotTo(HaveOccurred())
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(expiredToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("oidc: token is expired"))
-					})
-
-					It("returns an unauthenticated error when the perm.admin scope is missing", func() {
-						signedToken, err := getSignedToken(validPrivateKey, "unknown", validIssuer, time.Now().Unix())
-						Expect(err).NotTo(HaveOccurred())
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(signedToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("token not issued with the perm.admin scope"))
-					})
-
-					It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
-						signedToken, err := getSignedToken(validPrivateKey, "perm.admin", "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
-						Expect(err).NotTo(HaveOccurred())
-						clientWithAuth, err = perm.Dial(serverConfigWithAuth.addr, perm.WithTLSConfig(serverConfigWithAuth.tlsConfig), perm.WithToken(signedToken))
-						Expect(err).NotTo(HaveOccurred())
-						_, err = clientWithAuth.CreateRole(context.Background(), uuid.NewV4().String())
-						Expect(err).To(MatchError("perm: unauthenticated"))
-
-						Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-						_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-						Expect(logID).To(Equal("Auth"))
-						Expect(logName).To(Equal("Auth"))
-						Expect(extension).To(HaveLen(1))
-						Expect(extension[0].Value).To(ContainSubstring("oidc: id token issued by a different provider"))
-					})
-				})
 			})
 		})
 
