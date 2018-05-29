@@ -78,7 +78,7 @@ d7awuT2TT95mId/sDODb2YftWPnH76RBDwl4QhTJJU4=
 -----END RSA %s-----`, "PRIVATE KEY", "PRIVATE KEY")
 )
 
-type serverConfig struct {
+type clientConfig struct {
 	addr      string
 	tlsConfig *tls.Config
 }
@@ -179,7 +179,7 @@ var _ = Describe("MySQL server", func() {
 			subject     *api.Server
 
 			validIssuer string
-			sConfig     serverConfig
+			config      clientConfig
 			client      *perm.Client
 
 			fakeSecurityLogger *rpcfakes.FakeSecurityLogger
@@ -296,7 +296,7 @@ var _ = Describe("MySQL server", func() {
 			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
 			Expect(ok).To(BeTrue())
 
-			sConfig = serverConfig{
+			config = clientConfig{
 				addr: listener.Addr().String(),
 				tlsConfig: &tls.Config{
 					RootCAs: rootCAPool,
@@ -321,7 +321,7 @@ var _ = Describe("MySQL server", func() {
 		It("creates the new role when no errors occur during authentication", func() {
 			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
 			Expect(err).ToNot(HaveOccurred())
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
@@ -334,7 +334,7 @@ var _ = Describe("MySQL server", func() {
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
 			var err error
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -350,7 +350,7 @@ var _ = Describe("MySQL server", func() {
 		It("returns a malformed token error when the client's token is malformed", func() {
 			malformedJWTToken := "hello, world"
 			var err error
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(malformedJWTToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(malformedJWTToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
@@ -366,7 +366,7 @@ var _ = Describe("MySQL server", func() {
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
 			signedToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
 			Expect(err).ToNot(HaveOccurred())
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
@@ -382,7 +382,7 @@ var _ = Describe("MySQL server", func() {
 		It("returns a token invalid error when the client's token is expired", func() {
 			expiredToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, 1527115085)
 			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(expiredToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(expiredToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
@@ -398,7 +398,7 @@ var _ = Describe("MySQL server", func() {
 		It("returns an unauthenticated error when the perm.admin scope is missing", func() {
 			signedToken, err := getSignedToken(validPrivateKey, "unknown", validIssuer, time.Now().Unix())
 			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
@@ -414,7 +414,7 @@ var _ = Describe("MySQL server", func() {
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
 			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
 			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
@@ -444,7 +444,7 @@ var _ = Describe("MySQL server", func() {
 			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
 			Expect(ok).To(BeTrue())
 
-			sConfig := serverConfig{
+			config := clientConfig{
 				addr: listener.Addr().String(),
 				tlsConfig: &tls.Config{
 					RootCAs: rootCAPool,
@@ -456,7 +456,7 @@ var _ = Describe("MySQL server", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}()
 
-			client, err = perm.Dial(sConfig.addr, perm.WithTLSConfig(sConfig.tlsConfig))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 		})
 

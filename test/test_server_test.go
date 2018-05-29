@@ -59,14 +59,14 @@ var _ = Describe("Test server", func() {
 			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
 			Expect(ok).To(BeTrue())
 
-			serverConfigNoAuth := serverConfig{
+			config := clientConfig{
 				addr: listener.Addr().String(),
 				tlsConfig: &tls.Config{
 					RootCAs: rootCAPool,
 				},
 			}
 
-			client, err = perm.Dial(serverConfigNoAuth.addr, perm.WithTLSConfig(serverConfigNoAuth.tlsConfig))
+			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
