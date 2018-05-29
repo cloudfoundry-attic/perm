@@ -303,11 +303,10 @@ var _ = Describe("MySQL server", func() {
 				},
 			}
 
-			// TODO: race condition here
-			go func(s *api.Server, l net.Listener) {
-				err := s.Serve(l)
+			go func() {
+				err := subject.Serve(listener)
 				Expect(err).NotTo(HaveOccurred())
-			}(subject, listener)
+			}()
 		})
 
 		AfterEach(func() {
