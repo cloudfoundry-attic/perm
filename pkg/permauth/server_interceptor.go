@@ -63,6 +63,7 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 		for _, scope := range claims.Scopes {
 			if scope == permAdminScope {
 				permAdminScopeFound = true
+				break
 			}
 		}
 

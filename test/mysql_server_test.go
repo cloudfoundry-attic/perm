@@ -273,15 +273,12 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			certpool := x509.NewCertPool()
 			certpool.AddCert(serverCert)
-			clientTransport := &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: certpool,
-				},
-			}
 
 			oidcContext := oidc.ClientContext(context.Background(), &http.Client{
 				Transport: &http.Transport{
-					TLSClientConfig: clientTransport.TLSClientConfig,
+					TLSClientConfig: &tls.Config{
+						RootCAs: certpool,
+					},
 				},
 			})
 			oidcProvider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauthServer.URL))
