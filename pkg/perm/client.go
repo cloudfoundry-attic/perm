@@ -27,7 +27,7 @@ func (c perRPCCredentials) GetRequestMetadata(ctx context.Context, uri ...string
 }
 
 func (c perRPCCredentials) RequireTransportSecurity() bool {
-	return false
+	return true
 }
 
 func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
@@ -47,7 +47,9 @@ func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
 		return nil, ErrNoTransportSecurity
 	}
 
-	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPCCredentials{token: opts.token}))
+	if opts.token != "" {
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPCCredentials{token: opts.token}))
+	}
 
 	conn, err := grpc.Dial(addr, grpcOpts...)
 	if err != nil {

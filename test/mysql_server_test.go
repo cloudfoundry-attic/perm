@@ -336,11 +336,12 @@ var _ = Describe("MySQL server", func() {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+
 			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
 			Expect(logID).To(Equal("Auth"))
 			Expect(logName).To(Equal("Auth"))
 			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
+			Expect(extension[0].Value).To(ContainSubstring("token field not in the metadata"))
 		})
 
 		It("returns a malformed token error when the client's token is malformed", func() {
