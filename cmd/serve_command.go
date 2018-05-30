@@ -34,8 +34,7 @@ type ServeCommand struct {
 	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
 	DB                flags.DBFlag  `group:"DB" namespace:"db"`
 	AuditFilePath     string        `long:"audit-file-path" default:""`
-	UAAHostname       string        `long:"uaa-hostname" description:"UAA hostname"`
-	UAAPort           int           `long:"uaa-port" description:"UAA port" default:"443"`
+	OAuth2URL         string        `long:"oauth2-url" description:"URL of the OAuth2 provider (only required if '--required-auth' is provided)"`
 	RequireAuth       bool          `long:"require-auth" description:"Require auth"`
 }
 
@@ -106,13 +105,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	}
 
 	if cmd.RequireAuth {
-		var oidcIssuer string
-		if cmd.UAAPort == 443 {
-			oidcIssuer = fmt.Sprintf("https://%s/oauth/token", cmd.UAAHostname)
-		} else {
-			oidcIssuer = fmt.Sprintf("https://%s:%d/oauth/token", cmd.UAAHostname, cmd.UAAPort)
-		}
-		provider, err := oidc.NewProvider(context.Background(), oidcIssuer)
+		provider, err := oidc.NewProvider(context.Background(), fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
 		if err != nil {
 			return err
 		}
