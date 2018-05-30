@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/http"
 
 	"strconv"
 
@@ -20,6 +21,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
+	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	oidc "github.com/coreos/go-oidc"
@@ -27,15 +29,16 @@ import (
 
 type ServeCommand struct {
 	Logger            flags.LagerFlag
-	Hostname          string        `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
-	Port              int           `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
-	MaxConnectionIdle time.Duration `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
-	TLSCertificate    string        `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
-	TLSKey            string        `long:"tls-key" description:"File path of TLS private key" required:"true"`
-	DB                flags.DBFlag  `group:"DB" namespace:"db"`
-	AuditFilePath     string        `long:"audit-file-path" default:""`
-	OAuth2URL         string        `long:"oauth2-url" description:"URL of the OAuth2 provider (only required if '--required-auth' is provided)"`
-	RequireAuth       bool          `long:"require-auth" description:"Require auth"`
+	Hostname          string               `long:"listen-hostname" description:"Hostname on which to listen for gRPC traffic" default:"0.0.0.0"`
+	Port              int                  `long:"listen-port" description:"Port on which to listen for gRPC traffic" default:"6283"`
+	MaxConnectionIdle time.Duration        `long:"max-connection-idle" description:"The amount of time before an idle connection will be closed with a GoAway." default:"10s"`
+	TLSCertificate    string               `long:"tls-certificate" description:"File path of TLS certificate" required:"true"`
+	TLSKey            string               `long:"tls-key" description:"File path of TLS private key" required:"true"`
+	DB                flags.DBFlag         `group:"DB" namespace:"db"`
+	AuditFilePath     string               `long:"audit-file-path" default:""`
+	OAuth2URL         string               `long:"oauth2-url" description:"URL of the OAuth2 provider (only required if '--required-auth' is provided)"`
+	OAuth2CA          ioutilx.FileOrString `long:"oauth2-certificate-authority" description:"the certificate authority of the OAuth2 provider (only required if '--required-auth' is provided)"`
+	RequireAuth       bool                 `long:"require-auth" description:"Require auth"`
 }
 
 func (cmd ServeCommand) Execute([]string) error {
@@ -105,7 +108,24 @@ func (cmd ServeCommand) Execute([]string) error {
 	}
 
 	if cmd.RequireAuth {
-		provider, err := oidc.NewProvider(context.Background(), fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
+		oauthCA, err := cmd.OAuth2CA.Bytes(ioutilx.OS, ioutilx.IOReader)
+		if err != nil {
+			return err
+		}
+
+		oauthCAPool, err := cryptox.NewCertPool(oauthCA)
+		if err != nil {
+			return err
+		}
+
+		oidcContext := oidc.ClientContext(context.Background(), &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: oauthCAPool,
+				},
+			},
+		})
+		provider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
 		if err != nil {
 			return err
 		}
