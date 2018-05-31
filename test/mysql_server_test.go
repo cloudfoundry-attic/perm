@@ -15,7 +15,6 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/api/db"
-	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	jose "gopkg.in/square/go-jose.v2"
@@ -171,8 +170,6 @@ var _ = Describe("MySQL server", func() {
 			validIssuer string
 			config      clientConfig
 			client      *perm.Client
-
-			fakeSecurityLogger *rpcfakes.FakeSecurityLogger
 		)
 
 		BeforeEach(func() {
@@ -223,8 +220,7 @@ var _ = Describe("MySQL server", func() {
 			})
 			oidcProvider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauthServer.URL))
 			Expect(err).NotTo(HaveOccurred())
-			fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
-			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig), api.WithOIDCProvider(oidcProvider), api.WithSecurityLogger(fakeSecurityLogger))
+			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig), api.WithOIDCProvider(oidcProvider))
 
 			listener, err := net.Listen("tcp", "localhost:0")
 			Expect(err).NotTo(HaveOccurred())
@@ -261,11 +257,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, _ := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("CreateRole"))
-			Expect(logName).To(Equal("Role creation"))
 		})
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
@@ -275,13 +266,6 @@ var _ = Describe("MySQL server", func() {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("token field not in the metadata"))
 		})
 
 		It("returns a malformed token error when the client's token is malformed", func() {
@@ -291,13 +275,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"))
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
@@ -307,13 +284,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("failed to verify signature: failed to verify id token signature"))
 		})
 
 		It("returns a token invalid error when the client's token is expired", func() {
@@ -323,13 +293,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("oidc: token is expired"))
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
@@ -339,13 +302,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(err).NotTo(HaveOccurred())
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("oidc: id token issued by a different provider"))
 		})
 	})
 

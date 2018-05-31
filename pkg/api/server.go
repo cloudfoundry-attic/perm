@@ -57,7 +57,7 @@ func NewServer(store Store, opts ...ServerOption) *Server {
 	}
 
 	if config.oidcProvider != nil {
-		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider, config.securityLogger))
+		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider))
 	}
 
 	unaryMiddleware := grpc_middleware.ChainUnaryServer(unaryServerInterceptors...)
