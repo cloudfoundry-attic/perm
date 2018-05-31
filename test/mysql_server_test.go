@@ -86,31 +86,21 @@ type clientConfig struct {
 func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (string, error) {
 	payload := fmt.Sprintf(`
 {
-	"jti": "005b7b3c94214d7288248c0eca932b07",
-	"sub": "99d2075c-6137-4d0a-bc3f-f781e5e1b8b1",
 	"scope": [
 		"openid",
 		"%s"
 	],
-	"client_id": "cf",
-	"cid": "cf",
-	"azp": "cf",
-	"grant_type": "password",
-	"origin": "uaa",
-	"auth_time": %d,
-	"rev_sig": "f68745c9",
 	"iat": %d,
 	"exp": %d,
 	"iss": "%s",
-	"zid": "uaa",
 	"aud": [
-		"cloud_controller",
+		"abc",
 		"password",
-		"cf",
-		"uaa",
+		"perm",
+		"foobar",
 		"openid"
 	]
-}`, scope, issuedAtTimestamp, issuedAtTimestamp, issuedAtTimestamp+600, issuer)
+}`, scope, issuedAtTimestamp, issuedAtTimestamp+600, issuer)
 
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
@@ -193,54 +183,7 @@ var _ = Describe("MySQL server", func() {
 					w.Write([]byte(fmt.Sprintf(`
 {
   "issuer": "https://%s/oauth/token",
-  "authorization_endpoint": "https://login.run.pivotal.io/oauth/authorize",
-  "token_endpoint": "https://login.run.pivotal.io/oauth/token",
-  "token_endpoint_auth_methods_supported": [
-    "client_secret_basic",
-    "client_secret_post"
-  ],
-  "token_endpoint_auth_signing_alg_values_supported": [
-    "RS256",
-    "HS256"
-  ],
-  "userinfo_endpoint": "https://login.run.pivotal.io/userinfo",
-  "jwks_uri": "https://%s/token_keys",
-  "scopes_supported": [
-    "openid",
-    "profile",
-    "email",
-    "phone",
-    "roles",
-    "user_attributes"
-  ],
-  "response_types_supported": [
-    "code",
-    "code id_token",
-    "id_token",
-    "token id_token"
-  ],
-  "subject_types_supported": [
-    "public"
-  ],
-  "id_token_signing_alg_values_supported": [
-    "RS256",
-    "HS256"
-  ],
-  "id_token_encryption_alg_values_supported": [
-    "none"
-  ],
-  "claim_types_supported": [
-    "normal"
-  ],
-  "claims_supported": [
-    "phone_number",
-    "email"
-  ],
-  "claims_parameter_supported": false,
-  "service_documentation": "http://docs.cloudfoundry.org/api/uaa/",
-  "ui_locales_supported": [
-    "en-US"
-  ]
+  "jwks_uri": "https://%s/token_keys"
 }`, req.Host, req.Host)))
 				case "/token_keys":
 					w.Write([]byte(`
@@ -249,9 +192,6 @@ var _ = Describe("MySQL server", func() {
 		{
 			"kty": "RSA",
 			"e": "AQAB",
-			"use": "sig",
-			"kid": "sha2-2017-01-20-key",
-			"alg": "RS256",
 			"n": "APdfDb_pJpRhdbs9jDCWifExV81fROWxVVaLSh8R5dRxEIY8RRVS5AYmoI4etabv3gubYw3cgNIJGFqS3xLwJwGrVf7fh8YIIxm_H6QNG2mys7Rn80RufRpqrkas0EBcJqa_zQpS3QnINJ6ZkrSXhghYdD0R_01VQpQ7OnXFLKCAxUo7y0vUiMQhdKf0y8YhRd5v-cvujgze0vQnWrDQ9UY224OPnNtJK1zv2E7Ssn43PTEt1OxF2lYLuSqJUw8lEiE8FTQIBIUj0yqfiMQ8dn4GeJem8nTfsRyNHBOHF-HddJW-RrQ-ryvFLLpFu0H0wecSzlF-5SXOsTUpGuMQ0pU"
 		}
 	]

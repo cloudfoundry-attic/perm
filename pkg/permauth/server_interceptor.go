@@ -25,7 +25,7 @@ type Claims struct {
 
 func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger) grpc.UnaryServerInterceptor {
 	verifier := provider.Verifier(&oidc.Config{
-		SkipClientIDCheck: true,
+		ClientID: "perm",
 	})
 
 	extErr := func(message string) logging.CustomExtension {
