@@ -13,11 +13,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/permauth"
+	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
@@ -28,12 +30,12 @@ type Server struct {
 	server         *grpc.Server
 }
 
-type Store interface {
+type store interface {
 	repos.PermissionRepo
 	repos.RoleRepo
 }
 
-func NewServer(store Store, opts ...ServerOption) *Server {
+func NewServer(opts ...ServerOption) *Server {
 	config := &serverConfig{
 		logger:         &emptyLogger{},
 		securityLogger: &emptySecurityLogger{},
@@ -77,10 +79,17 @@ func NewServer(store Store, opts ...ServerOption) *Server {
 
 	securityLogger := config.securityLogger
 
-	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, store)
+	var s store
+	if config.conn == nil {
+		s = rpc.NewInMemoryStore()
+	} else {
+		s = db.NewDataService(config.conn)
+	}
+
+	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, s)
 	protos.RegisterRoleServiceServer(server, roleServiceServer)
 
-	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, store)
+	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, s)
 	protos.RegisterPermissionServiceServer(server, permissionServiceServer)
 
 	return &Server{
@@ -143,6 +152,12 @@ func WithOIDCProvider(provider permauth.OIDCProvider) ServerOption {
 	}
 }
 
+func WithDBConn(conn *sqlx.DB) ServerOption {
+	return func(o *serverConfig) {
+		o.conn = conn
+	}
+}
+
 type serverConfig struct {
 	logger         lager.Logger
 	securityLogger rpc.SecurityLogger
@@ -151,6 +166,8 @@ type serverConfig struct {
 	keepalive   keepalive.ServerParameters
 
 	oidcProvider permauth.OIDCProvider
+
+	conn *sqlx.DB
 }
 
 type emptyLogger struct{}

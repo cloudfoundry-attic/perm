@@ -15,7 +15,7 @@ var _ = Describe("Server", func() {
 	)
 
 	BeforeEach(func() {
-		subject = NewServer(nil)
+		subject = NewServer()
 	})
 
 	Describe("#Serve", func() {

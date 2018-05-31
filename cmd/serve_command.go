@@ -20,7 +20,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
@@ -74,11 +73,15 @@ func (cmd ServeCommand) Execute([]string) error {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	var store api.Store
+	maxConnectionIdle := cmd.MaxConnectionIdle
+	serverOpts := []api.ServerOption{
+		api.WithLogger(logger.Session("grpc-serve")),
+		api.WithSecurityLogger(securityLogger),
+		api.WithTLSConfig(tlsConfig),
+		api.WithMaxConnectionIdle(maxConnectionIdle),
+	}
 
-	if cmd.DB.IsInMemory() {
-		store = rpc.NewInMemoryStore()
-	} else {
+	if !cmd.DB.IsInMemory() {
 		conn, err := cmd.DB.Connect(context.Background(), logger)
 		if err != nil {
 			return err
@@ -96,15 +99,7 @@ func (cmd ServeCommand) Execute([]string) error {
 			return err
 		}
 
-		store = db.NewDataService(conn)
-	}
-
-	maxConnectionIdle := cmd.MaxConnectionIdle
-	serverOpts := []api.ServerOption{
-		api.WithLogger(logger.Session("grpc-serve")),
-		api.WithSecurityLogger(securityLogger),
-		api.WithTLSConfig(tlsConfig),
-		api.WithMaxConnectionIdle(maxConnectionIdle),
+		serverOpts = append(serverOpts, api.WithDBConn(conn))
 	}
 
 	if cmd.RequireAuth {
@@ -132,7 +127,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		serverOpts = append(serverOpts, api.WithOIDCProvider(provider))
 	}
 
-	server := api.NewServer(store, serverOpts...)
+	server := api.NewServer(serverOpts...)
 
 	listenInterface := cmd.Hostname
 	port := cmd.Port

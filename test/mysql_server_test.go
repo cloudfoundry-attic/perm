@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	jose "gopkg.in/square/go-jose.v2"
@@ -132,7 +131,6 @@ func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (
 var _ = Describe("MySQL server", func() {
 	var (
 		conn                *sqlx.DB
-		store               api.Store
 		permServerTLSConfig *tls.Config
 	)
 
@@ -140,8 +138,6 @@ var _ = Describe("MySQL server", func() {
 		var err error
 		conn, err = testMySQLDB.Connect()
 		Expect(err).NotTo(HaveOccurred())
-
-		store = db.NewDataService(conn)
 
 		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
 		Expect(err).NotTo(HaveOccurred())
@@ -220,7 +216,7 @@ var _ = Describe("MySQL server", func() {
 			})
 			oidcProvider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauthServer.URL))
 			Expect(err).NotTo(HaveOccurred())
-			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig), api.WithOIDCProvider(oidcProvider))
+			subject = api.NewServer(api.WithTLSConfig(permServerTLSConfig), api.WithOIDCProvider(oidcProvider), api.WithDBConn(conn))
 
 			listener, err := net.Listen("tcp", "localhost:0")
 			Expect(err).NotTo(HaveOccurred())
@@ -312,7 +308,7 @@ var _ = Describe("MySQL server", func() {
 		)
 
 		BeforeEach(func() {
-			subject = api.NewServer(store, api.WithTLSConfig(permServerTLSConfig))
+			subject = api.NewServer(api.WithTLSConfig(permServerTLSConfig), api.WithDBConn(conn))
 
 			listener, err := net.Listen("tcp", "localhost:0")
 			Expect(err).NotTo(HaveOccurred())

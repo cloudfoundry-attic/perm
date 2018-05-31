@@ -7,7 +7,6 @@ import (
 	"net"
 
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/perm"
 
 	. "github.com/onsi/ginkgo"
@@ -31,9 +30,7 @@ var _ = Describe("Test server", func() {
 			Certificates: []tls.Certificate{cert},
 		}
 
-		store := rpc.NewInMemoryStore()
-
-		subject = api.NewServer(store, api.WithTLSConfig(tlsConfig))
+		subject = api.NewServer(api.WithTLSConfig(tlsConfig))
 
 		// Port 0 should find a random open port
 		listener, err = net.Listen("tcp", "localhost:0")
