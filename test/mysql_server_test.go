@@ -332,22 +332,6 @@ var _ = Describe("MySQL server", func() {
 			Expect(extension[0].Value).To(ContainSubstring("oidc: token is expired"))
 		})
 
-		It("returns an unauthenticated error when the perm.admin scope is missing", func() {
-			signedToken, err := getSignedToken(validPrivateKey, "unknown", validIssuer, time.Now().Unix())
-			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
-			Expect(err).NotTo(HaveOccurred())
-			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
-			Expect(err).To(MatchError("perm: unauthenticated"))
-
-			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			_, logID, logName, extension := fakeSecurityLogger.LogArgsForCall(0)
-			Expect(logID).To(Equal("Auth"))
-			Expect(logName).To(Equal("Auth"))
-			Expect(extension).To(HaveLen(1))
-			Expect(extension[0].Value).To(ContainSubstring("token not issued with the perm.admin scope"))
-		})
-
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
 			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
 			Expect(err).NotTo(HaveOccurred())

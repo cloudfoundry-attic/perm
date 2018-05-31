@@ -45,30 +45,9 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 			return nil, perm.ErrUnauthenticated
 		}
 
-		idToken, err := verifier.Verify(ctx, token[0])
+		_, err = verifier.Verify(ctx, token[0])
 		if err != nil {
 			securityLogger.Log(ctx, "Auth", "Auth", extErr(err.Error()))
-			return nil, perm.ErrUnauthenticated
-		}
-
-		claims := Claims{}
-		err = idToken.Claims(&claims)
-		if err != nil {
-			// This should never occur because Verify would have failed first.
-			securityLogger.Log(ctx, "Auth", "Auth", extErr(err.Error()))
-			return nil, perm.ErrUnauthenticated
-		}
-
-		permAdminScopeFound := false
-		for _, scope := range claims.Scopes {
-			if scope == permAdminScope {
-				permAdminScopeFound = true
-				break
-			}
-		}
-
-		if !permAdminScopeFound {
-			securityLogger.Log(ctx, "Auth", "Auth", extErr("token not issued with the perm.admin scope"))
 			return nil, perm.ErrUnauthenticated
 		}
 
