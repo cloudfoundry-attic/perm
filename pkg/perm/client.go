@@ -41,8 +41,6 @@ func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
 
 	if opts.transportCredentials != nil {
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(opts.transportCredentials))
-	} else if opts.insecure {
-		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	} else {
 		return nil, ErrNoTransportSecurity
 	}
@@ -217,14 +215,7 @@ func WithToken(token string) DialOption {
 	}
 }
 
-func WithInsecure() DialOption {
-	return func(o *options) {
-		o.insecure = true
-	}
-}
-
 type options struct {
 	transportCredentials credentials.TransportCredentials
-	insecure             bool
 	token                string
 }
