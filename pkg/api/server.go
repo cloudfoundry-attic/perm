@@ -61,15 +61,12 @@ func NewServer(store Store, opts ...ServerOption) *Server {
 	}
 
 	unaryMiddleware := grpc_middleware.ChainUnaryServer(unaryServerInterceptors...)
-	streamMiddleware := grpc_middleware.ChainStreamServer(grpc_recovery.StreamServerInterceptor(recoveryOpts...))
 
 	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
-	streamInterceptor := grpc.StreamInterceptor(streamMiddleware)
 
 	serverOpts := []grpc.ServerOption{
 		grpc.KeepaliveParams(config.keepalive),
 		unaryInterceptor,
-		streamInterceptor,
 	}
 
 	if config.credentials != nil {
