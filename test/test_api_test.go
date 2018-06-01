@@ -69,6 +69,10 @@ d7awuT2TT95mId/sDODb2YftWPnH76RBDwl4QhTJJU4=
 -----END RSA PRIVATE KEY-----`
 )
 
+var (
+	validExpiryDate = time.Now().AddDate(50, 0, 0) // 50 years from now
+)
+
 type clientConfig struct {
 	addr      string
 	tlsConfig *tls.Config
@@ -189,7 +193,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("creates the new role when no errors occur during authentication", func() {
-			signedToken, err := getSignedToken(validPrivateKey, validIssuer, time.Now().Unix())
+			signedToken, err := getSignedToken(validPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -216,7 +220,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
-			signedToken, err := getSignedToken(foreignPrivateKey, validIssuer, time.Now().Unix())
+			signedToken, err := getSignedToken(foreignPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -225,7 +229,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a token invalid error when the client's token is expired", func() {
-			expiredToken, err := getSignedToken(foreignPrivateKey, validIssuer, 1527115085)
+			expiry := time.Now().AddDate(0, 0, -1) // 1 hour ago
+			expiredToken, err := getSignedToken(validPrivateKey, validIssuer, expiry)
 			Expect(err).NotTo(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(expiredToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -234,7 +239,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
-			signedToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
+			signedToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", validExpiryDate)
 			Expect(err).NotTo(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -723,7 +728,9 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 	})
 }
 
-func getSignedToken(privateKey, issuer string, issuedAtTimestamp int64) (string, error) {
+func getSignedToken(privateKey, issuer string, expiry time.Time) (string, error) {
+	issuedAt := time.Now().AddDate(-50, 0, 0).Unix() // 50 years ago
+
 	payload := fmt.Sprintf(`
 {
 	"scope": [
@@ -739,7 +746,7 @@ func getSignedToken(privateKey, issuer string, issuedAtTimestamp int64) (string,
 		"foobar",
 		"openid"
 	]
-}`, issuedAtTimestamp, issuedAtTimestamp+600, issuer)
+}`, issuedAt, expiry.Unix(), issuer)
 
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
