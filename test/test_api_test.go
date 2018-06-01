@@ -189,7 +189,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("creates the new role when no errors occur during authentication", func() {
-			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
+			signedToken, err := getSignedToken(validPrivateKey, validIssuer, time.Now().Unix())
 			Expect(err).ToNot(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -216,7 +216,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
-			signedToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, time.Now().Unix())
+			signedToken, err := getSignedToken(foreignPrivateKey, validIssuer, time.Now().Unix())
 			Expect(err).ToNot(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -225,7 +225,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a token invalid error when the client's token is expired", func() {
-			expiredToken, err := getSignedToken(foreignPrivateKey, "perm.admin", validIssuer, 1527115085)
+			expiredToken, err := getSignedToken(foreignPrivateKey, validIssuer, 1527115085)
 			Expect(err).NotTo(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(expiredToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -234,7 +234,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
-			signedToken, err := getSignedToken(validPrivateKey, "perm.admin", "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
+			signedToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", time.Now().Unix())
 			Expect(err).NotTo(HaveOccurred())
 			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
@@ -722,12 +722,12 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 	})
 }
-func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (string, error) {
+
+func getSignedToken(privateKey, issuer string, issuedAtTimestamp int64) (string, error) {
 	payload := fmt.Sprintf(`
 {
 	"scope": [
-		"openid",
-		"%s"
+		"openid"
 	],
 	"iat": %d,
 	"exp": %d,
@@ -739,7 +739,7 @@ func getSignedToken(privateKey, scope, issuer string, issuedAtTimestamp int64) (
 		"foobar",
 		"openid"
 	]
-}`, scope, issuedAtTimestamp, issuedAtTimestamp+600, issuer)
+}`, issuedAtTimestamp, issuedAtTimestamp+600, issuer)
 
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
