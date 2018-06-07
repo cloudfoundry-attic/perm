@@ -15,12 +15,11 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/perm"
-	jose "gopkg.in/square/go-jose.v2"
-
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"
+	jose "gopkg.in/square/go-jose.v2"
 )
 
 const (
@@ -81,6 +80,7 @@ type clientConfig struct {
 func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
 		serverOpts []api.ServerOption
+		clientConf clientConfig
 	)
 
 	BeforeEach(func() {
@@ -94,13 +94,22 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		}
 
 		serverOpts = append(serverOpts, api.WithTLSConfig(permServerTLSConfig))
+
+		rootCAPool := x509.NewCertPool()
+		ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
+		Expect(ok).To(BeTrue())
+
+		clientConf = clientConfig{
+			tlsConfig: &tls.Config{
+				RootCAs: rootCAPool,
+			},
+		}
 	})
 
 	Describe("with authentication", func() {
 		var (
 			subject *api.Server
 
-			config clientConfig
 			client *perm.Client
 
 			oauthServer *httptest.Server
@@ -154,28 +163,16 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				},
 			})
 
-			oidcProvider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauthServer.URL))
+			oidcProvider, err := oidc.NewProvider(oidcContext, validIssuer)
 			Expect(err).NotTo(HaveOccurred())
 
 			serverOpts = append(serverOpts, api.WithOIDCProvider(oidcProvider))
 			subject = api.NewServer(serverOpts...)
 
-			listener, err := net.Listen("tcp", "localhost:0")
+			listener, err := net.Listen("tcp", "localhost:")
 			Expect(err).NotTo(HaveOccurred())
 
-			rootCAPool := x509.NewCertPool()
-			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
-			Expect(ok).To(BeTrue())
-
-			config = clientConfig{
-				addr: listener.Addr().String(),
-				tlsConfig: &tls.Config{
-					RootCAs: rootCAPool,
-				},
-			}
-
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
-			Expect(err).NotTo(HaveOccurred())
+			clientConf.addr = listener.Addr().String()
 
 			go func() {
 				err := subject.Serve(listener)
@@ -195,15 +192,17 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		It("creates the new role when no errors occur during authentication", func() {
 			signedToken, err := getSignedToken(validPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
+
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
+
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
 			var err error
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -213,8 +212,9 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		It("returns a malformed token error when the client's token is malformed", func() {
 			malformedJWTToken := "hello, world"
 			var err error
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(malformedJWTToken))
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(malformedJWTToken))
 			Expect(err).NotTo(HaveOccurred())
+
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 		})
@@ -222,8 +222,10 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
 			signedToken, err := getSignedToken(foreignPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
+
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
+
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 		})
@@ -232,8 +234,10 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			expiry := time.Now().AddDate(0, 0, -1) // 1 hour ago
 			expiredToken, err := getSignedToken(validPrivateKey, validIssuer, expiry)
 			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(expiredToken))
+
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(expiredToken))
 			Expect(err).NotTo(HaveOccurred())
+
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 		})
@@ -241,8 +245,10 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
 			signedToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", validExpiryDate)
 			Expect(err).NotTo(HaveOccurred())
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig), perm.WithToken(signedToken))
+
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
 			Expect(err).NotTo(HaveOccurred())
+
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 		})
@@ -257,21 +263,12 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		BeforeEach(func() {
 			subject = api.NewServer(serverOpts...)
 
-			listener, err := net.Listen("tcp", "localhost:0")
+			listener, err := net.Listen("tcp", "localhost:")
 			Expect(err).NotTo(HaveOccurred())
 
-			rootCAPool := x509.NewCertPool()
-			ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
-			Expect(ok).To(BeTrue())
+			clientConf.addr = listener.Addr().String()
 
-			config := clientConfig{
-				addr: listener.Addr().String(),
-				tlsConfig: &tls.Config{
-					RootCAs: rootCAPool,
-				},
-			}
-
-			client, err = perm.Dial(config.addr, perm.WithTLSConfig(config.tlsConfig))
+			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 
 			go func() {
