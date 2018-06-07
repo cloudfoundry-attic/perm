@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 
 	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -19,14 +20,24 @@ type Client struct {
 }
 
 type perRPCCredentials struct {
-	token string
+	tokenSource oauth2.TokenSource
 }
 
-func (c perRPCCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{"token": c.token}, nil
+func newPerRPCCredentials(tokenSource oauth2.TokenSource) *perRPCCredentials {
+	return &perRPCCredentials{
+		tokenSource: oauth2.ReuseTokenSource(nil, tokenSource),
+	}
 }
 
-func (c perRPCCredentials) RequireTransportSecurity() bool {
+func (c *perRPCCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	token, err := c.tokenSource.Token()
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{"token": token.AccessToken}, nil
+}
+
+func (*perRPCCredentials) RequireTransportSecurity() bool {
 	return true
 }
 
@@ -45,8 +56,8 @@ func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
 		return nil, ErrNoTransportSecurity
 	}
 
-	if opts.token != "" {
-		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(perRPCCredentials{token: opts.token}))
+	if opts.tokenSource != nil {
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(newPerRPCCredentials(opts.tokenSource)))
 	}
 
 	conn, err := grpc.Dial(addr, grpcOpts...)
@@ -209,13 +220,13 @@ func WithTLSConfig(config *tls.Config) DialOption {
 	}
 }
 
-func WithToken(token string) DialOption {
+func WithTokenSource(tokenSource oauth2.TokenSource) DialOption {
 	return func(o *options) {
-		o.token = token
+		o.tokenSource = tokenSource
 	}
 }
 
 type options struct {
 	transportCredentials credentials.TransportCredentials
-	token                string
+	tokenSource          oauth2.TokenSource
 }

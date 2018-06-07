@@ -19,6 +19,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/oauth2"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
@@ -77,6 +78,16 @@ type clientConfig struct {
 	tlsConfig *tls.Config
 }
 
+type testTokenSource struct {
+	token     *oauth2.Token
+	callCount int
+}
+
+func (t *testTokenSource) Token() (*oauth2.Token, error) {
+	t.callCount += 1
+	return t.token, nil
+}
+
 func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
 		serverOpts []api.ServerOption
@@ -106,7 +117,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		}
 	})
 
-	Describe("with authentication", func() {
+	Describe("With Authentication", func() {
 		var (
 			subject *api.Server
 
@@ -190,10 +201,13 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("creates the new role when no errors occur during authentication", func() {
-			signedToken, err := getSignedToken(validPrivateKey, validIssuer, validExpiryDate)
+			validToken, err := getSignedToken(validPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
 
-			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(&testTokenSource{token: validToken}))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -210,9 +224,11 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a malformed token error when the client's token is malformed", func() {
-			malformedJWTToken := "hello, world"
 			var err error
-			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(malformedJWTToken))
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(&testTokenSource{token: &oauth2.Token{AccessToken: "hello, world"}}))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -220,10 +236,13 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
-			signedToken, err := getSignedToken(foreignPrivateKey, validIssuer, validExpiryDate)
+			invalidSignedToken, err := getSignedToken(foreignPrivateKey, validIssuer, validExpiryDate)
 			Expect(err).ToNot(HaveOccurred())
 
-			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(&testTokenSource{token: invalidSignedToken}))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -235,7 +254,10 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			expiredToken, err := getSignedToken(validPrivateKey, validIssuer, expiry)
 			Expect(err).NotTo(HaveOccurred())
 
-			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(expiredToken))
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(&testTokenSource{token: expiredToken}))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
@@ -243,18 +265,56 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
-			signedToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", validExpiryDate)
+			invalidToken, err := getSignedToken(validPrivateKey, "https://uaa.run.pivotal.io:443/oauth/token", validExpiryDate)
 			Expect(err).NotTo(HaveOccurred())
 
-			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig), perm.WithToken(signedToken))
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(&testTokenSource{token: invalidToken}))
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 		})
+
+		It("refreshes the token when it does not have AccessToken and therefore invalid", func() {
+			tokenSource := &testTokenSource{token: &oauth2.Token{}}
+
+			var err error
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(tokenSource))
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(tokenSource.callCount).To(Equal(1))
+
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(tokenSource.callCount).To(Equal(2))
+		})
+
+		It("refreshes the token when it is expired", func() {
+			validToken, err := getSignedToken(validPrivateKey, validIssuer, time.Now().Add(-10*time.Second))
+			Expect(err).ToNot(HaveOccurred())
+			tokenSource := &testTokenSource{token: validToken}
+
+			client, err = perm.Dial(
+				clientConf.addr,
+				perm.WithTLSConfig(clientConf.tlsConfig),
+				perm.WithTokenSource(tokenSource))
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(tokenSource.callCount).To(Equal(1))
+
+			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(tokenSource.callCount).To(Equal(2))
+		})
 	})
 
-	Describe("without authentication", func() {
+	Describe("Without Authentication", func() {
 		var (
 			subject *api.Server
 			client  *perm.Client
@@ -725,7 +785,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 	})
 }
 
-func getSignedToken(privateKey, issuer string, expiry time.Time) (string, error) {
+func getSignedToken(privateKey, issuer string, expiry time.Time) (*oauth2.Token, error) {
 	issuedAt := time.Now().AddDate(-50, 0, 0).Unix() // 50 years ago
 
 	payload := fmt.Sprintf(`
@@ -770,5 +830,8 @@ func getSignedToken(privateKey, issuer string, expiry time.Time) (string, error)
 	err = json.Unmarshal([]byte(serialized), &token)
 	Expect(err).NotTo(HaveOccurred())
 
-	return fmt.Sprintf("%s.%s.%s", token.Protected, token.Payload, token.Signature), nil
+	return &oauth2.Token{
+		AccessToken: fmt.Sprintf("%s.%s.%s", token.Protected, token.Payload, token.Signature),
+		Expiry:      expiry,
+	}, nil
 }
