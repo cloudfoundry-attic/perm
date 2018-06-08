@@ -36,6 +36,7 @@ For more information see:
 
 ## <a name="pkg-index">Index</a>
 * [Constants](#pkg-constants)
+* [func ClientAddContextTags(ctx context.Context, tags opentracing.Tags) context.Context](#ClientAddContextTags)
 * [func StreamClientInterceptor(opts ...Option) grpc.StreamClientInterceptor](#StreamClientInterceptor)
 * [func StreamServerInterceptor(opts ...Option) grpc.StreamServerInterceptor](#StreamServerInterceptor)
 * [func UnaryClientInterceptor(opts ...Option) grpc.UnaryClientInterceptor](#UnaryClientInterceptor)
@@ -56,11 +57,19 @@ const (
 )
 ```
 
+## <a name="ClientAddContextTags">func</a> [ClientAddContextTags](./client_interceptors.go#L105)
+``` go
+func ClientAddContextTags(ctx context.Context, tags opentracing.Tags) context.Context
+```
+ClientAddContextTags returns a context with specified opentracing tags, which
+are used by UnaryClientInterceptor/StreamClientInterceptor when creating a
+new span.
+
 ## <a name="StreamClientInterceptor">func</a> [StreamClientInterceptor](./client_interceptors.go#L35)
 ``` go
 func StreamClientInterceptor(opts ...Option) grpc.StreamClientInterceptor
 ```
-StreamClientInterceptor returns a new streaming server interceptor for OpenTracing.
+StreamClientInterceptor returns a new streaming client interceptor for OpenTracing.
 
 ## <a name="StreamServerInterceptor">func</a> [StreamServerInterceptor](./server_interceptors.go#L37)
 ``` go
@@ -72,7 +81,7 @@ StreamServerInterceptor returns a new streaming server interceptor for OpenTraci
 ``` go
 func UnaryClientInterceptor(opts ...Option) grpc.UnaryClientInterceptor
 ```
-UnaryClientInterceptor returns a new unary server interceptor for OpenTracing.
+UnaryClientInterceptor returns a new unary client interceptor for OpenTracing.
 
 ## <a name="UnaryServerInterceptor">func</a> [UnaryServerInterceptor](./server_interceptors.go#L23)
 ``` go

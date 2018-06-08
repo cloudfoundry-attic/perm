@@ -499,6 +499,34 @@ func TestString(t *testing.T) {
 	})
 }
 
+func TestRawBytes(t *testing.T) {
+	runTests(t, dsn, func(dbt *DBTest) {
+		v1 := []byte("aaa")
+		v2 := []byte("bbb")
+		rows := dbt.mustQuery("SELECT ?, ?", v1, v2)
+		if rows.Next() {
+			var o1, o2 sql.RawBytes
+			if err := rows.Scan(&o1, &o2); err != nil {
+				dbt.Errorf("Got error: %v", err)
+			}
+			if !bytes.Equal(v1, o1) {
+				dbt.Errorf("expected %v, got %v", v1, o1)
+			}
+			if !bytes.Equal(v2, o2) {
+				dbt.Errorf("expected %v, got %v", v2, o2)
+			}
+			// https://github.com/go-sql-driver/mysql/issues/765
+			// Appending to RawBytes shouldn't overwrite next RawBytes.
+			o1 = append(o1, "xyzzy"...)
+			if !bytes.Equal(v2, o2) {
+				dbt.Errorf("expected %v, got %v", v2, o2)
+			}
+		} else {
+			dbt.Errorf("no data")
+		}
+	})
+}
+
 type testValuer struct {
 	value string
 }
@@ -1814,7 +1842,7 @@ func TestSQLInjection(t *testing.T) {
 
 	dsns := []string{
 		dsn,
-		dsn + "&sql_mode='NO_BACKSLASH_ESCAPES,NO_AUTO_CREATE_USER'",
+		dsn + "&sql_mode='NO_BACKSLASH_ESCAPES'",
 	}
 	for _, testdsn := range dsns {
 		runTests(t, testdsn, createTest("1 OR 1=1"))
@@ -1844,7 +1872,7 @@ func TestInsertRetrieveEscapedData(t *testing.T) {
 
 	dsns := []string{
 		dsn,
-		dsn + "&sql_mode='NO_BACKSLASH_ESCAPES,NO_AUTO_CREATE_USER'",
+		dsn + "&sql_mode='NO_BACKSLASH_ESCAPES'",
 	}
 	for _, testdsn := range dsns {
 		runTests(t, testdsn, testData)
@@ -2017,4 +2045,31 @@ func TestPing(t *testing.T) {
 			dbt.fail("Ping", "Ping", err)
 		}
 	})
+}
+
+// See Issue #799
+func TestEmptyPassword(t *testing.T) {
+	if !available {
+		t.Skipf("MySQL server not running on %s", netAddr)
+	}
+
+	dsn := fmt.Sprintf("%s:%s@%s/%s?timeout=30s", user, "", netAddr, dbname)
+	db, err := sql.Open("mysql", dsn)
+	if err == nil {
+		defer db.Close()
+		err = db.Ping()
+	}
+
+	if pass == "" {
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	} else {
+		if err == nil {
+			t.Fatal("expected authentication error")
+		}
+		if !strings.HasPrefix(err.Error(), "Error 1045") {
+			t.Fatal(err.Error())
+		}
+	}
 }
