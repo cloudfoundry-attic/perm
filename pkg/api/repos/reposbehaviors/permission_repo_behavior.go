@@ -301,5 +301,134 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resourcePatterns).To(BeEmpty())
 		})
+
+		Context("when providing groups", func() {
+			var (
+				actor                                                  perm.Actor
+				groups                                                 []perm.Group
+				action                                                 string
+				role1Name, role2Name, role3Name                        string
+				resourcePattern1, resourcePattern2, resourcePattern3   string
+				permission1, permission2, permission3, otherPermission *perm.Permission
+			)
+
+			BeforeEach(func() {
+				actor = perm.Actor{
+					ID:        uuid.NewV4().String(),
+					Namespace: uuid.NewV4().String(),
+				}
+				groups = []perm.Group{
+					{ID: uuid.NewV4().String()},
+					{ID: uuid.NewV4().String()},
+				}
+				action = uuid.NewV4().String()
+
+				role1Name = uuid.NewV4().String()
+				role2Name = uuid.NewV4().String()
+				role3Name = uuid.NewV4().String()
+
+				resourcePattern1 = uuid.NewV4().String()
+				resourcePattern2 = uuid.NewV4().String()
+				resourcePattern3 = uuid.NewV4().String()
+
+				permission1 = &perm.Permission{
+					Action:          action,
+					ResourcePattern: resourcePattern1,
+				}
+				permission2 = &perm.Permission{
+					Action:          action,
+					ResourcePattern: resourcePattern2,
+				}
+				permission3 = &perm.Permission{
+					Action:          action,
+					ResourcePattern: resourcePattern3,
+				}
+				otherPermission = &perm.Permission{
+					Action:          "action-that-should-not-appear",
+					ResourcePattern: "some-resource-pattern",
+				}
+			})
+
+			Context("when both the actor and groups have assigned permissions", func() {
+				It("returns a list of all permissions", func() {
+					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRole(ctx, logger, role1Name, actor.ID, actor.Namespace)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = roleRepo.CreateRole(ctx, logger, role2Name, permission2)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(ctx, logger, role2Name, groups[0].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = roleRepo.CreateRole(ctx, logger, role3Name, permission3)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(ctx, logger, role3Name, groups[1].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					query := repos.ListResourcePatternsQuery{
+						Actor:  actor,
+						Action: action,
+						Groups: groups,
+					}
+
+					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resourcePatterns).NotTo(BeNil())
+					Expect(resourcePatterns).To(HaveLen(3))
+					Expect(resourcePatterns).To(ConsistOf(resourcePattern1, resourcePattern2, resourcePattern3))
+				})
+			})
+
+			Context("when the groups provided specify permissions for different actions", func() {
+				It("does not list out the permissions for those different actions", func() {
+					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(ctx, logger, role1Name, groups[0].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = roleRepo.CreateRole(ctx, logger, role2Name, otherPermission)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(ctx, logger, role2Name, groups[1].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					query := repos.ListResourcePatternsQuery{
+						Actor:  actor,
+						Action: action,
+						Groups: groups,
+					}
+
+					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resourcePatterns).NotTo(BeNil())
+					Expect(resourcePatterns).To(HaveLen(1))
+					Expect(resourcePatterns).To(ConsistOf(resourcePattern1))
+				})
+			})
+
+			Context("when there are no actor roles", func() {
+				It("still returns the group's roles", func() {
+					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1, permission2)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(ctx, logger, role1Name, groups[0].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					query := repos.ListResourcePatternsQuery{
+						Actor:  actor,
+						Action: action,
+						Groups: groups,
+					}
+
+					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resourcePatterns).NotTo(BeNil())
+					Expect(resourcePatterns).To(HaveLen(2))
+					Expect(resourcePatterns).To(ConsistOf(resourcePattern1, resourcePattern2))
+				})
+			})
+		})
 	})
 }

@@ -32,6 +32,7 @@ message ListResourcePatternsRequest {
 
   Actor actor = 2;
   string action = 3;
+  repeated Group groups = 4;
 }
 
 message ListResourcePatternsResponse {

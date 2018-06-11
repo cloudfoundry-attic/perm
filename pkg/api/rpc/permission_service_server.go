@@ -101,12 +101,24 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 		ID:        pActor.GetID(),
 		Namespace: pActor.GetNamespace(),
 	}
+
+	pGroups := req.GetGroups()
+	groups := []perm.Group{}
+	for _, pGroup := range pGroups {
+		groups = append(groups, perm.Group{ID: pGroup.GetID()})
+	}
+
 	action := req.GetAction()
 
+	groupsStr := ""
+	for _, g := range groups {
+		groupsStr = groupsStr + ", " + g.ID
+	}
 	logger := s.logger.Session("list-resource-patterns").
 		WithData(lager.Data{
 			"actor.id":          actor.ID,
 			"actor.namespace":   actor.Namespace,
+			"groups":            groupsStr,
 			"permission.action": action,
 		})
 
@@ -115,6 +127,7 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	query := repos.ListResourcePatternsQuery{
 		Actor:  actor,
 		Action: action,
+		Groups: groups,
 	}
 
 	resourcePatterns, err := s.permissionRepo.ListResourcePatterns(ctx, logger, query)

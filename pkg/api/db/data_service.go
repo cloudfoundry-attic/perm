@@ -769,13 +769,13 @@ func listResourcePatterns(
 	query repos.ListResourcePatternsQuery,
 ) ([]string, error) {
 	action := query.Action
-	namespace := query.Actor.Namespace
-	id := query.Actor.ID
+	actorNamespace := query.Actor.Namespace
+	actorID := query.Actor.ID
 
 	logger = logger.Session("list-resource-patterns").
 		WithData(lager.Data{
-			"assignment.actor_namespace": namespace,
-			"assignment.actor_id":        id,
+			"assignment.actor_namespace": actorNamespace,
+			"assignment.actor_id":        actorID,
 			"permission.action":          action,
 		})
 
@@ -787,8 +787,8 @@ func listResourcePatterns(
 		Join("action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
 			"action.name":                action,
-			"assignment.actor_id":        id,
-			"assignment.actor_namespace": namespace,
+			"assignment.actor_id":        actorID,
+			"assignment.actor_namespace": actorNamespace,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)
@@ -812,6 +812,43 @@ func listResourcePatterns(
 	}
 
 	err = rows.Err()
+	if err != nil {
+		logger.Error(failedToIterateOverRows, err)
+		return nil, err
+	}
+
+	gRows, err := squirrel.Select("permission.resource_pattern").
+		Distinct().
+		From("role").
+		Join("group_assignment ON role.id = group_assignment.role_id").
+		Join("permission ON permission.role_id = role.id").
+		Join("action ON permission.action_id = action.id").
+		Where(squirrel.Eq{
+			"action.name":               action,
+			"group_assignment.group_id": query.Groups.GetIDs(),
+		}).
+		RunWith(conn).
+		QueryContext(ctx)
+
+	if err != nil {
+		logger.Error(failedToListResourcePatterns, err)
+		return nil, err
+	}
+	defer gRows.Close()
+
+	for gRows.Next() {
+		var resourcePattern string
+
+		err = gRows.Scan(&resourcePattern)
+		if err != nil {
+			logger.Error(failedToScanRow, err)
+			return nil, err
+		}
+
+		resourcePatterns = append(resourcePatterns, resourcePattern)
+	}
+
+	err = gRows.Err()
 	if err != nil {
 		logger.Error(failedToIterateOverRows, err)
 		return nil, err

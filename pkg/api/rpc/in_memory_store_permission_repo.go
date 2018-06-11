@@ -70,8 +70,16 @@ func (s *InMemoryStore) ListResourcePatterns(
 ) ([]string, error) {
 	var resourcePatterns []string
 
-	assignments, ok := s.assignments[query.Actor]
-	if !ok {
+	assignments, _ := s.assignments[query.Actor]
+
+	for _, group := range query.Groups {
+		gAssignment, ok := s.groupAssignments[group]
+		if ok {
+			assignments = append(assignments, gAssignment...)
+		}
+	}
+
+	if len(assignments) == 0 {
 		return resourcePatterns, nil
 	}
 

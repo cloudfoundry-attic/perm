@@ -339,6 +339,84 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(res).To(BeNil())
 			Expect(err).To(MatchError(expectedErr))
 		})
-	})
 
+		Context("when there are groups provided to the request", func() {
+			var (
+				actor                                 *protos.Actor
+				groups                                []*protos.Group
+				role1Name, role2Name                  string
+				action1, action2                      string
+				resource1, resource2, resource3       string
+				permission1, permission2, permission3 *protos.Permission
+			)
+
+			BeforeEach(func() {
+				actor = &protos.Actor{ID: "actor", Namespace: "namespace"}
+				role1Name = "role1"
+				role2Name = "role2"
+
+				action1 = "some-action"
+				action2 = "some-other-action"
+
+				resource1 = "some-resource-1"
+				resource2 = "some-resource-2"
+				resource3 = "some-resource-3"
+
+				permission1 = &protos.Permission{
+					Action:          action1,
+					ResourcePattern: resource1,
+				}
+				permission2 = &protos.Permission{
+					Action:          action2,
+					ResourcePattern: resource2,
+				}
+				permission3 = &protos.Permission{
+					Action:          action2,
+					ResourcePattern: resource3,
+				}
+			})
+
+			It("returns a list of resource patterns from both actor and groups for the action", func() {
+				_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+					Name: role1Name,
+					Permissions: []*protos.Permission{
+						permission1,
+						permission2,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = roleServiceServer.AssignRole(ctx, &protos.AssignRoleRequest{
+					Actor:    actor,
+					RoleName: role1Name,
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
+					Name: role2Name,
+					Permissions: []*protos.Permission{
+						permission3,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				group := protos.Group{ID: "some-group-id"}
+				groups = append(groups, &group)
+				_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
+					Group:    &group,
+					RoleName: role2Name,
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				res, err := subject.ListResourcePatterns(ctx, &protos.ListResourcePatternsRequest{
+					Actor:  actor,
+					Action: action2,
+					Groups: groups,
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res.ResourcePatterns).To(HaveLen(2))
+				Expect(res.ResourcePatterns).To(ConsistOf(resource2, resource3))
+			})
+		})
+	})
 })
