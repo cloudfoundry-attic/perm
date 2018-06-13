@@ -27,6 +27,14 @@ func BehavesLikeAPermissionRepo(
 		logger *lagertest.TestLogger
 
 		cancelFunc context.CancelFunc
+
+		roleName                                             string
+		groups                                               []perm.Group
+		sameAction                                           string
+		resourcePattern1, resourcePattern2, resourcePattern3 string
+
+		actor                    perm.Actor
+		permission1, permission2 *perm.Permission
 	)
 
 	BeforeEach(func() {
@@ -36,6 +44,23 @@ func BehavesLikeAPermissionRepo(
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
+
+		roleName = uuid.NewV4().String()
+		sameAction = "some-action"
+		resourcePattern1 = "resource-pattern-1"
+		resourcePattern2 = "resource-pattern-2"
+		resourcePattern3 = "resource-pattern-3"
+
+		permission1 = &perm.Permission{Action: sameAction, ResourcePattern: resourcePattern1}
+		permission2 = &perm.Permission{Action: sameAction, ResourcePattern: resourcePattern2}
+		actor = perm.Actor{
+			ID:        uuid.NewV4().String(),
+			Namespace: uuid.NewV4().String(),
+		}
+		groups = []perm.Group{
+			{ID: uuid.NewV4().String()},
+			{ID: uuid.NewV4().String()},
+		}
 	})
 
 	AfterEach(func() {
@@ -44,17 +69,7 @@ func BehavesLikeAPermissionRepo(
 
 	Describe("#HasPermission", func() {
 		It("returns true if they have been assigned to a role that has the permission", func() {
-			roleName := uuid.NewV4().String()
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			permission := perm.Permission{
-				Action:          "some-action",
-				ResourcePattern: "some-resource",
-			}
-
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
@@ -62,8 +77,8 @@ func BehavesLikeAPermissionRepo(
 
 			query := repos.HasPermissionQuery{
 				Actor:           actor,
-				Action:          permission.Action,
-				ResourcePattern: permission.ResourcePattern,
+				Action:          permission1.Action,
+				ResourcePattern: permission1.ResourcePattern,
 			}
 
 			yes, err := subject.HasPermission(ctx, logger, query)
@@ -73,23 +88,13 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			roleName := uuid.NewV4().String()
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			permission := perm.Permission{
-				Action:          "some-action",
-				ResourcePattern: "some-resource",
-			}
-
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{
 				Actor:           actor,
-				Action:          permission.Action,
-				ResourcePattern: permission.ResourcePattern,
+				Action:          permission1.Action,
+				ResourcePattern: permission1.ResourcePattern,
 			}
 			yes, err := subject.HasPermission(ctx, logger, query)
 
@@ -98,24 +103,13 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("return false if the actor does not exist", func() {
-			roleName := uuid.NewV4().String()
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-
 			_, err := roleRepo.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			permission := perm.Permission{
-				Action:          "some-action",
-				ResourcePattern: "some-resource",
-			}
-
 			query := repos.HasPermissionQuery{
 				Actor:           actor,
-				Action:          permission.Action,
-				ResourcePattern: permission.ResourcePattern,
+				Action:          permission1.Action,
+				ResourcePattern: permission1.ResourcePattern,
 			}
 			yes, err := subject.HasPermission(ctx, logger, query)
 
@@ -125,30 +119,17 @@ func BehavesLikeAPermissionRepo(
 
 		Context("when the actor doesn't have permission but groups are supplied", func() {
 			It("returns true if a group is assigned to a role with permission", func() {
-				roleName := uuid.NewV4().String()
-				actor := perm.Actor{
-					ID:        uuid.NewV4().String(),
-					Namespace: uuid.NewV4().String(),
-				}
-				group := perm.Group{
-					ID: uuid.NewV4().String(),
-				}
-				permission := perm.Permission{
-					Action:          "some-action",
-					ResourcePattern: "some-resource",
-				}
-
-				_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+				_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, group.ID)
+				err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
 				Expect(err).NotTo(HaveOccurred())
 
 				query := repos.HasPermissionQuery{
 					Actor:           actor,
-					Action:          permission.Action,
-					ResourcePattern: permission.ResourcePattern,
-					Groups:          []perm.Group{group},
+					Action:          permission1.Action,
+					ResourcePattern: permission1.ResourcePattern,
+					Groups:          groups,
 				}
 
 				yes, err := subject.HasPermission(ctx, logger, query)
@@ -158,27 +139,14 @@ func BehavesLikeAPermissionRepo(
 			})
 
 			It("returns false if the group is not assigned to a role with permission", func() {
-				roleName := uuid.NewV4().String()
-				actor := perm.Actor{
-					ID:        uuid.NewV4().String(),
-					Namespace: uuid.NewV4().String(),
-				}
-				group := perm.Group{
-					ID: uuid.NewV4().String(),
-				}
-				permission := perm.Permission{
-					Action:          "some-action",
-					ResourcePattern: "some-resource",
-				}
-
-				_, err := roleRepo.CreateRole(ctx, logger, roleName, &permission)
+				_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 				Expect(err).NotTo(HaveOccurred())
 
 				query := repos.HasPermissionQuery{
 					Actor:           actor,
-					Action:          permission.Action,
-					ResourcePattern: permission.ResourcePattern,
-					Groups:          []perm.Group{group},
+					Action:          permission1.Action,
+					ResourcePattern: permission1.ResourcePattern,
+					Groups:          groups,
 				}
 				yes, err := subject.HasPermission(ctx, logger, query)
 
@@ -190,26 +158,8 @@ func BehavesLikeAPermissionRepo(
 
 	Describe("#ListResourcePatterns", func() {
 		It("returns the list of resource patterns for which the actor has that permission", func() {
-			roleName := uuid.NewV4().String()
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			action := uuid.NewV4().String()
-			resourcePattern1 := uuid.NewV4().String()
-			resourcePattern2 := uuid.NewV4().String()
-			resourcePattern3 := uuid.NewV4().String()
-
-			permission1 := &perm.Permission{
-				Action:          action,
-				ResourcePattern: resourcePattern1,
-			}
-			permission2 := &perm.Permission{
-				Action:          action,
-				ResourcePattern: resourcePattern2,
-			}
 			permission3 := &perm.Permission{
-				Action:          "another-action",
+				Action:          "different-action",
 				ResourcePattern: resourcePattern3,
 			}
 
@@ -219,17 +169,17 @@ func BehavesLikeAPermissionRepo(
 			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			permission4 := &perm.Permission{
-				Action:          action,
+			permissionForUnassignedRole := &perm.Permission{
+				Action:          sameAction,
 				ResourcePattern: "should-not-have-this-resource-pattern",
 			}
 
-			_, err = roleRepo.CreateRole(ctx, logger, "not-assigned-to-this-role", permission4)
+			_, err = roleRepo.CreateRole(ctx, logger, "not-assigned-to-this-role", permissionForUnassignedRole)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.ListResourcePatternsQuery{
 				Actor:  actor,
-				Action: action,
+				Action: sameAction,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -241,29 +191,16 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("de-dupes the results if the user has access to the same resource pattern through multiple roles/permissions", func() {
-			roleName1 := uuid.NewV4().String()
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			action := uuid.NewV4().String()
-			resourcePattern := uuid.NewV4().String()
-
-			permission1 := &perm.Permission{
-				Action:          action,
-				ResourcePattern: resourcePattern,
-			}
-
-			_, err := roleRepo.CreateRole(ctx, logger, roleName1, permission1)
+			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleRepo.AssignRole(ctx, logger, roleName1, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := uuid.NewV4().String()
 			permission2 := &perm.Permission{
-				Action:          action,
-				ResourcePattern: resourcePattern,
+				Action:          sameAction,
+				ResourcePattern: resourcePattern1,
 			}
 
 			_, err = roleRepo.CreateRole(ctx, logger, roleName2, permission2)
@@ -274,7 +211,7 @@ func BehavesLikeAPermissionRepo(
 
 			query := repos.ListResourcePatternsQuery{
 				Actor:  actor,
-				Action: action,
+				Action: sameAction,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -282,18 +219,13 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resourcePatterns).NotTo(BeNil())
 			Expect(resourcePatterns).To(HaveLen(1))
-			Expect(resourcePatterns).To(ConsistOf(resourcePattern))
+			Expect(resourcePatterns).To(ConsistOf(resourcePattern1))
 		})
 
 		It("returns empty if the actor is not assigned to any roles with that permission", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			action := uuid.NewV4().String()
 			query := repos.ListResourcePatternsQuery{
 				Actor:  actor,
-				Action: action,
+				Action: sameAction,
 			}
 
 			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
@@ -304,71 +236,41 @@ func BehavesLikeAPermissionRepo(
 
 		Context("when providing groups", func() {
 			var (
-				actor                                                  perm.Actor
-				groups                                                 []perm.Group
-				action                                                 string
-				role1Name, role2Name, role3Name                        string
-				resourcePattern1, resourcePattern2, resourcePattern3   string
-				permission1, permission2, permission3, otherPermission *perm.Permission
+				otherPermission *perm.Permission
+				otherRoleName   string
 			)
 
 			BeforeEach(func() {
-				actor = perm.Actor{
-					ID:        uuid.NewV4().String(),
-					Namespace: uuid.NewV4().String(),
-				}
-				groups = []perm.Group{
-					{ID: uuid.NewV4().String()},
-					{ID: uuid.NewV4().String()},
-				}
-				action = uuid.NewV4().String()
-
-				role1Name = uuid.NewV4().String()
-				role2Name = uuid.NewV4().String()
-				role3Name = uuid.NewV4().String()
-
-				resourcePattern1 = uuid.NewV4().String()
-				resourcePattern2 = uuid.NewV4().String()
-				resourcePattern3 = uuid.NewV4().String()
-
-				permission1 = &perm.Permission{
-					Action:          action,
-					ResourcePattern: resourcePattern1,
-				}
-				permission2 = &perm.Permission{
-					Action:          action,
-					ResourcePattern: resourcePattern2,
-				}
-				permission3 = &perm.Permission{
-					Action:          action,
-					ResourcePattern: resourcePattern3,
-				}
+				otherRoleName = "other-role"
 				otherPermission = &perm.Permission{
 					Action:          "action-that-should-not-appear",
-					ResourcePattern: "some-resource-pattern",
+					ResourcePattern: "other-resource-pattern",
 				}
 			})
-
 			Context("when both the actor and groups have assigned permissions", func() {
 				It("returns a list of all permissions", func() {
-					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1)
+					permission3 := &perm.Permission{
+						Action:          sameAction,
+						ResourcePattern: resourcePattern3,
+					}
+					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRole(ctx, logger, role1Name, actor.ID, actor.Namespace)
+					err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = roleRepo.CreateRole(ctx, logger, role2Name, permission2)
+					_, err = roleRepo.CreateRole(ctx, logger, otherRoleName, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, role2Name, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(ctx, logger, otherRoleName, groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = roleRepo.CreateRole(ctx, logger, role3Name, permission3)
+					_, err = roleRepo.CreateRole(ctx, logger, "some-other-role-name", permission3)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, role3Name, groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(ctx, logger, "some-other-role-name", groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
 						Actor:  actor,
-						Action: action,
+						Action: sameAction,
 						Groups: groups,
 					}
 
@@ -383,19 +285,19 @@ func BehavesLikeAPermissionRepo(
 
 			Context("when the groups provided specify permissions for different actions", func() {
 				It("does not list out the permissions for those different actions", func() {
-					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1)
+					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, role1Name, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = roleRepo.CreateRole(ctx, logger, role2Name, otherPermission)
+					_, err = roleRepo.CreateRole(ctx, logger, otherRoleName, otherPermission)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, role2Name, groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(ctx, logger, otherRoleName, groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
 						Actor:  actor,
-						Action: action,
+						Action: sameAction,
 						Groups: groups,
 					}
 
@@ -410,14 +312,14 @@ func BehavesLikeAPermissionRepo(
 
 			Context("when there are no actor roles", func() {
 				It("still returns the group's roles", func() {
-					_, err := roleRepo.CreateRole(ctx, logger, role1Name, permission1, permission2)
+					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, role1Name, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
 						Actor:  actor,
-						Action: action,
+						Action: sameAction,
 						Groups: groups,
 					}
 

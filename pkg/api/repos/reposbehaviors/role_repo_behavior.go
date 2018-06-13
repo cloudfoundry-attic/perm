@@ -21,6 +21,15 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		logger *lagertest.TestLogger
 
 		cancelFunc context.CancelFunc
+
+		name      string
+		roleName  string
+		actorID   string
+		namespace string
+		group     perm.Group
+
+		actor                    perm.Actor
+		permission1, permission2 *perm.Permission
 	)
 
 	BeforeEach(func() {
@@ -28,6 +37,19 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagertest.NewTestLogger("perm-test")
+
+		name = uuid.NewV4().String()
+		roleName = uuid.NewV4().String()
+		actorID = uuid.NewV4().String()
+		namespace = uuid.NewV4().String()
+
+		permission1 = &perm.Permission{Action: "permission-1", ResourcePattern: "resource-pattern-1"}
+		permission2 = &perm.Permission{Action: "permission-2", ResourcePattern: "resource-pattern-2"}
+		actor = perm.Actor{
+			ID:        uuid.NewV4().String(),
+			Namespace: uuid.NewV4().String(),
+		}
+		group = perm.Group{ID: uuid.NewV4().String()}
 	})
 
 	AfterEach(func() {
@@ -36,8 +58,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 	Describe("#CreateRole", func() {
 		It("saves the role", func() {
-			name := uuid.NewV4().String()
-
 			role, err := subject.CreateRole(ctx, logger, name)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -47,8 +67,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if a role with the name already exists", func() {
-			name := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, name)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -59,9 +77,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
-			name := uuid.NewV4().String()
-
-			permission := &perm.Permission{"a", "b"}
+			permission := &perm.Permission{Action: "a", ResourcePattern: "b"}
 			_, err := subject.CreateRole(ctx, logger, name, permission)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -79,8 +95,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			name := uuid.NewV4().String()
-
 			err := subject.DeleteRole(ctx, logger, name)
 
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
@@ -89,10 +103,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 	Describe("#ListRolePermissions", func() {
 		It("returns a list of all permissions that the role has been created with", func() {
-			roleName := uuid.NewV4().String()
-
-			permission1 := &perm.Permission{Action: "permission-1", ResourcePattern: "resource-pattern-1"}
-			permission2 := &perm.Permission{Action: "permission-2", ResourcePattern: "resource-pattern-2"}
 			_, err := subject.CreateRole(ctx, logger, roleName, permission1, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -119,12 +129,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 	Describe("#AssignRole", func() {
 		It("saves the role assignment, saving the actor if it does not exist", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -143,12 +147,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role assignment already exists", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -161,22 +159,13 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			id := uuid.NewV4().String()
-			namespace := uuid.NewV4().String()
-			roleName := uuid.NewV4().String()
-
-			err := subject.AssignRole(ctx, logger, roleName, id, namespace)
+			err := subject.AssignRole(ctx, logger, roleName, actorID, namespace)
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
 		})
 	})
 
 	Describe("#AssignRoleToGroup", func() {
 		It("saves the role assignment, saving the group if it does not exist", func() {
-			group := perm.Group{
-				ID: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -195,11 +184,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role assignment already exists", func() {
-			group := perm.Group{
-				ID: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -212,22 +196,13 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			id := uuid.NewV4().String()
-			roleName := uuid.NewV4().String()
-
-			err := subject.AssignRoleToGroup(ctx, logger, roleName, id)
+			err := subject.AssignRoleToGroup(ctx, logger, roleName, uuid.NewV4().String())
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
 		})
 	})
 
 	Describe("#UnassignRole", func() {
 		It("removes the role assignment", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -248,47 +223,29 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			id := uuid.NewV4().String()
-			namespace := uuid.NewV4().String()
-			roleName := uuid.NewV4().String()
-
-			err := subject.UnassignRole(ctx, logger, roleName, id, namespace)
+			err := subject.UnassignRole(ctx, logger, roleName, actorID, namespace)
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
 		})
 
 		It("fails if the actor does not exist", func() {
-			id := uuid.NewV4().String()
-			namespace := uuid.NewV4().String()
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.UnassignRole(ctx, logger, roleName, id, namespace)
+			err = subject.UnassignRole(ctx, logger, roleName, actorID, namespace)
 			Expect(err).To(MatchError(perm.ErrAssignmentNotFound))
 		})
 
 		It("fails if the role assignment does not exist", func() {
-			id := uuid.NewV4().String()
-			namespace := uuid.NewV4().String()
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.UnassignRole(ctx, logger, roleName, id, namespace)
+			err = subject.UnassignRole(ctx, logger, roleName, actorID, namespace)
 			Expect(err).To(Equal(perm.ErrAssignmentNotFound))
 		})
 	})
 
 	Describe("#HasRole", func() {
 		It("returns true if they have been assigned the role", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -306,12 +263,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -326,12 +277,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("returns false if the actor does not exist", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			_, err := subject.CreateRole(ctx, logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -346,12 +291,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			actor := perm.Actor{
-				ID:        uuid.NewV4().String(),
-				Namespace: uuid.NewV4().String(),
-			}
-			roleName := uuid.NewV4().String()
-
 			query := repos.HasRoleQuery{
 				Actor:    actor,
 				RoleName: roleName,
