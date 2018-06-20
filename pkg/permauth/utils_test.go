@@ -5,7 +5,7 @@ import (
 
 	"net/http"
 
-	"code.cloudfoundry.org/cc-to-perm-migrator/migrator/retriever"
+	"code.cloudfoundry.org/perm/pkg/permauth"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
@@ -33,7 +33,7 @@ var _ = Describe("GetOIDCIssuer", func() {
 				ghttp.RespondWith(200, `{"issuer": "foo"}`),
 			),
 		)
-		issuer, err := retriever.GetOIDCIssuer(http.DefaultClient, tokenURL)
+		issuer, err := permauth.GetOIDCIssuer(http.DefaultClient, tokenURL)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(issuer).To(Equal("foo"))
 	})
@@ -45,7 +45,7 @@ var _ = Describe("GetOIDCIssuer", func() {
 				ghttp.RespondWith(404, `{"error": "not found"}`),
 			),
 		)
-		_, err := retriever.GetOIDCIssuer(http.DefaultClient, tokenURL)
+		_, err := permauth.GetOIDCIssuer(http.DefaultClient, tokenURL)
 		Expect(err).To(MatchError("HTTP bad response: 404 Not Found"))
 	})
 
@@ -56,7 +56,7 @@ var _ = Describe("GetOIDCIssuer", func() {
 				ghttp.RespondWith(200, `{"issuer": "foo....`),
 			),
 		)
-		_, err := retriever.GetOIDCIssuer(http.DefaultClient, tokenURL)
+		_, err := permauth.GetOIDCIssuer(http.DefaultClient, tokenURL)
 		Expect(err).To(MatchError("unexpected EOF"))
 	})
 })
