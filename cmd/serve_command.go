@@ -1,17 +1,19 @@
 package cmd
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
-	"os"
+
 	"strconv"
-	"strings"
+
+	"context"
+
 	"time"
+
+	"io/ioutil"
+	"os"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
@@ -118,13 +120,7 @@ func (cmd ServeCommand) Execute([]string) error {
 				},
 			},
 		})
-
-		oauth2URL, err := removeSchemeSpecificPort(cmd.OAuth2URL)
-		if err != nil {
-			return err
-		}
-
-		provider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", oauth2URL))
+		provider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
 		if err != nil {
 			return err
 		}
@@ -151,23 +147,4 @@ func (cmd ServeCommand) Execute([]string) error {
 	logger.Debug(starting, listeningLogData)
 
 	return server.Serve(lis)
-}
-
-func removeSchemeSpecificPort(urlString string) (string, error) {
-	parsedURL, err := url.Parse(urlString)
-	if err != nil {
-		return "", err
-	}
-
-	parts := strings.Split(parsedURL.Host, ":")
-	if len(parts) != 2 {
-		return urlString, nil
-	}
-
-	if (parsedURL.Scheme == "http" && parts[1] == "80") ||
-		(parsedURL.Scheme == "https" && parts[1] == "443") {
-		parsedURL.Host = parts[0]
-	}
-
-	return parsedURL.String(), nil
 }
