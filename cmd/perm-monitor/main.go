@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"net"
 	"os"
 
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
+	"golang.org/x/oauth2/clientcredentials"
 
 	"code.cloudfoundry.org/lager"
 
@@ -38,6 +40,10 @@ type permOptions struct {
 	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
 	Port          int                    `long:"port" description:"Port used to connect to Perm" required:"true"`
 	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path of Perm's CA certificate"`
+	RequireAuth   bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
+	TokenURL      string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
+	ClientID      string                 `long:"client-id" description:"UAA Client ID used to fetch token (only required if '--require-auth' is provided)"`
+	ClientSecret  string                 `long:"client-secret" description:"UAA Client Secret used to fetch token (only required if '--require-auth' is provided)"`
 }
 
 type statsDOptions struct {
@@ -100,9 +106,24 @@ func main() {
 	}
 
 	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
-	client, err := perm.Dial(addr, perm.WithTLSConfig(&tls.Config{
-		RootCAs: pool,
-	}))
+	var client *perm.Client
+	if !parserOpts.Perm.RequireAuth {
+		client, err = perm.Dial(addr, perm.WithTLSConfig(&tls.Config{
+			RootCAs: pool,
+		}))
+	} else {
+		tsConfig := clientcredentials.Config{
+			ClientID:     parserOpts.Perm.ClientID,
+			ClientSecret: parserOpts.Perm.ClientSecret,
+			TokenURL:     parserOpts.Perm.TokenURL,
+		}
+		tokenSource := tsConfig.TokenSource(context.Background())
+		client, err = perm.Dial(
+			addr,
+			perm.WithTLSConfig(&tls.Config{RootCAs: pool}),
+			perm.WithTokenSource(tokenSource),
+		)
+	}
 	if err != nil {
 		logger.Error(failedToCreatePermClient, err)
 	}
