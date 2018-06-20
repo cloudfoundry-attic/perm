@@ -22,6 +22,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	oidc "github.com/coreos/go-oidc"
 )
@@ -113,14 +114,19 @@ func (cmd ServeCommand) Execute([]string) error {
 			return err
 		}
 
-		oidcContext := oidc.ClientContext(context.Background(), &http.Client{
+		tlsClient := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					RootCAs: oauthCAPool,
 				},
 			},
-		})
-		provider, err := oidc.NewProvider(oidcContext, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
+		}
+		oidcContext := oidc.ClientContext(context.Background(), tlsClient)
+		oidcIssuer, err := permauth.GetOIDCIssuer(tlsClient, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
+		if err != nil {
+			return err
+		}
+		provider, err := oidc.NewProvider(oidcContext, oidcIssuer)
 		if err != nil {
 			return err
 		}
