@@ -26,7 +26,7 @@ var _ = Describe("Client", func() {
 
 			_, err := Dial(server.Addr())
 
-			Expect(err).To(MatchError("perm: no transport security set (use perm.WithTransportCredentials() to set)"))
+			Expect(err).To(MatchError("perm: no transport security set (use perm.WithTLSConfig() to set)"))
 		})
 	})
 
