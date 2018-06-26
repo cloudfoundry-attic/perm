@@ -59,7 +59,7 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	if config.oidcProvider != nil {
-		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider))
+		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider, config.securityLogger))
 	}
 
 	unaryMiddleware := grpc_middleware.ChainUnaryServer(unaryServerInterceptors...)
@@ -77,8 +77,6 @@ func NewServer(opts ...ServerOption) *Server {
 
 	server := grpc.NewServer(serverOpts...)
 
-	securityLogger := config.securityLogger
-
 	var s store
 	if config.conn == nil {
 		s = rpc.NewInMemoryStore()
@@ -86,10 +84,10 @@ func NewServer(opts ...ServerOption) *Server {
 		s = db.NewDataService(config.conn)
 	}
 
-	roleServiceServer := rpc.NewRoleServiceServer(logger, securityLogger, s)
+	roleServiceServer := rpc.NewRoleServiceServer(logger, config.securityLogger, s)
 	protos.RegisterRoleServiceServer(server, roleServiceServer)
 
-	permissionServiceServer := rpc.NewPermissionServiceServer(logger, securityLogger, s)
+	permissionServiceServer := rpc.NewPermissionServiceServer(logger, config.securityLogger, s)
 	protos.RegisterPermissionServiceServer(server, permissionServiceServer)
 
 	return &Server{

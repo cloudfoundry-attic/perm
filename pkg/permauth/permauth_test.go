@@ -3,6 +3,7 @@ package permauth_test
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/permauth/permauthfakes"
 	"google.golang.org/grpc"
@@ -14,14 +15,16 @@ import (
 
 var _ = Describe("Auth Server Interceptor", func() {
 	var (
-		interceptor   grpc.UnaryServerInterceptor
-		fakeProvider  *permauthfakes.FakeOIDCProvider
-		sampleHandler func(context.Context, interface{}) (interface{}, error)
+		interceptor        grpc.UnaryServerInterceptor
+		fakeProvider       *permauthfakes.FakeOIDCProvider
+		sampleHandler      func(context.Context, interface{}) (interface{}, error)
+		fakeSecurityLogger *rpcfakes.FakeSecurityLogger
 	)
 
 	BeforeEach(func() {
 		fakeProvider = new(permauthfakes.FakeOIDCProvider)
-		interceptor = permauth.ServerInterceptor(fakeProvider)
+		fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
+		interceptor = permauth.ServerInterceptor(fakeProvider, fakeSecurityLogger)
 		sampleHandler = func(c context.Context, r interface{}) (interface{}, error) { return nil, nil }
 	})
 
