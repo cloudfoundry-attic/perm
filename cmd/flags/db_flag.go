@@ -97,24 +97,24 @@ func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, er
 
 func (flag *DBFlag) validate() error {
 	if flag.Host == "" {
-		return &missingFlagError{flag: "--db-host"}
+		return &missingFlagError{param: "host"}
 	}
 	if flag.Port == 0 {
-		return &missingFlagError{flag: "--db-port"}
+		return &missingFlagError{param: "port"}
 	}
 	if flag.Schema == "" {
-		return &missingFlagError{flag: "--db-schema"}
+		return &missingFlagError{param: "schema"}
 	}
 	if flag.Username == "" {
-		return &missingFlagError{flag: "--db-user"}
+		return &missingFlagError{param: "username"}
 	}
 	return nil
 }
 
 type missingFlagError struct {
-	flag string
+	param string
 }
 
 func (e *missingFlagError) Error() string {
-	return fmt.Sprintf("the required flag `%s' was not specified", e.flag)
+	return fmt.Sprintf("the required %s parameter was not specified; see --help", e.param)
 }

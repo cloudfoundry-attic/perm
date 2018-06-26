@@ -49,28 +49,28 @@ var _ = Describe("DBFlag", func() {
 			flag.Host = ""
 
 			_, err := flag.Connect(ctx, logger)
-			Expect(err).To(MatchError("the required flag `--db-host' was not specified"))
+			Expect(err).To(MatchError("the required host parameter was not specified; see --help"))
 		})
 
 		It("requires a port", func() {
 			flag.Port = 0
 
 			_, err := flag.Connect(ctx, logger)
-			Expect(err).To(MatchError("the required flag `--db-port' was not specified"))
+			Expect(err).To(MatchError("the required port parameter was not specified; see --help"))
 		})
 
 		It("requires a schema", func() {
 			flag.Schema = ""
 
 			_, err := flag.Connect(ctx, logger)
-			Expect(err).To(MatchError("the required flag `--db-schema' was not specified"))
+			Expect(err).To(MatchError("the required schema parameter was not specified; see --help"))
 		})
 
 		It("requires a username", func() {
 			flag.Username = ""
 
 			_, err := flag.Connect(ctx, logger)
-			Expect(err).To(MatchError("the required flag `--db-user' was not specified"))
+			Expect(err).To(MatchError("the required username parameter was not specified; see --help"))
 		})
 	})
 })
