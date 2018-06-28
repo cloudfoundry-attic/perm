@@ -39,7 +39,7 @@ type options struct {
 type permOptions struct {
 	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
 	Port          int                    `long:"port" description:"Port used to connect to Perm" required:"true"`
-	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path of Perm's CA certificate"`
+	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path(s) of Perm's CA certificate (and UAA's CA if --require-auth)"`
 	RequireAuth   bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
 	TokenURL      string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
 	ClientID      string                 `long:"client-id" description:"UAA Client ID used to fetch token (only required if '--require-auth' is provided)"`
