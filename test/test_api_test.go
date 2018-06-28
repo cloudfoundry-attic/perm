@@ -144,7 +144,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 					var expectedVal string
 					var ok bool
 					if expectedVal, ok = extensions[actualExt.Key]; !ok {
-						Fail(fmt.Sprintf("Found unexpected CEF extension %s with value %s", actualExt.Key, actualExt.Value))
+						Fail(fmt.Sprintf("Found unexpected CEF extension '%s' with value '%s'", actualExt.Key, actualExt.Value))
 					}
 					if !strings.HasPrefix(actualExt.Value, expectedVal) {
 						Fail(fmt.Sprintf("Value for extension %s doesn't match. Expected prefix: %s; Actual: %s", actualExt.Key, expectedVal, actualExt.Value))
@@ -242,7 +242,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "authentication succeeded"})
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "authentication succeeded", "subject": "subject_id"})
 		})
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
@@ -844,6 +844,7 @@ func getSignedToken(privateKey, issuer string, expiry time.Time) (*oauth2.Token,
 	"scope": [
 		"openid"
 	],
+	"sub": "subject_id",
 	"iat": %d,
 	"exp": %d,
 	"iss": "%s",

@@ -41,13 +41,17 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 			return nil, perm.ErrUnauthenticated
 		}
 
-		_, err = verifier.Verify(ctx, token[0])
+		idToken, err := verifier.Verify(ctx, token[0])
 		if err != nil {
 			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: err.Error()})
 			return nil, perm.ErrUnauthenticated
 		}
 
-		securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "authentication succeeded"})
+		extensions := []logging.CustomExtension{
+			logging.CustomExtension{Key: "msg", Value: "authentication succeeded"},
+			logging.CustomExtension{Key: "subject", Value: idToken.Subject},
+		}
+		securityLogger.Log(ctx, "Auth", "Auth", extensions...)
 		return handler(ctx, req)
 	}
 }
