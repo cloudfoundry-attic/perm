@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/perm/pkg/api"
+	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
@@ -123,11 +125,38 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			client *perm.Client
 
-			oauthServer *httptest.Server
-			validIssuer string
+			oauthServer        *httptest.Server
+			validIssuer        string
+			fakeSecurityLogger *rpcfakes.FakeSecurityLogger
+			expectSecurityLog  func(logID, logName string, extensions map[string]string)
 		)
 
 		BeforeEach(func() {
+			fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
+
+			logLineID := 0
+			expectSecurityLog = func(logID, logName string, extensions map[string]string) {
+				_, actualLogID, actualLogName, actualExtensions := fakeSecurityLogger.LogArgsForCall(logLineID)
+				Expect(logID).To(Equal(actualLogID))
+				Expect(logName).To(Equal(actualLogName))
+
+				for _, actualExt := range actualExtensions {
+					var expectedVal string
+					var ok bool
+					if expectedVal, ok = extensions[actualExt.Key]; !ok {
+						Fail(fmt.Sprintf("Found unexpected CEF extension %s with value %s", actualExt.Key, actualExt.Value))
+					}
+					if !strings.HasPrefix(actualExt.Value, expectedVal) {
+						Fail(fmt.Sprintf("Value for extension %s doesn't match. Expected prefix: %s; Actual: %s", actualExt.Key, expectedVal, actualExt.Value))
+					}
+				}
+				if len(extensions) != len(actualExtensions) {
+					failureMsg := fmt.Sprintf("Expected %d extensions, but got %d", len(extensions), len(actualExtensions))
+					Fail(failureMsg)
+				}
+
+				logLineID++
+			}
 			oauthServer = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				switch req.URL.Path {
@@ -178,6 +207,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			Expect(err).NotTo(HaveOccurred())
 
 			serverOpts = append(serverOpts, api.WithOIDCProvider(oidcProvider))
+			serverOpts = append(serverOpts, api.WithSecurityLogger(fakeSecurityLogger))
 			subject = api.NewServer(serverOpts...)
 
 			listener, err := net.Listen("tcp", "localhost:")
@@ -212,6 +242,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "authentication succeeded"})
 		})
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
@@ -221,6 +252,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "no token"})
 		})
 
 		It("returns a malformed token error when the client's token is malformed", func() {
@@ -233,6 +266,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
@@ -247,6 +282,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "failed to verify signature: failed to verify id token signature"})
 		})
 
 		It("returns a token invalid error when the client's token is expired", func() {
@@ -262,6 +299,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
@@ -276,6 +315,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: id token issued by a different provider"})
 		})
 
 		It("refreshes the token when it does not have AccessToken and therefore invalid", func() {
@@ -293,6 +334,11 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(tokenSource.callCount).To(Equal(2))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(2))
+			// TODO: should the second message be a success?
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
 		})
 
 		It("refreshes the token when it is expired", func() {
@@ -311,6 +357,11 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(tokenSource.callCount).To(Equal(2))
+
+			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(2))
+			// TODO: should the second message be a success?
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
+			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
 		})
 	})
 

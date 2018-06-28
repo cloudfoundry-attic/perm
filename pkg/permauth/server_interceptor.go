@@ -3,6 +3,7 @@ package permauth
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
@@ -30,19 +31,23 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
+			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "no metadata"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		token, ok := md["token"]
 		if !ok {
+			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "no token"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		_, err = verifier.Verify(ctx, token[0])
 		if err != nil {
+			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: err.Error()})
 			return nil, perm.ErrUnauthenticated
 		}
 
+		securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "authentication succeeded"})
 		return handler(ctx, req)
 	}
 }
