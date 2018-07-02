@@ -16,7 +16,9 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
+	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
+	"code.cloudfoundry.org/perm/pkg/permstats"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -92,12 +94,14 @@ func (t *testTokenSource) Token() (*oauth2.Token, error) {
 
 func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
-		serverOpts []api.ServerOption
-		clientConf clientConfig
+		serverOpts  []api.ServerOption
+		clientConf  clientConfig
+		fakeStatter *monitorfakes.FakePermStatter
 	)
 
 	BeforeEach(func() {
 		serverOpts = serverOptsFactory()
+		fakeStatter = new(monitorfakes.FakePermStatter)
 
 		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
 		Expect(err).NotTo(HaveOccurred())
@@ -106,7 +110,11 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			Certificates: []tls.Certificate{permServerCert},
 		}
 
-		serverOpts = append(serverOpts, api.WithTLSConfig(permServerTLSConfig))
+		serverOpts = append(
+			serverOpts,
+			api.WithTLSConfig(permServerTLSConfig),
+			api.WithStats(permstats.NewHandler(fakeStatter)),
+		)
 
 		rootCAPool := x509.NewCertPool()
 		ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
@@ -831,6 +839,59 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(resourcePatterns).To(BeEmpty())
+			})
+		})
+
+		Describe("Statter", func() {
+			var permission perm.Permission
+
+			BeforeEach(func() {
+				permission = perm.Permission{
+					Action:          uuid.NewV4().String(),
+					ResourcePattern: uuid.NewV4().String(),
+				}
+				_, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("records request count", func() {
+				Expect(fakeStatter.IncCallCount()).To(Equal(1))
+				methodName, increment, rate := fakeStatter.IncArgsForCall(0)
+				Expect(methodName).To(Equal("count.CreateRole"))
+				Expect(increment).To(Equal(int64(1)))
+				Expect(rate).To(Equal(float32(1)))
+			})
+
+			It("records the time taken to serve the rpc call", func() {
+				Expect(fakeStatter.TimingDurationCallCount()).To(Equal(1))
+				methodName, duration, rate := fakeStatter.TimingDurationArgsForCall(0)
+				Expect(methodName).To(Equal("rpcduration.CreateRole"))
+				Expect(duration).To(BeNumerically(">", 0))
+				Expect(rate).To(Equal(float32(1)))
+			})
+
+			It("records request size", func() {
+				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				methodName, size, rate := fakeStatter.RawArgsForCall(0)
+				Expect(methodName).To(Equal("requestsize.CreateRole"))
+				Expect(size).To(Equal("116")) //This is the length of Create Role request
+				Expect(rate).To(Equal(float32(1)))
+			})
+
+			It("records response size", func() {
+				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				methodName, size, rate := fakeStatter.RawArgsForCall(1)
+				Expect(methodName).To(Equal("responsesize.CreateRole"))
+				Expect(size).To(Equal("40")) //This is the length of Create Role response
+				Expect(rate).To(Equal(float32(1)))
+			})
+
+			It("records success", func() {
+				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				methodName, increment, rate := fakeStatter.RawArgsForCall(2)
+				Expect(methodName).To(Equal("success.CreateRole"))
+				Expect(increment).To(Equal("1"))
+				Expect(rate).To(Equal(float32(1)))
 			})
 		})
 	})
