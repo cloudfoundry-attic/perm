@@ -23,6 +23,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/permauth"
+	"code.cloudfoundry.org/perm/pkg/permstats"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	oidc "github.com/coreos/go-oidc"
 )
@@ -80,6 +81,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		api.WithSecurityLogger(securityLogger),
 		api.WithTLSConfig(tlsConfig),
 		api.WithMaxConnectionIdle(maxConnectionIdle),
+		api.WithStats(&permstats.Handler{}),
 	}
 
 	if !cmd.DB.IsInMemory() {

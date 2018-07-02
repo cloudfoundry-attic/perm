@@ -2,6 +2,7 @@ package perm_test
 
 import (
 	"code.cloudfoundry.org/perm/pkg/api"
+	"code.cloudfoundry.org/perm/pkg/permstats"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 
 	. "github.com/onsi/ginkgo"
@@ -31,6 +32,9 @@ var _ = Describe("MySQL server", func() {
 	})
 
 	testAPI(func() []api.ServerOption {
-		return []api.ServerOption{api.WithDBConn(conn)}
+		return []api.ServerOption{
+			api.WithDBConn(conn),
+			api.WithStats(&permstats.Handler{}),
+		}
 	})
 })

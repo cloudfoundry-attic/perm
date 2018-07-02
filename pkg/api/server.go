@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/lager"
@@ -73,6 +74,10 @@ func NewServer(opts ...ServerOption) *Server {
 
 	if config.credentials != nil {
 		serverOpts = append(serverOpts, grpc.Creds(config.credentials))
+	}
+
+	if config.statsHandler != nil {
+		serverOpts = append(serverOpts, grpc.StatsHandler(config.statsHandler))
 	}
 
 	server := grpc.NewServer(serverOpts...)
@@ -156,12 +161,19 @@ func WithDBConn(conn *sqlx.DB) ServerOption {
 	}
 }
 
+func WithStats(handler stats.Handler) ServerOption {
+	return func(o *serverConfig) {
+		o.statsHandler = handler
+	}
+}
+
 type serverConfig struct {
 	logger         lager.Logger
 	securityLogger rpc.SecurityLogger
 
-	credentials credentials.TransportCredentials
-	keepalive   keepalive.ServerParameters
+	credentials  credentials.TransportCredentials
+	keepalive    keepalive.ServerParameters
+	statsHandler stats.Handler
 
 	oidcProvider permauth.OIDCProvider
 
