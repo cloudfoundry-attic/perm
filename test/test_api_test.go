@@ -843,19 +843,19 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		Describe("Statter", func() {
-			var permission perm.Permission
-
 			BeforeEach(func() {
-				permission = perm.Permission{
+				role := uuid.NewV4().String()
+				permission := perm.Permission{
 					Action:          uuid.NewV4().String(),
 					ResourcePattern: uuid.NewV4().String(),
 				}
-				_, err := client.CreateRole(context.Background(), uuid.NewV4().String(), permission)
+				returnedRole, err := client.CreateRole(context.Background(), role, permission)
+				Expect(returnedRole.Name).To(Equal(role))
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("records request count", func() {
-				Expect(fakeStatter.IncCallCount()).To(Equal(1))
+				Eventually(fakeStatter.IncCallCount()).Should(Equal(1))
 				methodName, increment, rate := fakeStatter.IncArgsForCall(0)
 				Expect(methodName).To(Equal("count.CreateRole"))
 				Expect(increment).To(Equal(int64(1)))
@@ -863,7 +863,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records the time taken to serve the rpc call", func() {
-				Expect(fakeStatter.TimingDurationCallCount()).To(Equal(1))
+				Eventually(fakeStatter.TimingDurationCallCount()).Should(Equal(1))
 				methodName, duration, rate := fakeStatter.TimingDurationArgsForCall(0)
 				Expect(methodName).To(Equal("rpcduration.CreateRole"))
 				Expect(duration).To(BeNumerically(">", 0))
@@ -871,7 +871,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records request size", func() {
-				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				Eventually(fakeStatter.RawCallCount()).Should(Equal(3))
 				methodName, size, rate := fakeStatter.RawArgsForCall(0)
 				Expect(methodName).To(Equal("requestsize.CreateRole"))
 				Expect(size).To(Equal("116")) //This is the length of Create Role request
@@ -879,7 +879,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records response size", func() {
-				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				Eventually(fakeStatter.RawCallCount()).Should(Equal(3))
 				methodName, size, rate := fakeStatter.RawArgsForCall(1)
 				Expect(methodName).To(Equal("responsesize.CreateRole"))
 				Expect(size).To(Equal("40")) //This is the length of Create Role response
@@ -887,7 +887,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records success", func() {
-				Expect(fakeStatter.RawCallCount()).To(Equal(3))
+				Eventually(fakeStatter.RawCallCount()).Should(Equal(3))
 				methodName, increment, rate := fakeStatter.RawArgsForCall(2)
 				Expect(methodName).To(Equal("success.CreateRole"))
 				Expect(increment).To(Equal("1"))
