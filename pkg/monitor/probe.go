@@ -195,20 +195,20 @@ func (p *Probe) Run(
 
 	doneChan := make(chan result)
 	go func() {
-		correct, duration, err := p.runAssignedPermission(ctx, logger, uniqueSuffix)
+		permission, duration, runErr := p.runAssignedPermission(ctx, logger, uniqueSuffix)
 		r := result{}
 		r.Durations = append(r.Durations, duration)
-		if err != nil || !correct {
-			r.Err = err
-			r.Correct = correct
+		if runErr != nil || !permission {
+			r.Err = runErr
+			r.Correct = permission
 			doneChan <- r
 			return
 		}
 
-		correct, duration, err = p.runUnassignedPermission(ctx, logger, uniqueSuffix)
+		permission, duration, runErr = p.runUnassignedPermission(ctx, logger, uniqueSuffix)
 		r.Durations = append(r.Durations, duration)
-		r.Err = err
-		r.Correct = correct
+		r.Err = runErr
+		r.Correct = permission
 		doneChan <- r
 	}()
 

@@ -198,7 +198,7 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := uuid.NewV4().String()
-			permission2 := &perm.Permission{
+			permission2 = &perm.Permission{
 				Action:          sameAction,
 				ResourcePattern: resourcePattern1,
 			}

@@ -1,18 +1,14 @@
 package sqlx_test
 
 import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "code.cloudfoundry.org/perm/pkg/sqlx"
-
-	"database/sql"
-
-	"context"
-
-	"errors"
-
-	"time"
-
 	"github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,7 +22,6 @@ var _ = Describe("#ApplyMigrations", func() {
 
 		fakeConn *sql.DB
 		mock     sqlmock.Sqlmock
-		err      error
 
 		conn *DB
 
@@ -38,6 +33,7 @@ var _ = Describe("#ApplyMigrations", func() {
 
 		fakeLogger = lagertest.NewTestLogger("perm-sqlx")
 
+		var err error
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
@@ -58,8 +54,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -70,8 +65,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		mock.ExpectCommit().WillReturnError(errors.New("commit-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 		Expect(err).To(MatchError("commit-failed"))
 	})
 
@@ -82,8 +76,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback()
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 		Expect(err).To(MatchError("create-table-failed"))
 	})
 
@@ -94,8 +87,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("create-table-failed"))
 		mock.ExpectRollback().WillReturnError(errors.New("rollback-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{})
 		Expect(err).To(MatchError("create-table-failed"))
 	})
 
@@ -141,8 +133,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -180,8 +171,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnResult(sqlmock.NewResult(2, 1))
 		mock.ExpectCommit()
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{migration1, migration2})
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, []Migration{migration1, migration2})
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -216,8 +206,7 @@ var _ = Describe("#ApplyMigrations", func() {
 			WillReturnError(errors.New("migration-failed"))
 		mock.ExpectRollback()
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 		Expect(err).To(MatchError("migration-failed"))
 	})
 
@@ -255,8 +244,7 @@ var _ = Describe("#ApplyMigrations", func() {
 		mock.ExpectCommit().
 			WillReturnError(errors.New("commit-failed"))
 
-		err = ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
-
+		err := ApplyMigrations(ctx, fakeLogger, conn, migrationTableName, migrations)
 		Expect(err).To(MatchError("commit-failed"))
 	})
 })

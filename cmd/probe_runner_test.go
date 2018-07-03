@@ -24,7 +24,6 @@ var _ = Describe("Running the Probes", func() {
 		logger          *lagertest.TestLogger
 		requestDuration time.Duration
 		timeout         time.Duration
-		durations       []time.Duration
 	)
 
 	BeforeEach(func() {
@@ -109,7 +108,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when the setup fails", func() {
 			BeforeEach(func() {
-				probe.SetupReturns(durations, someErr)
+				probe.SetupReturns(nil, someErr)
 			})
 
 			It("returns the error, calling cleanup, but not calling run", func() {
@@ -157,7 +156,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when setup and cleanup fail", func() {
 			BeforeEach(func() {
-				probe.SetupReturns(durations, someErr)
+				probe.SetupReturns(nil, someErr)
 				probe.CleanupReturns([]time.Duration{}, someOtherErr)
 			})
 
@@ -194,7 +193,7 @@ var _ = Describe("Running the Probes", func() {
 		})
 
 		It("reports failed probe when probe's setup fails", func() {
-			probe.SetupReturns(durations, errors.New("error in setup"))
+			probe.SetupReturns(nil, errors.New("error in setup"))
 			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})

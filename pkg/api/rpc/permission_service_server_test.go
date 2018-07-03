@@ -151,13 +151,13 @@ var _ = Describe("PermissionServiceServer", func() {
 		})
 
 		It("fails when the actor namespace is not provided", func() {
-			actor := &protos.Actor{
+			actorWithoutNamespace := &protos.Actor{
 				ID:        "actor",
 				Namespace: "",
 			}
 
 			res, err := subject.HasPermission(ctx, &protos.HasPermissionRequest{
-				Actor:    actor,
+				Actor:    actorWithoutNamespace,
 				Action:   "some-action",
 				Resource: "some-resource",
 			})
@@ -310,7 +310,7 @@ var _ = Describe("PermissionServiceServer", func() {
 
 		It("returns a relevant error if the query fails", func() {
 			permissionRepo := new(reposfakes.FakePermissionRepo)
-			subject := rpc.NewPermissionServiceServer(logger, securityLogger, permissionRepo)
+			subject = rpc.NewPermissionServiceServer(logger, securityLogger, permissionRepo)
 			testErr := errors.New("test-error")
 			permissionRepo.ListResourcePatternsReturns(nil, testErr)
 

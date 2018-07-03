@@ -58,17 +58,17 @@ func (cmd ServeCommand) Execute([]string) error {
 		auditSink = securityLogFile
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		return err
+	hostname, hostErr := os.Hostname()
+	if hostErr != nil {
+		return hostErr
 	}
 
 	securityLogger := logging.NewCEFLogger(auditSink, "cloud_foundry", "perm", version, logging.Hostname(hostname), cmd.Port)
 
-	cert, err := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
-	if err != nil {
-		logger.Error(failedToParseTLSCredentials, err)
-		return err
+	cert, certErr := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
+	if certErr != nil {
+		logger.Error(failedToParseTLSCredentials, certErr)
+		return certErr
 	}
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
