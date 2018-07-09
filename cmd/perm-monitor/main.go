@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"net"
+	"net/http"
 	"os"
 
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
 	"code.cloudfoundry.org/lager"
@@ -108,16 +110,27 @@ func main() {
 	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
 	var client *perm.Client
 	if !parserOpts.Perm.RequireAuth {
-		client, err = perm.Dial(addr, perm.WithTLSConfig(&tls.Config{
-			RootCAs: pool,
-		}))
+		client, err = perm.Dial(
+			addr,
+			perm.WithTLSConfig(&tls.Config{RootCAs: pool}),
+		)
 	} else {
 		tsConfig := clientcredentials.Config{
 			ClientID:     parserOpts.Perm.ClientID,
 			ClientSecret: parserOpts.Perm.ClientSecret,
 			TokenURL:     parserOpts.Perm.TokenURL,
 		}
-		tokenSource := tsConfig.TokenSource(context.Background())
+
+		uaaClient := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: pool,
+				},
+			},
+		}
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &uaaClient)
+
+		tokenSource := tsConfig.TokenSource(ctx)
 		client, err = perm.Dial(
 			addr,
 			perm.WithTLSConfig(&tls.Config{RootCAs: pool}),
