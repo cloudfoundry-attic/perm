@@ -2,10 +2,9 @@ package permstats
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
-	"code.cloudfoundry.org/perm/pkg/monitor"
+	"github.com/cactus/go-statsd-client/statsd"
 	"google.golang.org/grpc/stats"
 )
 
@@ -15,7 +14,7 @@ const (
 )
 
 type Handler struct {
-	statter monitor.PermStatter
+	statter statsd.Statter
 }
 
 func (h *Handler) TagRPC(c context.Context, info *stats.RPCTagInfo) context.Context {
@@ -29,18 +28,18 @@ func (h *Handler) HandleRPC(c context.Context, rpcStats stats.RPCStats) {
 
 	switch s := rpcStats.(type) {
 	case *stats.InHeader:
-		h.statter.Inc("count."+methodName, 1, statsSampleRate)
-	case *stats.InPayload:
-		h.statter.Raw("requestsize."+methodName, strconv.Itoa(s.Length), statsSampleRate)
-	case *stats.OutPayload:
-		h.statter.Raw("responsesize."+methodName, strconv.Itoa(s.Length), statsSampleRate)
+		h.statter.Inc("perm.count."+methodName, 1, statsSampleRate)
 	case *stats.End:
-		h.statter.TimingDuration("rpcduration."+methodName, s.EndTime.Sub(s.BeginTime), statsSampleRate)
-		success := "0"
+		h.statter.TimingDuration("perm.requesttime."+methodName, s.EndTime.Sub(s.BeginTime), statsSampleRate)
+		success := int64(0)
 		if s.Error == nil {
-			success = "1"
+			success = 1
 		}
-		h.statter.Raw("success."+methodName, success, statsSampleRate)
+		h.statter.Inc("perm.success."+methodName, success, statsSampleRate)
+	case *stats.InPayload:
+		h.statter.Inc("perm.requestsize."+methodName, int64(s.Length), statsSampleRate)
+	case *stats.OutPayload:
+		h.statter.Inc("perm.responsesize."+methodName, int64(s.Length), statsSampleRate)
 	}
 }
 
@@ -52,6 +51,6 @@ func (h *Handler) TagConn(c context.Context, info *stats.ConnTagInfo) context.Co
 // Not used, implemented to satisfy the stats.Handler interface
 func (h *Handler) HandleConn(context.Context, stats.ConnStats) {}
 
-func NewHandler(statter monitor.PermStatter) *Handler {
+func NewHandler(statter statsd.Statter) *Handler {
 	return &Handler{statter: statter}
 }
