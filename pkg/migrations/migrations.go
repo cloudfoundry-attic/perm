@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
-var MigrationsTableName = "perm_migrations"
+var TableName = "perm_migrations"
 
 var Migrations = []sqlx.Migration{
 	{

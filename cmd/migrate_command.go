@@ -57,7 +57,7 @@ func (cmd UpCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.ApplyMigrations(ctx, logger, conn, migrations.MigrationsTableName, migrations.Migrations)
+	return sqlx.ApplyMigrations(ctx, logger, conn, migrations.TableName, migrations.Migrations)
 }
 
 func (cmd DownCommand) Execute([]string) error {
@@ -78,7 +78,7 @@ func (cmd DownCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.RollbackMigrations(ctx, logger, conn, migrations.MigrationsTableName, migrations.Migrations, cmd.All)
+	return sqlx.RollbackMigrations(ctx, logger, conn, migrations.TableName, migrations.Migrations, cmd.All)
 }
 
 func (cmd StatusCommand) Execute([]string) error {
@@ -92,7 +92,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, migrations.MigrationsTableName)
+	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, migrations.TableName)
 	if err != nil {
 		return err
 	}

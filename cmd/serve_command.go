@@ -114,7 +114,7 @@ func (cmd ServeCommand) Execute([]string) error {
 			context.Background(),
 			migrationLogger,
 			conn,
-			migrations.MigrationsTableName,
+			migrations.TableName,
 			migrations.Migrations,
 		); err != nil {
 			return err
