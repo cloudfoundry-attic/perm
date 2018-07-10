@@ -18,7 +18,7 @@ type Vendor string
 type Product string
 type Version string
 type Hostname string
-type CEFLogger struct {
+type Logger struct {
 	logger   *ceflog.Logger
 	hostname string
 	destPort int
@@ -26,15 +26,15 @@ type CEFLogger struct {
 
 const CEFTimeFormat = "Jan 2 2006 15:04:05"
 
-func NewCEFLogger(writer io.Writer, vendor Vendor, product Product, version Version, hostname Hostname, destPort int) *CEFLogger {
-	return &CEFLogger{
+func NewLogger(writer io.Writer, vendor Vendor, product Product, version Version, hostname Hostname, destPort int) *Logger {
+	return &Logger{
 		logger:   ceflog.New(writer, string(vendor), string(product), string(version)),
 		hostname: string(hostname),
 		destPort: destPort,
 	}
 }
 
-func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args ...logx.SecurityData) {
+func (l *Logger) Log(ctx context.Context, signature string, name string, args ...logx.SecurityData) {
 	peer, ok := peer.FromContext(ctx)
 
 	var srcAddr net.IP

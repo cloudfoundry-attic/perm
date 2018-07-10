@@ -16,12 +16,12 @@ import (
 )
 
 var _ = Describe("Logging", func() {
-	var securityLogger *CEFLogger
+	var securityLogger *Logger
 	var logOutput *gbytes.Buffer
 	var rt = time.Date(1999, 12, 31, 23, 59, 59, 59, time.UTC)
 	BeforeEach(func() {
 		logOutput = gbytes.NewBuffer()
-		securityLogger = NewCEFLogger(logOutput, "cloud_foundry", "unittest", "0.0.1", "hook", 443)
+		securityLogger = NewLogger(logOutput, "cloud_foundry", "unittest", "0.0.1", "hook", 443)
 	})
 
 	Describe("#Log", func() {

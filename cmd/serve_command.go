@@ -72,7 +72,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		return hostErr
 	}
 
-	securityLogger := cef.NewCEFLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port)
+	securityLogger := cef.NewLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port)
 
 	cert, certErr := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
 	if certErr != nil {
