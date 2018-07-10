@@ -41,7 +41,7 @@ UNIQUE(domain_id_issuer_hash)
 
 var deleteActorsTable = `DROP TABLE actor`
 
-func CreateActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actors-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -62,7 +62,7 @@ func CreateActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) 
 	return err
 }
 
-func CreateActorsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createActorsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actors-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

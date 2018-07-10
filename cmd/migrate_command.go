@@ -10,7 +10,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
-	"code.cloudfoundry.org/perm/pkg/api/db"
+	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
 )
@@ -57,7 +57,7 @@ func (cmd UpCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.ApplyMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations)
+	return sqlx.ApplyMigrations(ctx, logger, conn, migrations.MigrationsTableName, migrations.Migrations)
 }
 
 func (cmd DownCommand) Execute([]string) error {
@@ -78,7 +78,7 @@ func (cmd DownCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.RollbackMigrations(ctx, logger, conn, db.MigrationsTableName, db.Migrations, cmd.All)
+	return sqlx.RollbackMigrations(ctx, logger, conn, migrations.MigrationsTableName, migrations.Migrations, cmd.All)
 }
 
 func (cmd StatusCommand) Execute([]string) error {
@@ -92,7 +92,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, db.MigrationsTableName)
+	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, migrations.MigrationsTableName)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (cmd StatusCommand) Execute([]string) error {
 
 	unappliedMigrationsTable := tablewriter.NewWriter(f)
 	unappliedMigrationsTable.SetHeader([]string{"Version", "Name"})
-	for i, migration := range db.Migrations {
+	for i, migration := range migrations.Migrations {
 		version := i
 
 		appliedMigration, ok := appliedMigrations[version]

@@ -48,7 +48,7 @@ var dropAssignmentTable = `DROP TABLE IF EXISTS assignment`
 
 var dropRoleAssignmentTable = `DROP TABLE IF EXISTS role_assignment`
 
-func CombineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actor-and-role-assignment-tables")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -115,18 +115,18 @@ func CombineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Log
 	return err
 }
 
-func CombineActorAndRoleAssignmentTablesDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func combineActorAndRoleAssignmentTablesDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-actor-and-role-assignment-tables")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 	var err error
 
-	err = CreateActorsTableUp(ctx, logger, tx)
+	err = createActorsTableUp(ctx, logger, tx)
 	if err != nil {
 		return err
 	}
 
-	err = CreateRoleAssignmentsTableUp(ctx, logger, tx)
+	err = createRoleAssignmentsTableUp(ctx, logger, tx)
 	if err != nil {
 		return err
 	}

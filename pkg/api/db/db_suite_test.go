@@ -1,7 +1,7 @@
 package db_test
 
 import (
-	"code.cloudfoundry.org/perm/pkg/api/db"
+	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,7 +20,7 @@ var _ = BeforeSuite(func() {
 	var err error
 
 	testDB = sqlxtest.NewTestMySQLDB()
-	err = testDB.Create(db.Migrations...)
+	err = testDB.Create(migrations.Migrations...)
 	Expect(err).NotTo(HaveOccurred())
 })
 

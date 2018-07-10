@@ -38,7 +38,7 @@ ON DELETE CASCADE
 
 var deletePermissionsTable = `DROP TABLE permission`
 
-func CreatePermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createPermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permissions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -57,7 +57,7 @@ func CreatePermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx
 	return err
 }
 
-func CreatePermissionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createPermissionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permissions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

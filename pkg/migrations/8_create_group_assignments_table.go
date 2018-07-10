@@ -40,7 +40,7 @@ ON DELETE CASCADE
 `
 var dropGroupAssignmentTable = `DROP TABLE IF EXISTS group_assignment`
 
-func CreateGroupAssignmentTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createGroupAssignmentTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-group-assignment-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -63,7 +63,7 @@ func CreateGroupAssignmentTableUp(ctx context.Context, logger lager.Logger, tx *
 	return err
 }
 
-func CreateGroupAssignmentTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createGroupAssignmentTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

@@ -46,7 +46,7 @@ FOREIGN KEY(action_id) REFERENCES action(id)
 ON DELETE CASCADE
 `
 
-func RenamePermissionDefinitionToActionUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func renamePermissionDefinitionToActionUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("rename-permission-definition-to-action")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -90,7 +90,7 @@ RENAME TO
 	permission_definition
 `
 
-func RenamePermissionDefinitionToActionDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func renamePermissionDefinitionToActionDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("rename-action-to-permission-definition")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

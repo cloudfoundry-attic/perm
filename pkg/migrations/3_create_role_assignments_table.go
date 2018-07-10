@@ -43,7 +43,7 @@ ON DELETE CASCADE
 
 var deleteRoleAssignmentsTable = `DROP TABLE role_assignment`
 
-func CreateRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -69,7 +69,7 @@ func CreateRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *
 	return err
 }
 
-func CreateRoleAssignmentsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createRoleAssignmentsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

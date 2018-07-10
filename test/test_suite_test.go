@@ -1,7 +1,7 @@
 package perm_test
 
 import (
-	"code.cloudfoundry.org/perm/pkg/api/db"
+	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,7 +23,7 @@ var _ = BeforeSuite(func() {
 
 	testMySQLDB = sqlxtest.NewTestMySQLDB()
 
-	err = testMySQLDB.Create(db.Migrations...)
+	err = testMySQLDB.Create(migrations.Migrations...)
 	Expect(err).NotTo(HaveOccurred())
 })
 

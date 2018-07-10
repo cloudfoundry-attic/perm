@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS permission_definition
 
 var deletePermissionDefinitionsTable = `DROP TABLE permission_definition`
 
-func CreatePermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createPermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permission-definitions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -28,7 +28,7 @@ func CreatePermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger
 	return err
 }
 
-func CreatePermissionDefinitionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createPermissionDefinitionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-permission-definitions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)

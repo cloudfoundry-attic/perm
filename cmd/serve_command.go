@@ -18,10 +18,10 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/permstats"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
@@ -114,8 +114,8 @@ func (cmd ServeCommand) Execute([]string) error {
 			context.Background(),
 			migrationLogger,
 			conn,
-			db.MigrationsTableName,
-			db.Migrations,
+			migrations.MigrationsTableName,
+			migrations.Migrations,
 		); err != nil {
 			return err
 		}

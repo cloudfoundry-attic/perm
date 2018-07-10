@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS role
 
 var deleteRolesTable = `DROP TABLE role`
 
-func CreateRolesTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createRolesTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-roles-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
@@ -29,7 +29,7 @@ func CreateRolesTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) e
 	return err
 }
 
-func CreateRolesTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
+func createRolesTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
 	logger = logger.Session("create-roles-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
