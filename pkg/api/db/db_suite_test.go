@@ -1,4 +1,4 @@
-package integration_test
+package db_test
 
 import (
 	"code.cloudfoundry.org/perm/pkg/api/db"
@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-func TestIntegration(t *testing.T) {
+func TestDB(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Integration Suite")
+	RunSpecs(t, "DB Suite")
 }
 
 var testDB *sqlxtest.TestMySQLDB
