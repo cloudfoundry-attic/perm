@@ -81,7 +81,7 @@ func createRole(
 
 		return role{
 			ID: roleID,
-			Role: &perm.Role{
+			Role: perm.Role{
 				Name: name,
 			},
 		}, nil
@@ -124,7 +124,7 @@ func findRole(
 	case nil:
 		return role{
 			ID: roleID,
-			Role: &perm.Role{
+			Role: perm.Role{
 				Name: roleName,
 			},
 		}, nil
@@ -538,7 +538,7 @@ func createAction(
 
 		return action{
 			ID: actionID,
-			Action: &perm.Action{
+			Action: perm.Action{
 				Name: name,
 			},
 		}, nil
@@ -581,7 +581,7 @@ func findAction(
 	case nil:
 		return action{
 			ID: actionID,
-			Action: &perm.Action{
+			Action: perm.Action{
 				Name: name,
 			},
 		}, nil
@@ -632,7 +632,7 @@ func findRolePermissions(
 
 		p := permission{
 			ID: permissionID,
-			Permission: &perm.Permission{
+			Permission: perm.Permission{
 				Action:          action,
 				ResourcePattern: resourcePattern,
 			},
@@ -741,7 +741,7 @@ func createPermission(
 
 		return permission{
 			ID: permissionID,
-			Permission: &perm.Permission{
+			Permission: perm.Permission{
 				Action:          action,
 				ResourcePattern: resourcePattern,
 			},

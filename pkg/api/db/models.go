@@ -4,20 +4,20 @@ import "code.cloudfoundry.org/perm/pkg/perm"
 
 type actor struct {
 	ID int64
-	*perm.Actor
+	perm.Actor
 }
 
 type role struct {
 	ID int64
-	*perm.Role
+	perm.Role
 }
 
 type permission struct {
 	ID int64
-	*perm.Permission
+	perm.Permission
 }
 
 type action struct {
 	ID int64
-	*perm.Action
+	perm.Action
 }

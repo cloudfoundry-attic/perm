@@ -35,7 +35,7 @@ func (s *DataService) CreateRole(
 	if err != nil {
 		return
 	}
-	r = r2.Role
+	r = &r2.Role
 
 	return
 }
@@ -60,7 +60,10 @@ func (s *DataService) ListRolePermissions(
 
 	var permissions []*perm.Permission
 	for _, permission := range p {
-		permissions = append(permissions, permission.Permission)
+		permissions = append(permissions, &perm.Permission{
+			Action:          permission.Action,
+			ResourcePattern: permission.ResourcePattern,
+		})
 	}
 
 	return permissions, nil
