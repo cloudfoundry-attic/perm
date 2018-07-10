@@ -6,7 +6,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,7 +50,7 @@ func (s *PermissionServiceServer) HasPermission(
 		})
 	}
 	resourcePattern := req.GetResource()
-	extensions := []cef.CustomExtension{
+	extensions := []logx.SecurityData{
 		{Key: "userID", Value: pActor.GetID()},
 		{Key: "action", Value: action},
 		{Key: "resource", Value: resourcePattern},

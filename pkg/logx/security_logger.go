@@ -2,12 +2,15 @@ package logx
 
 import (
 	"context"
-
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 )
 
 //go:generate counterfeiter . SecurityLogger
 
+type SecurityData struct {
+	Key   string
+	Value string
+}
+
 type SecurityLogger interface {
-	Log(ctx context.Context, signature, name string, args ...cef.CustomExtension)
+	Log(ctx context.Context, signature, name string, args ...SecurityData)
 }

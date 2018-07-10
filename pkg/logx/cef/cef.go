@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"github.com/xoebus/ceflog"
 	"google.golang.org/grpc/peer"
 )
@@ -33,7 +34,7 @@ func NewCEFLogger(writer io.Writer, vendor Vendor, product Product, version Vers
 	}
 }
 
-func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args ...CustomExtension) {
+func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args ...logx.SecurityData) {
 	peer, ok := peer.FromContext(ctx)
 
 	var srcAddr net.IP
@@ -79,9 +80,4 @@ func (l *CEFLogger) Log(ctx context.Context, signature string, name string, args
 		extension = append(extension, ceflog.Pair{Key: "msg", Value: msgBuffer.String()})
 	}
 	l.logger.LogEvent(signature, name, 0, extension)
-}
-
-type CustomExtension struct {
-	Key   string
-	Value string
 }

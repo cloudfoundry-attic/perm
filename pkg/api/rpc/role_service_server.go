@@ -6,7 +6,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,7 +42,7 @@ func (s *RoleServiceServer) CreateRole(
 			ResourcePattern: p.GetResourcePattern(),
 		})
 	}
-	logExtensions := cef.CustomExtension{Key: "roleName", Value: name}
+	logExtensions := logx.SecurityData{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "CreateRole", "Role creation", logExtensions)
 
 	logger := s.logger.WithName("create-role").WithData(
@@ -71,7 +70,7 @@ func (s *RoleServiceServer) DeleteRole(
 	req *protos.DeleteRoleRequest,
 ) (*protos.DeleteRoleResponse, error) {
 	name := req.GetName()
-	logExtensions := cef.CustomExtension{Key: "roleName", Value: name}
+	logExtensions := logx.SecurityData{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion", logExtensions)
 	logger := s.logger.WithName("delete-role").WithData(logx.Data{"role.name", name})
 	logger.Debug(starting)
@@ -98,7 +97,7 @@ func (s *RoleServiceServer) AssignRole(
 
 	domainID := pActor.GetID()
 	namespace := pActor.GetNamespace()
-	logExtensions := []cef.CustomExtension{
+	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
 	}
@@ -128,7 +127,7 @@ func (s *RoleServiceServer) AssignRoleToGroup(
 	pGroup := req.GetGroup()
 
 	groupID := pGroup.GetID()
-	logExtensions := []cef.CustomExtension{
+	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "groupID", Value: pGroup.ID},
 	}
@@ -166,7 +165,7 @@ func (s *RoleServiceServer) UnassignRole(
 		ID:        domainID,
 		Namespace: namespace,
 	}
-	logExtensions := []cef.CustomExtension{
+	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pActor.ID},
 	}
@@ -198,7 +197,7 @@ func (s *RoleServiceServer) UnassignRoleFromGroup(
 	group := perm.Group{
 		ID: domainID,
 	}
-	logExtensions := []cef.CustomExtension{
+	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "userID", Value: pGroup.ID},
 	}

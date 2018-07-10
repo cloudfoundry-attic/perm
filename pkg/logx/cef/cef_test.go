@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	. "code.cloudfoundry.org/perm/pkg/logx/cef"
 	"github.com/onsi/gomega/gbytes"
 	"google.golang.org/grpc/peer"
@@ -55,12 +56,12 @@ var _ = Describe("Logging", func() {
 
 		Context("when there are custom extensions", func() {
 			var (
-				customExtension1 CustomExtension
-				customExtension2 CustomExtension
+				customExtension1 logx.SecurityData
+				customExtension2 logx.SecurityData
 			)
 			BeforeEach(func() {
-				customExtension1 = CustomExtension{Key: "roleName", Value: "my-role-name"}
-				customExtension2 = CustomExtension{Key: "roleBlame", Value: "my-role-blame"}
+				customExtension1 = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
+				customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
 			})
 
 			It("logs each extension", func() {
@@ -85,15 +86,15 @@ var _ = Describe("Logging", func() {
 			})
 
 			Context("when the extension provided is invalid", func() {
-				var invalidExtension CustomExtension
-				var validExtension CustomExtension
+				var invalidExtension logx.SecurityData
+				var validExtension logx.SecurityData
 				BeforeEach(func() {
-					validExtension = CustomExtension{Key: "key", Value: "value"}
+					validExtension = logx.SecurityData{Key: "key", Value: "value"}
 				})
 
 				Context("because there is no key", func() {
 					BeforeEach(func() {
-						invalidExtension = CustomExtension{Value: "no-key"}
+						invalidExtension = logx.SecurityData{Value: "no-key"}
 
 						p := &peer.Peer{}
 						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
@@ -114,7 +115,7 @@ var _ = Describe("Logging", func() {
 
 				Context("because there is no value", func() {
 					BeforeEach(func() {
-						invalidExtension = CustomExtension{Key: "noValue"}
+						invalidExtension = logx.SecurityData{Key: "noValue"}
 
 						p := &peer.Peer{}
 						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
@@ -142,26 +143,26 @@ var _ = Describe("Logging", func() {
 
 			Context("when there are more than 6 custom extensions", func() {
 				var (
-					customExtension3 CustomExtension
-					customExtension4 CustomExtension
-					customExtension5 CustomExtension
-					customExtension6 CustomExtension
-					extraExtension   CustomExtension
+					customExtension3 logx.SecurityData
+					customExtension4 logx.SecurityData
+					customExtension5 logx.SecurityData
+					customExtension6 logx.SecurityData
+					extraExtension   logx.SecurityData
 				)
 
 				BeforeEach(func() {
-					customExtension3 = CustomExtension{Key: "roleDame", Value: "my-role-dame"}
-					customExtension4 = CustomExtension{Key: "roleFame", Value: "my-role-fame"}
-					customExtension5 = CustomExtension{Key: "roleBeshame", Value: "my-role-beshame"}
-					customExtension6 = CustomExtension{Key: "roleEndgame", Value: "my-role-endgame"}
-					extraExtension = CustomExtension{Key: "dog", Value: "cat"}
+					customExtension3 = logx.SecurityData{Key: "roleDame", Value: "my-role-dame"}
+					customExtension4 = logx.SecurityData{Key: "roleFame", Value: "my-role-fame"}
+					customExtension5 = logx.SecurityData{Key: "roleBeshame", Value: "my-role-beshame"}
+					customExtension6 = logx.SecurityData{Key: "roleEndgame", Value: "my-role-endgame"}
+					extraExtension = logx.SecurityData{Key: "dog", Value: "cat"}
 				})
 
 				It("should only log the first 6 custom extensions", func() {
 					p := &peer.Peer{}
 					p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 					ctx := peer.NewContext(context.Background(), p)
-					args := []CustomExtension{
+					args := []logx.SecurityData{
 						customExtension1,
 						customExtension2,
 						customExtension3,
@@ -192,16 +193,16 @@ var _ = Describe("Logging", func() {
 				})
 
 				Context("when there is also as an invalid extension", func() {
-					var badExtension CustomExtension
+					var badExtension logx.SecurityData
 					BeforeEach(func() {
-						badExtension = CustomExtension{Value: "no-key"}
+						badExtension = logx.SecurityData{Value: "no-key"}
 					})
 
 					It("logs both errors in the message", func() {
 						p := &peer.Peer{}
 						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 						ctx := peer.NewContext(context.Background(), p)
-						args := []CustomExtension{
+						args := []logx.SecurityData{
 							badExtension,
 							customExtension1,
 							customExtension2,

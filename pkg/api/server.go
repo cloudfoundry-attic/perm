@@ -18,7 +18,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -198,4 +197,4 @@ func (l *emptyLogger) Error(string, error, ...logx.Data) {}
 
 type emptySecurityLogger struct{}
 
-func (l *emptySecurityLogger) Log(context.Context, string, string, ...cef.CustomExtension) {}
+func (l *emptySecurityLogger) Log(context.Context, string, string, ...logx.SecurityData) {}
