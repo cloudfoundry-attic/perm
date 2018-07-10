@@ -3,10 +3,10 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,13 +14,13 @@ import (
 
 type PermissionServiceServer struct {
 	logger         logx.Logger
-	securityLogger SecurityLogger
+	securityLogger logx.SecurityLogger
 	permissionRepo repos.PermissionRepo
 }
 
 func NewPermissionServiceServer(
 	logger logx.Logger,
-	securityLogger SecurityLogger,
+	securityLogger logx.SecurityLogger,
 	permissionRepo repos.PermissionRepo,
 ) *PermissionServiceServer {
 	return &PermissionServiceServer{

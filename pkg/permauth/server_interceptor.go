@@ -3,8 +3,8 @@ package permauth
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/cef"
-	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
 	"google.golang.org/grpc"
@@ -23,7 +23,7 @@ type Claims struct {
 	Scopes []string `json:"scope"`
 }
 
-func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger) grpc.UnaryServerInterceptor {
+func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger) grpc.UnaryServerInterceptor {
 	verifier := provider.Verifier(&oidc.Config{
 		ClientID: "perm",
 	})

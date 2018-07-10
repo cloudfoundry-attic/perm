@@ -14,11 +14,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/perm/pkg/api/db"
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -27,7 +27,7 @@ import (
 
 type Server struct {
 	logger         logx.Logger
-	securityLogger rpc.SecurityLogger
+	securityLogger logx.SecurityLogger
 	server         *grpc.Server
 }
 
@@ -131,7 +131,7 @@ func WithLogger(logger logx.Logger) ServerOption {
 	}
 }
 
-func WithSecurityLogger(logger rpc.SecurityLogger) ServerOption {
+func WithSecurityLogger(logger logx.SecurityLogger) ServerOption {
 	return func(o *serverConfig) {
 		o.securityLogger = logger
 	}
@@ -169,7 +169,7 @@ func WithStats(handler stats.Handler) ServerOption {
 
 type serverConfig struct {
 	logger         logx.Logger
-	securityLogger rpc.SecurityLogger
+	securityLogger logx.SecurityLogger
 
 	credentials  credentials.TransportCredentials
 	keepalive    keepalive.ServerParameters

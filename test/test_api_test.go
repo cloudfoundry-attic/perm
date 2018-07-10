@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
+	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/permstats"
@@ -135,12 +135,12 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			oauthServer        *httptest.Server
 			validIssuer        string
-			fakeSecurityLogger *rpcfakes.FakeSecurityLogger
+			fakeSecurityLogger *logxfakes.FakeSecurityLogger
 			expectSecurityLog  func(logID, logName string, extensions map[string]string)
 		)
 
 		BeforeEach(func() {
-			fakeSecurityLogger = new(rpcfakes.FakeSecurityLogger)
+			fakeSecurityLogger = new(logxfakes.FakeSecurityLogger)
 
 			logLineID := 0
 			expectSecurityLog = func(logID, logName string, extensions map[string]string) {
