@@ -3,8 +3,9 @@ package sqlx_test
 import (
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	. "code.cloudfoundry.org/perm/pkg/sqlx"
 
 	"context"
@@ -21,7 +22,7 @@ var _ = Describe("#RollbackMigrations", func() {
 	var (
 		migrationTableName string
 
-		fakeLogger *lagertest.TestLogger
+		fakeLogger logx.Logger
 
 		fakeConn *sql.DB
 		mock     sqlmock.Sqlmock
@@ -41,7 +42,7 @@ var _ = Describe("#RollbackMigrations", func() {
 	BeforeEach(func() {
 		migrationTableName = "db_migrations"
 
-		fakeLogger = lagertest.NewTestLogger("perm-sqlx")
+		fakeLogger = lagerx.NewLogger(lagertest.NewTestLogger("perm-sqlx"))
 
 		fakeConn, mock, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
@@ -57,7 +58,7 @@ var _ = Describe("#RollbackMigrations", func() {
 		migrations = []Migration{
 			{
 				Name: "migration_1",
-				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+				Down: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 1")
 
 					return err
@@ -65,7 +66,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			},
 			{
 				Name: "migration_2",
-				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+				Down: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 2")
 
 					return err
@@ -73,7 +74,7 @@ var _ = Describe("#RollbackMigrations", func() {
 			},
 			{
 				Name: "migration_3",
-				Down: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+				Down: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 					_, err := tx.ExecContext(ctx, "SOME FAKE MIGRATION 3")
 
 					return err

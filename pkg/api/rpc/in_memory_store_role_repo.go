@@ -3,14 +3,14 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 func (s *InMemoryStore) CreateRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	name string,
 	permissions ...perm.Permission,
 ) (perm.Role, error) {
@@ -29,7 +29,7 @@ func (s *InMemoryStore) CreateRole(
 
 func (s *InMemoryStore) DeleteRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName string,
 ) error {
 	if _, exists := s.roles[roleName]; !exists {
@@ -44,12 +44,12 @@ func (s *InMemoryStore) DeleteRole(
 		for i, roleName := range assignments {
 			if roleName == roleName {
 				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
-				assignmentData := lager.Data{
-					"actor.id":        actor.ID,
-					"actor.namespace": actor.Namespace,
-					"role.name":       roleName,
+				assignmentData := []logx.Data{
+					logx.Data{"actor.id", actor.ID},
+					logx.Data{"actor.namespace", actor.Namespace},
+					logx.Data{"role.name", roleName},
 				}
-				logger.Debug(success, assignmentData)
+				logger.Debug(success, assignmentData...)
 				break
 			}
 		}
@@ -65,7 +65,7 @@ func (s *InMemoryStore) DeleteRole(
 
 func (s *InMemoryStore) AssignRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	id,
 	namespace string,
@@ -99,7 +99,7 @@ func (s *InMemoryStore) AssignRole(
 
 func (s *InMemoryStore) AssignRoleToGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	id string,
 ) error {
@@ -131,7 +131,7 @@ func (s *InMemoryStore) AssignRoleToGroup(
 
 func (s *InMemoryStore) UnassignRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	id,
 	namespace string,
@@ -168,7 +168,7 @@ func (s *InMemoryStore) UnassignRole(
 
 func (s *InMemoryStore) UnassignRoleFromGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	groupID string,
 ) error {
@@ -203,7 +203,7 @@ func (s *InMemoryStore) UnassignRoleFromGroup(
 
 func (s *InMemoryStore) HasRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.HasRoleQuery,
 ) (bool, error) {
 	roleName := query.RoleName
@@ -232,7 +232,7 @@ func (s *InMemoryStore) HasRole(
 
 func (s *InMemoryStore) HasRoleForGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
 	roleName := query.RoleName
@@ -261,7 +261,7 @@ func (s *InMemoryStore) HasRoleForGroup(
 
 func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.ListRolePermissionsQuery,
 ) ([]perm.Permission, error) {
 	permissions, exists := s.permissions[query.RoleName]

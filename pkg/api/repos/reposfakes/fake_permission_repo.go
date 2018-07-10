@@ -5,16 +5,16 @@ import (
 	"context"
 	"sync"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 )
 
 type FakePermissionRepo struct {
-	HasPermissionStub        func(ctx context.Context, logger lager.Logger, query repos.HasPermissionQuery) (bool, error)
+	HasPermissionStub        func(ctx context.Context, logger logx.Logger, query repos.HasPermissionQuery) (bool, error)
 	hasPermissionMutex       sync.RWMutex
 	hasPermissionArgsForCall []struct {
 		ctx    context.Context
-		logger lager.Logger
+		logger logx.Logger
 		query  repos.HasPermissionQuery
 	}
 	hasPermissionReturns struct {
@@ -25,11 +25,11 @@ type FakePermissionRepo struct {
 		result1 bool
 		result2 error
 	}
-	ListResourcePatternsStub        func(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]string, error)
+	ListResourcePatternsStub        func(ctx context.Context, logger logx.Logger, query repos.ListResourcePatternsQuery) ([]string, error)
 	listResourcePatternsMutex       sync.RWMutex
 	listResourcePatternsArgsForCall []struct {
 		ctx    context.Context
-		logger lager.Logger
+		logger logx.Logger
 		query  repos.ListResourcePatternsQuery
 	}
 	listResourcePatternsReturns struct {
@@ -44,12 +44,12 @@ type FakePermissionRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePermissionRepo) HasPermission(ctx context.Context, logger lager.Logger, query repos.HasPermissionQuery) (bool, error) {
+func (fake *FakePermissionRepo) HasPermission(ctx context.Context, logger logx.Logger, query repos.HasPermissionQuery) (bool, error) {
 	fake.hasPermissionMutex.Lock()
 	ret, specificReturn := fake.hasPermissionReturnsOnCall[len(fake.hasPermissionArgsForCall)]
 	fake.hasPermissionArgsForCall = append(fake.hasPermissionArgsForCall, struct {
 		ctx    context.Context
-		logger lager.Logger
+		logger logx.Logger
 		query  repos.HasPermissionQuery
 	}{ctx, logger, query})
 	fake.recordInvocation("HasPermission", []interface{}{ctx, logger, query})
@@ -69,7 +69,7 @@ func (fake *FakePermissionRepo) HasPermissionCallCount() int {
 	return len(fake.hasPermissionArgsForCall)
 }
 
-func (fake *FakePermissionRepo) HasPermissionArgsForCall(i int) (context.Context, lager.Logger, repos.HasPermissionQuery) {
+func (fake *FakePermissionRepo) HasPermissionArgsForCall(i int) (context.Context, logx.Logger, repos.HasPermissionQuery) {
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
 	return fake.hasPermissionArgsForCall[i].ctx, fake.hasPermissionArgsForCall[i].logger, fake.hasPermissionArgsForCall[i].query
@@ -97,12 +97,12 @@ func (fake *FakePermissionRepo) HasPermissionReturnsOnCall(i int, result1 bool, 
 	}{result1, result2}
 }
 
-func (fake *FakePermissionRepo) ListResourcePatterns(ctx context.Context, logger lager.Logger, query repos.ListResourcePatternsQuery) ([]string, error) {
+func (fake *FakePermissionRepo) ListResourcePatterns(ctx context.Context, logger logx.Logger, query repos.ListResourcePatternsQuery) ([]string, error) {
 	fake.listResourcePatternsMutex.Lock()
 	ret, specificReturn := fake.listResourcePatternsReturnsOnCall[len(fake.listResourcePatternsArgsForCall)]
 	fake.listResourcePatternsArgsForCall = append(fake.listResourcePatternsArgsForCall, struct {
 		ctx    context.Context
-		logger lager.Logger
+		logger logx.Logger
 		query  repos.ListResourcePatternsQuery
 	}{ctx, logger, query})
 	fake.recordInvocation("ListResourcePatterns", []interface{}{ctx, logger, query})
@@ -122,7 +122,7 @@ func (fake *FakePermissionRepo) ListResourcePatternsCallCount() int {
 	return len(fake.listResourcePatternsArgsForCall)
 }
 
-func (fake *FakePermissionRepo) ListResourcePatternsArgsForCall(i int) (context.Context, lager.Logger, repos.ListResourcePatternsQuery) {
+func (fake *FakePermissionRepo) ListResourcePatternsArgsForCall(i int) (context.Context, logx.Logger, repos.ListResourcePatternsQuery) {
 	fake.listResourcePatternsMutex.RLock()
 	defer fake.listResourcePatternsMutex.RUnlock()
 	return fake.listResourcePatternsArgsForCall[i].ctx, fake.listResourcePatternsArgsForCall[i].logger, fake.listResourcePatternsArgsForCall[i].query

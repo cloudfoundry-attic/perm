@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -43,8 +43,8 @@ ON DELETE CASCADE
 
 var deleteRoleAssignmentsTable = `DROP TABLE role_assignment`
 
-func createRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-role-assignments-table")
+func createRoleAssignmentsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -69,8 +69,8 @@ func createRoleAssignmentsTableUp(ctx context.Context, logger lager.Logger, tx *
 	return err
 }
 
-func createRoleAssignmentsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-role-assignments-table")
+func createRoleAssignmentsTableDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/Masterminds/squirrel"
@@ -25,7 +25,7 @@ func NewDataService(conn *sqlx.DB) *DataService {
 
 func createRoleAndAssignPermissions(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	permissions ...perm.Permission,
@@ -58,11 +58,11 @@ func createRoleAndAssignPermissions(
 
 func createRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	name string,
 ) (role, error) {
-	logger = logger.Session("create-role")
+	logger = logger.WithName("create-role")
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("role").
@@ -101,11 +101,11 @@ func createRole(
 
 func findRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	requestedRoleName string,
 ) (role, error) {
-	logger = logger.Session("find-role")
+	logger = logger.WithName("find-role")
 
 	var (
 		roleID   int64
@@ -139,11 +139,11 @@ func findRole(
 
 func deleteRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 ) error {
-	logger = logger.Session("delete-role")
+	logger = logger.WithName("delete-role")
 	result, err := squirrel.Delete("role").
 		Where(squirrel.Eq{
 			"name": roleName,
@@ -176,13 +176,13 @@ func deleteRole(
 
 func assignRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	actorID string,
 	actorNamespace string,
 ) error {
-	logger = logger.Session("assign-role")
+	logger = logger.WithName("assign-role")
 
 	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
@@ -194,15 +194,15 @@ func assignRole(
 
 func createRoleAssignmentForGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	groupID string,
 ) error {
-	logger = logger.Session("create-role-assignment-for-group").WithData(lager.Data{
-		"role.id":                   roleID,
-		"group_assignment.group_id": groupID,
-	})
+	logger = logger.WithName("create-role-assignment-for-group").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"group_assignment.group_id", groupID},
+	)
 
 	u := uuid.NewV4().Bytes()
 	_, err := squirrel.Insert("group_assignment").
@@ -230,12 +230,12 @@ func createRoleAssignmentForGroup(
 
 func assignRoleToGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	groupID string,
 ) error {
-	logger = logger.Session("assign-role-to-group")
+	logger = logger.WithName("assign-role-to-group")
 
 	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
@@ -246,17 +246,17 @@ func assignRoleToGroup(
 
 func createRoleAssignment(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	actorID string,
 	actorNamespace string,
 ) error {
-	logger = logger.Session("create-role-assignment").WithData(lager.Data{
-		"role.id":                    roleID,
-		"assignment.actor_id":        actorID,
-		"assignment.actor_namespace": actorNamespace,
-	})
+	logger = logger.WithName("create-role-assignment").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"assignment.actor_id", actorID},
+		logx.Data{"assignment.actor_namespace", actorNamespace},
+	)
 
 	u := uuid.NewV4().Bytes()
 	_, err := squirrel.Insert("assignment").
@@ -283,13 +283,13 @@ func createRoleAssignment(
 }
 
 func unassignRole(ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	actorID string,
 	actorNamespace string,
 ) error {
-	logger = logger.Session("unassign-role")
+	logger = logger.WithName("unassign-role")
 
 	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
@@ -301,17 +301,17 @@ func unassignRole(ctx context.Context,
 
 func deleteRoleAssignment(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	actorID string,
 	actorNamespace string,
 ) error {
-	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
-		"role.id":                    roleID,
-		"assignment.actor_id":        actorID,
-		"assignment.actor_namespace": actorNamespace,
-	})
+	logger = logger.WithName("delete-role-assignment").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"assignment.actor_id", actorID},
+		logx.Data{"assignment.actor_namespace", actorNamespace},
+	)
 
 	result, err := squirrel.Delete("assignment").
 		Where(squirrel.Eq{
@@ -346,12 +346,12 @@ func deleteRoleAssignment(
 }
 
 func unassignRoleFromGroup(ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	groupID string,
 ) error {
-	logger = logger.Session("unassign-role-from-group")
+	logger = logger.WithName("unassign-role-from-group")
 
 	role, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
@@ -363,15 +363,15 @@ func unassignRoleFromGroup(ctx context.Context,
 
 func deleteGroupRoleAssignment(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	groupID string,
 ) error {
-	logger = logger.Session("delete-role-assignment").WithData(lager.Data{
-		"role.id":                   roleID,
-		"group_assignment.group_id": groupID,
-	})
+	logger = logger.WithName("delete-role-assignment").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"group_assignment.group_id", groupID},
+	)
 
 	result, err := squirrel.Delete("group_assignment").
 		Where(squirrel.Eq{
@@ -406,11 +406,11 @@ func deleteGroupRoleAssignment(
 
 func hasRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasRoleQuery,
 ) (bool, error) {
-	logger = logger.Session("has-role")
+	logger = logger.WithName("has-role")
 	role, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
@@ -421,11 +421,11 @@ func hasRole(
 
 func hasRoleForGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
-	logger = logger.Session("has-role-for-group")
+	logger = logger.WithName("has-role-for-group")
 	role, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
@@ -436,17 +436,17 @@ func hasRoleForGroup(
 
 func findRoleAssignment(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	actorID string,
 	actorNamespace string,
 ) (bool, error) {
-	logger = logger.Session("find-role-assignment").WithData(lager.Data{
-		"role.id":                    roleID,
-		"assignment.actor_id":        actorID,
-		"assignment.actor_namespace": actorNamespace,
-	})
+	logger = logger.WithName("find-role-assignment").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"assignment.actor_id", actorID},
+		logx.Data{"assignment.actor_namespace", actorNamespace},
+	)
 
 	var count int
 
@@ -469,15 +469,15 @@ func findRoleAssignment(
 
 func findRoleAssignmentForGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 	groupID string,
 ) (bool, error) {
-	logger = logger.Session("find-role-assignment-for-group").WithData(lager.Data{
-		"role.id":                   roleID,
-		"group_assignment.group_id": groupID,
-	})
+	logger = logger.WithName("find-role-assignment-for-group").WithData(
+		logx.Data{"role.id", roleID},
+		logx.Data{"group_assignment.group_id", groupID},
+	)
 
 	var count int
 
@@ -499,11 +499,11 @@ func findRoleAssignmentForGroup(
 
 func listRolePermissions(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListRolePermissionsQuery,
 ) ([]permission, error) {
-	logger = logger.Session("list-role-permissions")
+	logger = logger.WithName("list-role-permissions")
 
 	role, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
@@ -515,11 +515,11 @@ func listRolePermissions(
 
 func createAction(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	name string,
 ) (action, error) {
-	logger = logger.Session("create-permission-definition")
+	logger = logger.WithName("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("action").
@@ -558,11 +558,11 @@ func createAction(
 
 func findAction(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	actionName string,
 ) (action, error) {
-	logger = logger.Session("find-permission-definition")
+	logger = logger.WithName("find-permission-definition")
 
 	var (
 		actionID int64
@@ -596,13 +596,11 @@ func findAction(
 
 func findRolePermissions(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
 ) ([]permission, error) {
-	logger = logger.Session("find-role-permissions").WithData(lager.Data{
-		"role.id": roleID,
-	})
+	logger = logger.WithName("find-role-permissions").WithData(logx.Data{"role.id", roleID})
 
 	rows, err := squirrel.Select("permission.id", "action.name", "permission.resource_pattern").
 		From("permission").
@@ -651,17 +649,17 @@ func findRolePermissions(
 
 func hasPermission(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasPermissionQuery,
 ) (bool, error) {
-	logger = logger.Session("has-permission").WithData(lager.Data{
-		"actor.issuer":               query.Actor.Namespace,
-		"assignment.actor_id":        query.Actor.ID,
-		"permission.action":          query.Action,
-		"permission.resourcePattern": query.ResourcePattern,
-		"group_assignment.groups":    query.Groups,
-	})
+	logger = logger.WithName("has-permission").WithData(
+		logx.Data{"actor.issuer", query.Actor.Namespace},
+		logx.Data{"assignment.actor_id", query.Actor.ID},
+		logx.Data{"permission.action", query.Action},
+		logx.Data{"permission.resourcePattern", query.ResourcePattern},
+		logx.Data{"group_assignment.groups", query.Groups},
+	)
 
 	var count int
 
@@ -715,14 +713,14 @@ func hasPermission(
 
 func createPermission(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	actionID int64,
 	roleID int64,
 	resourcePattern string,
 	action string,
 ) (permission, error) {
-	logger = logger.Session("create-permission-definition")
+	logger = logger.WithName("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
 	result, err := squirrel.Insert("permission").
@@ -762,7 +760,7 @@ func createPermission(
 
 func listResourcePatterns(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListResourcePatternsQuery,
 ) ([]string, error) {
@@ -770,12 +768,11 @@ func listResourcePatterns(
 	actorNamespace := query.Actor.Namespace
 	actorID := query.Actor.ID
 
-	logger = logger.Session("list-resource-patterns").
-		WithData(lager.Data{
-			"assignment.actor_namespace": actorNamespace,
-			"assignment.actor_id":        actorID,
-			"permission.action":          action,
-		})
+	logger = logger.WithName("list-resource-patterns").WithData(
+		logx.Data{"assignment.actor_namespace", actorNamespace},
+		logx.Data{"assignment.actor_id", actorID},
+		logx.Data{"permission.action", action},
+	)
 
 	rows, err := squirrel.Select("permission.resource_pattern").
 		Distinct().

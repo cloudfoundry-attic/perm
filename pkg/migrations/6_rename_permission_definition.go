@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -46,8 +46,8 @@ FOREIGN KEY(action_id) REFERENCES action(id)
 ON DELETE CASCADE
 `
 
-func renamePermissionDefinitionToActionUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("rename-permission-definition-to-action")
+func renamePermissionDefinitionToActionUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("rename-permission-definition-to-action")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -90,8 +90,8 @@ RENAME TO
 	permission_definition
 `
 
-func renamePermissionDefinitionToActionDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("rename-action-to-permission-definition")
+func renamePermissionDefinitionToActionDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("rename-action-to-permission-definition")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

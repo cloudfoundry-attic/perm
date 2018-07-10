@@ -5,26 +5,25 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"github.com/Masterminds/squirrel"
 )
 
 func ApplyMigrations(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 	migrations []Migration,
 ) error {
-	createTableLogger := logger.Session("create-migrations-table").WithData(lager.Data{
-		"table_name": tableName,
-	})
+	createTableLogger := logger.WithName("create-migrations-table").WithData(logx.Data{"table_name", tableName})
 	if err := createMigrationsTable(ctx, createTableLogger, conn, tableName); err != nil {
 		return err
 	}
 
-	migrationsLogger := logger.Session("apply-migrations").WithData(lager.Data{
-		"table_name": tableName,
+	migrationsLogger := logger.WithName("apply-migrations").WithData(logx.Data{
+		"table_name",
+		tableName,
 	})
 
 	if len(migrations) == 0 {
@@ -35,16 +34,11 @@ func ApplyMigrations(
 	if err != nil {
 		return err
 	}
-	migrationsLogger.Debug(retrievedAppliedMigrations, lager.Data{
-		"versions": appliedMigrations,
-	})
+	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{"versions", appliedMigrations})
 
 	for i, migration := range migrations {
 		version := i
-		migrationLogger := logger.WithData(lager.Data{
-			"version": version,
-			"name":    migration.Name,
-		})
+		migrationLogger := logger.WithData(logx.Data{"version", version}, logx.Data{"name", migration.Name})
 
 		_, ok := appliedMigrations[version]
 		if ok {
@@ -62,7 +56,7 @@ func ApplyMigrations(
 
 func createMigrationsTable(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB, tableName string,
 ) (err error) {
 	var tx *Tx
@@ -88,7 +82,7 @@ func createMigrationsTable(
 
 func applyMigration(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 	version int,

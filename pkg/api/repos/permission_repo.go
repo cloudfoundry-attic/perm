@@ -3,7 +3,7 @@ package repos
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
@@ -35,13 +35,13 @@ type ListResourcePatternsQuery struct {
 type PermissionRepo interface {
 	HasPermission(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		query HasPermissionQuery,
 	) (bool, error)
 
 	ListResourcePatterns(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		query ListResourcePatternsQuery,
 	) ([]string, error)
 }

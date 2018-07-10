@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/Masterminds/squirrel"
 	uuid "github.com/satori/go.uuid"
@@ -48,8 +48,8 @@ var dropAssignmentTable = `DROP TABLE IF EXISTS assignment`
 
 var dropRoleAssignmentTable = `DROP TABLE IF EXISTS role_assignment`
 
-func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-actor-and-role-assignment-tables")
+func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-actor-and-role-assignment-tables")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 	var err error
@@ -115,8 +115,8 @@ func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger lager.Log
 	return err
 }
 
-func combineActorAndRoleAssignmentTablesDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-actor-and-role-assignment-tables")
+func combineActorAndRoleAssignmentTablesDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-actor-and-role-assignment-tables")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 	var err error

@@ -5,6 +5,8 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +26,7 @@ func BehavesLikeAPermissionRepo(
 		roleRepo repos.RoleRepo
 
 		ctx    context.Context
-		logger *lagertest.TestLogger
+		logger logx.Logger
 
 		cancelFunc context.CancelFunc
 
@@ -43,7 +45,7 @@ func BehavesLikeAPermissionRepo(
 		roleRepo = roleRepoCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
-		logger = lagertest.NewTestLogger("perm-test")
+		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 
 		roleName = uuid.NewV4().String()
 		sameAction = "some-action"

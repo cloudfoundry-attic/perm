@@ -5,7 +5,7 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 )
 
 type Migration struct {
@@ -20,4 +20,4 @@ type AppliedMigration struct {
 	AppliedAt time.Time
 }
 
-type MigrationFunc func(context.Context, lager.Logger, *Tx) error
+type MigrationFunc func(context.Context, logx.Logger, *Tx) error

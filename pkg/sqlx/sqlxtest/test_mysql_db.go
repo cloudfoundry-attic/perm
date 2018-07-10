@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	uuid "github.com/satori/go.uuid"
 )
@@ -75,7 +76,8 @@ func (db *TestMySQLDB) Create(migrations ...sqlx.Migration) error {
 		return err
 	}
 
-	err = sqlx.ApplyMigrations(context.Background(), lagertest.NewTestLogger("test-db"), conn, "migrations", migrations)
+	logger := lagerx.NewLogger(lagertest.NewTestLogger("test-db"))
+	err = sqlx.ApplyMigrations(context.Background(), logger, conn, "migrations", migrations)
 	if err != nil {
 		_ = db.Drop()
 		return err

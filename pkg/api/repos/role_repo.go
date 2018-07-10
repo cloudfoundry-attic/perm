@@ -3,7 +3,7 @@ package repos
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
@@ -24,26 +24,26 @@ type HasRoleForGroupQuery struct {
 type RoleRepo interface {
 	CreateRole(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		name string,
 		permissions ...perm.Permission,
 	) (perm.Role, error)
 
 	DeleteRole(
 		context.Context,
-		lager.Logger,
+		logx.Logger,
 		string,
 	) error
 
 	ListRolePermissions(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		query ListRolePermissionsQuery,
 	) ([]perm.Permission, error)
 
 	AssignRole(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		roleName,
 		domainID,
 		namespace string,
@@ -51,14 +51,14 @@ type RoleRepo interface {
 
 	AssignRoleToGroup(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		roleName,
 		groupID string,
 	) error
 
 	UnassignRole(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		roleName,
 		domainID,
 		namespace string,
@@ -66,20 +66,20 @@ type RoleRepo interface {
 
 	UnassignRoleFromGroup(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		roleName,
 		groupID string,
 	) error
 
 	HasRole(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		query HasRoleQuery,
 	) (bool, error)
 
 	HasRoleForGroup(
 		ctx context.Context,
-		logger lager.Logger,
+		logger logx.Logger,
 		query HasRoleForGroupQuery,
 	) (bool, error)
 }

@@ -10,6 +10,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
@@ -57,7 +58,7 @@ func (cmd UpCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.ApplyMigrations(ctx, logger, conn, migrations.TableName, migrations.Migrations)
+	return sqlx.ApplyMigrations(ctx, lagerx.NewLogger(logger), conn, migrations.TableName, migrations.Migrations)
 }
 
 func (cmd DownCommand) Execute([]string) error {
@@ -78,7 +79,7 @@ func (cmd DownCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	return sqlx.RollbackMigrations(ctx, logger, conn, migrations.TableName, migrations.Migrations, cmd.All)
+	return sqlx.RollbackMigrations(ctx, lagerx.NewLogger(logger), conn, migrations.TableName, migrations.Migrations, cmd.All)
 }
 
 func (cmd StatusCommand) Execute([]string) error {
@@ -92,7 +93,7 @@ func (cmd StatusCommand) Execute([]string) error {
 	}
 	defer conn.Close()
 
-	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, logger, conn, migrations.TableName)
+	appliedMigrations, err := sqlx.RetrieveAppliedMigrations(ctx, lagerx.NewLogger(logger), conn, migrations.TableName)
 	if err != nil {
 		return err
 	}

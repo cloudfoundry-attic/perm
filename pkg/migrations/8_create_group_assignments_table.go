@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -40,8 +40,8 @@ ON DELETE CASCADE
 `
 var dropGroupAssignmentTable = `DROP TABLE IF EXISTS group_assignment`
 
-func createGroupAssignmentTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-group-assignment-table")
+func createGroupAssignmentTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-group-assignment-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 	var err error
@@ -63,8 +63,8 @@ func createGroupAssignmentTableUp(ctx context.Context, logger lager.Logger, tx *
 	return err
 }
 
-func createGroupAssignmentTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-role-assignments-table")
+func createGroupAssignmentTableDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-role-assignments-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

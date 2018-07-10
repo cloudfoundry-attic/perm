@@ -3,21 +3,19 @@ package sqlx
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"github.com/Masterminds/squirrel"
 )
 
 func RollbackMigrations(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 	migrations []Migration,
 	all bool,
 ) error {
-	migrationsLogger := logger.Session("rollback-migrations").WithData(lager.Data{
-		"table_name": tableName,
-	})
+	migrationsLogger := logger.WithName("rollback-migrations").WithData(logx.Data{"table_name", tableName})
 
 	migrationsLogger.Info("starting")
 	if len(migrations) == 0 {
@@ -28,18 +26,13 @@ func RollbackMigrations(
 	if err != nil {
 		return err
 	}
-	migrationsLogger.Debug(retrievedAppliedMigrations, lager.Data{
-		"versions": appliedMigrations,
-	})
+	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{"versions", appliedMigrations})
 
 	for version := len(migrations) - 1; version >= 0; version-- {
 		migration := migrations[version]
 		_, ok := appliedMigrations[version]
 
-		migrationLogger := logger.WithData(lager.Data{
-			"version": version,
-			"name":    migration.Name,
-		})
+		migrationLogger := logger.WithData(logx.Data{"version", version}, logx.Data{"name", migration.Name})
 
 		if !ok {
 			migrationLogger.Debug("skipping")
@@ -60,7 +53,7 @@ func RollbackMigrations(
 
 func rollbackMigration(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 	version int,

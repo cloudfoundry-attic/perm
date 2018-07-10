@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS permission_definition
 
 var deletePermissionDefinitionsTable = `DROP TABLE permission_definition`
 
-func createPermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-permission-definitions-table")
+func createPermissionDefinitionsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-permission-definitions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -28,8 +28,8 @@ func createPermissionDefinitionsTableUp(ctx context.Context, logger lager.Logger
 	return err
 }
 
-func createPermissionDefinitionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-permission-definitions-table")
+func createPermissionDefinitionsTableDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-permission-definitions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

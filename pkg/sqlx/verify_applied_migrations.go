@@ -3,17 +3,17 @@ package sqlx
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 )
 
 func VerifyAppliedMigrations(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 	migrations []Migration,
 ) error {
-	retrieveLogger := logger.Session("retrieve-applied-migrations")
+	retrieveLogger := logger.WithName("retrieve-applied-migrations")
 	appliedMigrations, err := RetrieveAppliedMigrations(ctx, retrieveLogger, conn, tableName)
 	if err != nil {
 		return err
@@ -27,17 +27,12 @@ func VerifyAppliedMigrations(
 	for i, migration := range migrations {
 		appliedMigration, exists := appliedMigrations[i]
 		if !exists {
-			logger.Info(migrationNotFound, lager.Data{
-				"name": migration.Name,
-			})
+			logger.Info(migrationNotFound, logx.Data{"name", migration.Name})
 			return ErrMigrationsOutOfSync
 		}
 
 		if migration.Name != appliedMigration.Name {
-			logger.Info(migrationMismatch, lager.Data{
-				"expected_name": migration.Name,
-				"applied_name":  appliedMigration.Name,
-			})
+			logger.Info(migrationMismatch, logx.Data{"expected_name", migration.Name}, logx.Data{"applied_name", appliedMigration.Name})
 			return ErrMigrationsOutOfSync
 		}
 	}

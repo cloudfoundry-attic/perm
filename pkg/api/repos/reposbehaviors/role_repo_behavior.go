@@ -7,6 +7,8 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,7 +20,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		subject repos.RoleRepo
 
 		ctx    context.Context
-		logger *lagertest.TestLogger
+		logger logx.Logger
 
 		cancelFunc context.CancelFunc
 
@@ -36,7 +38,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		subject = subjectCreator()
 
 		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
-		logger = lagertest.NewTestLogger("perm-test")
+		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 
 		name = uuid.NewV4().String()
 		roleName = uuid.NewV4().String()

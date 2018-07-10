@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/rpcfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,7 +20,7 @@ import (
 var _ = Describe("RoleRepoServer", func() {
 	var (
 		subject        *rpc.RoleServiceServer
-		logger         *lagertest.TestLogger
+		logger         logx.Logger
 		securityLogger *rpcfakes.FakeSecurityLogger
 
 		inMemoryStore *rpc.InMemoryStore
@@ -27,7 +29,7 @@ var _ = Describe("RoleRepoServer", func() {
 	)
 
 	BeforeEach(func() {
-		logger = lagertest.NewTestLogger("perm-test")
+		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 		securityLogger = new(rpcfakes.FakeSecurityLogger)
 		inMemoryStore = rpc.NewInMemoryStore()
 

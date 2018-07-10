@@ -3,24 +3,24 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type RoleServiceServer struct {
-	logger         lager.Logger
+	logger         logx.Logger
 	securityLogger SecurityLogger
 
 	roleRepo repos.RoleRepo
 }
 
 func NewRoleServiceServer(
-	logger lager.Logger,
+	logger logx.Logger,
 	securityLogger SecurityLogger,
 	roleRepo repos.RoleRepo,
 ) *RoleServiceServer {
@@ -45,7 +45,11 @@ func (s *RoleServiceServer) CreateRole(
 	}
 	logExtensions := logging.CustomExtension{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "CreateRole", "Role creation", logExtensions)
-	logger := s.logger.Session("create-role").WithData(lager.Data{"role.name": name, "permissions": permissions})
+
+	logger := s.logger.WithName("create-role").WithData(
+		logx.Data{"role.name", name},
+		logx.Data{"permissions", permissions},
+	)
 	logger.Debug(starting)
 
 	role, err := s.roleRepo.CreateRole(ctx, logger, name, permissions...)
@@ -69,9 +73,7 @@ func (s *RoleServiceServer) DeleteRole(
 	name := req.GetName()
 	logExtensions := logging.CustomExtension{Key: "roleName", Value: name}
 	s.securityLogger.Log(ctx, "DeleteRole", "Role deletion", logExtensions)
-	logger := s.logger.Session("delete-role").WithData(lager.Data{
-		"role.name": name,
-	})
+	logger := s.logger.WithName("delete-role").WithData(logx.Data{"role.name", name})
 	logger.Debug(starting)
 
 	err := s.roleRepo.DeleteRole(ctx, logger, name)
@@ -102,11 +104,11 @@ func (s *RoleServiceServer) AssignRole(
 	}
 
 	s.securityLogger.Log(ctx, "AssignRole", "Role assignment", logExtensions...)
-	logger := s.logger.Session("assign-role").WithData(lager.Data{
-		"actor.id":        domainID,
-		"actor.namespace": namespace,
-		"role.name":       roleName,
-	})
+	logger := s.logger.WithName("assign-role").WithData(
+		logx.Data{"actor.id", domainID},
+		logx.Data{"actor.namespace", namespace},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	err = s.roleRepo.AssignRole(ctx, logger, roleName, domainID, namespace)
@@ -132,10 +134,10 @@ func (s *RoleServiceServer) AssignRoleToGroup(
 	}
 
 	s.securityLogger.Log(ctx, "AssignRoleToGroup", "Role assignment", logExtensions...)
-	logger := s.logger.Session("assign-role").WithData(lager.Data{
-		"actor.id":  groupID,
-		"role.name": roleName,
-	})
+	logger := s.logger.WithName("assign-role").WithData(
+		logx.Data{"actor.id", groupID},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	err := s.roleRepo.AssignRoleToGroup(ctx, logger, roleName, groupID)
@@ -169,11 +171,11 @@ func (s *RoleServiceServer) UnassignRole(
 		{Key: "userID", Value: pActor.ID},
 	}
 	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment", logExtensions...)
-	logger := s.logger.Session("unassign-role").WithData(lager.Data{
-		"actor.id":        actor.ID,
-		"actor.namespace": actor.Namespace,
-		"role.name":       roleName,
-	})
+	logger := s.logger.WithName("unassign-role").WithData(
+		logx.Data{"actor.id", actor.ID},
+		logx.Data{"actor.namespace", actor.Namespace},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	err = s.roleRepo.UnassignRole(ctx, logger, roleName, domainID, namespace)
@@ -201,10 +203,10 @@ func (s *RoleServiceServer) UnassignRoleFromGroup(
 		{Key: "userID", Value: pGroup.ID},
 	}
 	s.securityLogger.Log(ctx, "UnassignRoleFromGroup", "Role group unassignment", logExtensions...)
-	logger := s.logger.Session("unassign-role-from-group").WithData(lager.Data{
-		"group.id":  group.ID,
-		"role.name": roleName,
-	})
+	logger := s.logger.WithName("unassign-role-from-group").WithData(
+		logx.Data{"group.id", group.ID},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	err := s.roleRepo.UnassignRoleFromGroup(ctx, logger, roleName, pGroup.ID)
@@ -232,11 +234,11 @@ func (s *RoleServiceServer) HasRole(
 		Namespace: pActor.GetNamespace(),
 	}
 
-	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"actor.id":        actor.ID,
-		"actor.namespace": actor.Namespace,
-		"role.name":       roleName,
-	})
+	logger := s.logger.WithName("has-role").WithData(
+		logx.Data{"actor.id", actor.ID},
+		logx.Data{"actor.namespace", actor.Namespace},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	query := repos.HasRoleQuery{
@@ -268,10 +270,10 @@ func (s *RoleServiceServer) HasRoleForGroup(
 		ID: pGroup.GetID(),
 	}
 
-	logger := s.logger.Session("has-role").WithData(lager.Data{
-		"group.id":  group.ID,
-		"role.name": roleName,
-	})
+	logger := s.logger.WithName("has-role").WithData(
+		logx.Data{"group.id", group.ID},
+		logx.Data{"role.name", roleName},
+	)
 	logger.Debug(starting)
 
 	query := repos.HasRoleForGroupQuery{
@@ -297,9 +299,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	req *protos.ListRolePermissionsRequest,
 ) (*protos.ListRolePermissionsResponse, error) {
 	roleName := req.GetRoleName()
-	logger := s.logger.Session("list-role-permissions").WithData(lager.Data{
-		"role.name": roleName,
-	})
+	logger := s.logger.WithName("list-role-permissions").WithData(logx.Data{"role.name", roleName})
 	logger.Debug(starting)
 
 	query := repos.ListRolePermissionsQuery{

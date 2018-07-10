@@ -21,6 +21,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/permstats"
@@ -83,7 +84,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	}
 
 	serverOpts := []api.ServerOption{
-		api.WithLogger(logger.Session("grpc-serve")),
+		api.WithLogger(lagerx.NewLogger(logger.Session("grpc-serve"))),
 		api.WithSecurityLogger(securityLogger),
 		api.WithTLSConfig(tlsConfig),
 		api.WithMaxConnectionIdle(cmd.MaxConnectionIdle),
@@ -112,7 +113,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		migrationLogger := logger.Session("verify-migrations")
 		if err := sqlx.VerifyAppliedMigrations(
 			context.Background(),
-			migrationLogger,
+			lagerx.NewLogger(migrationLogger),
 			conn,
 			migrations.TableName,
 			migrations.Migrations,

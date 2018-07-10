@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -38,8 +38,8 @@ ON DELETE CASCADE
 
 var deletePermissionsTable = `DROP TABLE permission`
 
-func createPermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-permissions-table")
+func createPermissionsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-permissions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -57,8 +57,8 @@ func createPermissionsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx
 	return err
 }
 
-func createPermissionsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-permissions-table")
+func createPermissionsTableDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-permissions-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

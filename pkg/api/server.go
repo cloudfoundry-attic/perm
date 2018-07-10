@@ -13,12 +13,12 @@ import (
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -26,7 +26,7 @@ import (
 )
 
 type Server struct {
-	logger         lager.Logger
+	logger         logx.Logger
 	securityLogger rpc.SecurityLogger
 	server         *grpc.Server
 }
@@ -125,7 +125,7 @@ func (s *Server) Stop() {
 
 type ServerOption func(*serverConfig)
 
-func WithLogger(logger lager.Logger) ServerOption {
+func WithLogger(logger logx.Logger) ServerOption {
 	return func(o *serverConfig) {
 		o.logger = logger
 	}
@@ -168,7 +168,7 @@ func WithStats(handler stats.Handler) ServerOption {
 }
 
 type serverConfig struct {
-	logger         lager.Logger
+	logger         logx.Logger
 	securityLogger rpc.SecurityLogger
 
 	credentials  credentials.TransportCredentials
@@ -182,27 +182,19 @@ type serverConfig struct {
 
 type emptyLogger struct{}
 
-func (l *emptyLogger) RegisterSink(lager.Sink) {}
-
-func (l *emptyLogger) SessionName() string {
-	return ""
-}
-
-func (l *emptyLogger) Session(string, ...lager.Data) lager.Logger {
+func (l *emptyLogger) WithName(string) logx.Logger {
 	return l
 }
 
-func (l *emptyLogger) WithData(lager.Data) lager.Logger {
+func (l *emptyLogger) WithData(...logx.Data) logx.Logger {
 	return l
 }
 
-func (l *emptyLogger) Debug(string, ...lager.Data) {}
+func (l *emptyLogger) Debug(string, ...logx.Data) {}
 
-func (l *emptyLogger) Info(string, ...lager.Data) {}
+func (l *emptyLogger) Info(string, ...logx.Data) {}
 
-func (l *emptyLogger) Error(string, error, ...lager.Data) {}
-
-func (l *emptyLogger) Fatal(string, error, ...lager.Data) {}
+func (l *emptyLogger) Error(string, error, ...logx.Data) {}
 
 type emptySecurityLogger struct{}
 

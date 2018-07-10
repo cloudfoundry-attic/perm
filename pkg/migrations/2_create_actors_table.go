@@ -5,7 +5,7 @@ import (
 
 	"strings"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -41,8 +41,8 @@ UNIQUE(domain_id_issuer_hash)
 
 var deleteActorsTable = `DROP TABLE actor`
 
-func createActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-actors-table")
+func createActorsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-actors-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
@@ -62,8 +62,8 @@ func createActorsTableUp(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) 
 	return err
 }
 
-func createActorsTableDown(ctx context.Context, logger lager.Logger, tx *sqlx.Tx) error {
-	logger = logger.Session("create-actors-table")
+func createActorsTableDown(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
+	logger = logger.WithName("create-actors-table")
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 

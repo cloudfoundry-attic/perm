@@ -3,19 +3,19 @@ package db
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 func (s *DataService) CreateRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	name string,
 	permissions ...perm.Permission,
 ) (r perm.Role, err error) {
-	logger = logger.Session("data-service")
+	logger = logger.WithName("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -42,18 +42,18 @@ func (s *DataService) CreateRole(
 
 func (s *DataService) DeleteRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName string,
 ) error {
-	return deleteRole(ctx, logger.Session("data-service"), s.conn, roleName)
+	return deleteRole(ctx, logger.WithName("data-service"), s.conn, roleName)
 }
 
 func (s *DataService) ListRolePermissions(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.ListRolePermissionsQuery,
 ) ([]perm.Permission, error) {
-	p, err := listRolePermissions(ctx, logger.Session("data-service"), s.conn, query)
+	p, err := listRolePermissions(ctx, logger.WithName("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}

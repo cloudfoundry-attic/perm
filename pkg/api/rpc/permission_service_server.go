@@ -3,24 +3,23 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/api/logging"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"code.cloudfoundry.org/perm/pkg/api/logging"
-	"code.cloudfoundry.org/perm/pkg/api/repos"
-	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type PermissionServiceServer struct {
-	logger         lager.Logger
+	logger         logx.Logger
 	securityLogger SecurityLogger
 	permissionRepo repos.PermissionRepo
 }
 
 func NewPermissionServiceServer(
-	logger lager.Logger,
+	logger logx.Logger,
 	securityLogger SecurityLogger,
 	permissionRepo repos.PermissionRepo,
 ) *PermissionServiceServer {
@@ -60,12 +59,12 @@ func (s *PermissionServiceServer) HasPermission(
 
 	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)
 
-	logger := s.logger.Session("has-permission").WithData(lager.Data{
-		"actor.id":                   actor.ID,
-		"actor.namespace":            actor.Namespace,
-		"permission.action":          action,
-		"permission.resourcePattern": resourcePattern,
-	})
+	logger := s.logger.WithName("has-permission").WithData(
+		logx.Data{"actor.id", actor.ID},
+		logx.Data{"actor.namespace", actor.Namespace},
+		logx.Data{"permission.action", action},
+		logx.Data{"permission.resourcePattern", resourcePattern},
+	)
 	logger.Debug(starting)
 
 	query := repos.HasPermissionQuery{
@@ -114,13 +113,12 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	for _, g := range groups {
 		groupsStr = groupsStr + ", " + g.ID
 	}
-	logger := s.logger.Session("list-resource-patterns").
-		WithData(lager.Data{
-			"actor.id":          actor.ID,
-			"actor.namespace":   actor.Namespace,
-			"groups":            groupsStr,
-			"permission.action": action,
-		})
+	logger := s.logger.WithName("list-resource-patterns").WithData(
+		logx.Data{"actor.id", actor.ID},
+		logx.Data{"actor.namespace", actor.Namespace},
+		logx.Data{"groups", groupsStr},
+		logx.Data{"permission.action", action},
+	)
 
 	logger.Debug(starting)
 

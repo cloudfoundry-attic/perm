@@ -3,14 +3,14 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 func (s *InMemoryStore) HasPermission(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	// Actor-based check
@@ -65,7 +65,7 @@ func (s *InMemoryStore) HasPermission(
 
 func (s *InMemoryStore) ListResourcePatterns(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.ListResourcePatternsQuery,
 ) ([]string, error) {
 	var resourcePatterns []string

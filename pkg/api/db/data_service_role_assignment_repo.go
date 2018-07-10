@@ -3,19 +3,19 @@ package db
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 func (s *DataService) AssignRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	domainID,
 	namespace string,
 ) (err error) {
-	logger = logger.Session("data-service")
+	logger = logger.WithName("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -37,11 +37,11 @@ func (s *DataService) AssignRole(
 
 func (s *DataService) AssignRoleToGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	groupID string,
 ) (err error) {
-	logger = logger.Session("data-service")
+	logger = logger.WithName("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -63,12 +63,12 @@ func (s *DataService) AssignRoleToGroup(
 
 func (s *DataService) UnassignRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	domainID,
 	namespace string,
 ) (err error) {
-	logger = logger.Session("data-service")
+	logger = logger.WithName("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -90,11 +90,11 @@ func (s *DataService) UnassignRole(
 
 func (s *DataService) UnassignRoleFromGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	roleName,
 	groupID string,
 ) (err error) {
-	logger = logger.Session("data-service")
+	logger = logger.WithName("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -115,16 +115,16 @@ func (s *DataService) UnassignRoleFromGroup(
 
 func (s *DataService) HasRole(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.HasRoleQuery,
 ) (bool, error) {
-	return hasRole(ctx, logger.Session("data-service"), s.conn, query)
+	return hasRole(ctx, logger.WithName("data-service"), s.conn, query)
 }
 
 func (s *DataService) HasRoleForGroup(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
-	return hasRoleForGroup(ctx, logger.Session("data-service"), s.conn, query)
+	return hasRoleForGroup(ctx, logger.WithName("data-service"), s.conn, query)
 }

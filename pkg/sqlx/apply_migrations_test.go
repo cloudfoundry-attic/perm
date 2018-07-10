@@ -6,8 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	. "code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/DATA-DOG/go-sqlmock"
 	. "github.com/onsi/ginkgo"
@@ -18,7 +19,7 @@ var _ = Describe("#ApplyMigrations", func() {
 	var (
 		migrationTableName string
 
-		fakeLogger *lagertest.TestLogger
+		fakeLogger logx.Logger
 
 		fakeConn *sql.DB
 		mock     sqlmock.Sqlmock
@@ -31,7 +32,7 @@ var _ = Describe("#ApplyMigrations", func() {
 	BeforeEach(func() {
 		migrationTableName = "db_migrations"
 
-		fakeLogger = lagertest.NewTestLogger("perm-sqlx")
+		fakeLogger = lagerx.NewLogger(lagertest.NewTestLogger("perm-sqlx"))
 
 		var err error
 		fakeConn, mock, err = sqlmock.New()
@@ -94,14 +95,14 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("applies the migrations", func() {
 		migration1 := Migration{
 			Name: "migration-1",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 				return err
 			},
 		}
 		migration2 := Migration{
 			Name: "migration-2",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "THIS IS A TEST")
 				return err
 			},
@@ -140,14 +141,14 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("does not repeat applied migrations", func() {
 		migration1 := Migration{
 			Name: "migration-1",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 				return err
 			},
 		}
 		migration2 := Migration{
 			Name: "migration-2",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "THIS IS A TEST")
 				return err
 			},
@@ -178,14 +179,14 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("does not apply later migrations if a migration fails", func() {
 		migration1 := Migration{
 			Name: "migration-1",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 				return err
 			},
 		}
 		migration2 := Migration{
 			Name: "migration-2",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 				return err
 			},
@@ -213,14 +214,14 @@ var _ = Describe("#ApplyMigrations", func() {
 	It("does not apply later migrations if a migration commit fails", func() {
 		migration1 := Migration{
 			Name: "migration-1",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "FAKE MIGRATION")
 				return err
 			},
 		}
 		migration2 := Migration{
 			Name: "migration-2",
-			Up: func(ctx context.Context, logger lager.Logger, tx *Tx) error {
+			Up: func(ctx context.Context, logger logx.Logger, tx *Tx) error {
 				_, err := tx.ExecContext(ctx, "SHOULD NOT BE APPLIED")
 				return err
 			},

@@ -1,10 +1,8 @@
 package sqlx
 
-import (
-	"code.cloudfoundry.org/lager"
-)
+import "code.cloudfoundry.org/perm/pkg/logx"
 
-func Commit(logger lager.Logger, tx *Tx, err error) error {
+func Commit(logger logx.Logger, tx *Tx, err error) error {
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {

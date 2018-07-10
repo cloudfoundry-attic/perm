@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"github.com/Masterminds/squirrel"
 )
 
 func RetrieveAppliedMigrations(
 	ctx context.Context,
-	logger lager.Logger,
+	logger logx.Logger,
 	conn *DB,
 	tableName string,
 ) (map[int]AppliedMigration, error) {
