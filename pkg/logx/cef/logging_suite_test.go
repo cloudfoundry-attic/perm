@@ -1,4 +1,4 @@
-package logging_test
+package cef_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestLogging(t *testing.T) {
+func TestCEF(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Logging Suite")
+	RunSpecs(t, "CEF Suite")
 }

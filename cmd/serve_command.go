@@ -18,7 +18,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
@@ -52,7 +52,7 @@ type statsDOptions struct {
 
 func (cmd ServeCommand) Execute([]string) error {
 	//TODO Figure out version dynamically
-	version := logging.Version("0.0.0")
+	version := cef.Version("0.0.0")
 	logger, _ := cmd.Logger.Logger("perm")
 	logger = logger.Session("serve")
 
@@ -72,7 +72,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		return hostErr
 	}
 
-	securityLogger := logging.NewCEFLogger(auditSink, "cloud_foundry", "perm", version, logging.Hostname(hostname), cmd.Port)
+	securityLogger := cef.NewCEFLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port)
 
 	cert, certErr := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
 	if certErr != nil {

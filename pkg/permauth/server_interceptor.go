@@ -3,7 +3,7 @@ package permauth
 import (
 	"context"
 
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
@@ -31,25 +31,25 @@ func ServerInterceptor(provider OIDCProvider, securityLogger rpc.SecurityLogger)
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "no metadata"})
+			securityLogger.Log(ctx, "Auth", "Auth", cef.CustomExtension{Key: "msg", Value: "no metadata"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		token, ok := md["token"]
 		if !ok {
-			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: "no token"})
+			securityLogger.Log(ctx, "Auth", "Auth", cef.CustomExtension{Key: "msg", Value: "no token"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		idToken, err := verifier.Verify(ctx, token[0])
 		if err != nil {
-			securityLogger.Log(ctx, "Auth", "Auth", logging.CustomExtension{Key: "msg", Value: err.Error()})
+			securityLogger.Log(ctx, "Auth", "Auth", cef.CustomExtension{Key: "msg", Value: err.Error()})
 			return nil, perm.ErrUnauthenticated
 		}
 
-		extensions := []logging.CustomExtension{
-			logging.CustomExtension{Key: "msg", Value: "authentication succeeded"},
-			logging.CustomExtension{Key: "subject", Value: idToken.Subject},
+		extensions := []cef.CustomExtension{
+			cef.CustomExtension{Key: "msg", Value: "authentication succeeded"},
+			cef.CustomExtension{Key: "subject", Value: idToken.Subject},
 		}
 		securityLogger.Log(ctx, "Auth", "Auth", extensions...)
 		return handler(ctx, req)

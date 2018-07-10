@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/perm/pkg/api/db"
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
@@ -198,4 +198,4 @@ func (l *emptyLogger) Error(string, error, ...logx.Data) {}
 
 type emptySecurityLogger struct{}
 
-func (l *emptySecurityLogger) Log(context.Context, string, string, ...logging.CustomExtension) {}
+func (l *emptySecurityLogger) Log(context.Context, string, string, ...cef.CustomExtension) {}

@@ -1,4 +1,4 @@
-package logging_test
+package cef_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
-	. "code.cloudfoundry.org/perm/pkg/api/logging"
+	. "code.cloudfoundry.org/perm/pkg/logx/cef"
 	"github.com/onsi/gomega/gbytes"
 	"google.golang.org/grpc/peer"
 )

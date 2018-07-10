@@ -3,7 +3,7 @@ package rpc
 import (
 	"context"
 
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
@@ -51,7 +51,7 @@ func (s *PermissionServiceServer) HasPermission(
 		})
 	}
 	resourcePattern := req.GetResource()
-	extensions := []logging.CustomExtension{
+	extensions := []cef.CustomExtension{
 		{Key: "userID", Value: pActor.GetID()},
 		{Key: "action", Value: action},
 		{Key: "resource", Value: resourcePattern},

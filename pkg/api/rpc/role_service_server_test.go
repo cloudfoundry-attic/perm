@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/logx"
@@ -67,7 +67,7 @@ var _ = Describe("RoleRepoServer", func() {
 
 		It("logs a security event", func() {
 			_, err := subject.CreateRole(ctx, req)
-			expectedExtensions := []logging.CustomExtension{{Key: "roleName", Value: "test-role"}}
+			expectedExtensions := []cef.CustomExtension{{Key: "roleName", Value: "test-role"}}
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
@@ -170,7 +170,7 @@ var _ = Describe("RoleRepoServer", func() {
 			req := &protos.DeleteRoleRequest{
 				Name: "test-role",
 			}
-			expectedExtensions := []logging.CustomExtension{{Key: "roleName", Value: "test-role"}}
+			expectedExtensions := []cef.CustomExtension{{Key: "roleName", Value: "test-role"}}
 			subject.DeleteRole(ctx, req)
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
@@ -269,7 +269,7 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.AssignRole(ctx, req)
-			expectedExtensions := []logging.CustomExtension{
+			expectedExtensions := []cef.CustomExtension{
 				{Key: "roleName", Value: "role"},
 				{Key: "userID", Value: "actor-id"},
 			}
@@ -375,7 +375,7 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.UnassignRole(ctx, req)
-			expectedExtensions := []logging.CustomExtension{
+			expectedExtensions := []cef.CustomExtension{
 				{Key: "roleName", Value: "role"},
 				{Key: "userID", Value: "actor-id"},
 			}
@@ -476,7 +476,7 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.UnassignRoleFromGroup(ctx, req)
-			expectedExtensions := []logging.CustomExtension{
+			expectedExtensions := []cef.CustomExtension{
 				{Key: "roleName", Value: "role"},
 				{Key: "userID", Value: "group-id"},
 			}
@@ -675,7 +675,7 @@ var _ = Describe("RoleRepoServer", func() {
 				RoleName: "role",
 			}
 			subject.AssignRoleToGroup(ctx, req)
-			expectedExtensions := []logging.CustomExtension{
+			expectedExtensions := []cef.CustomExtension{
 				{Key: "roleName", Value: "role"},
 				{Key: "groupID", Value: "group-id"},
 			}

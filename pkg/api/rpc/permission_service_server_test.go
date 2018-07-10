@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/pkg/api/logging"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos/reposfakes"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
@@ -175,7 +175,7 @@ var _ = Describe("PermissionServiceServer", func() {
 				Resource: "some-resource",
 			})
 			Expect(err).NotTo(HaveOccurred())
-			expectedExtensions := []logging.CustomExtension{
+			expectedExtensions := []cef.CustomExtension{
 				{Key: "userID", Value: "actor"},
 				{Key: "action", Value: "some-action"},
 				{Key: "resource", Value: "some-resource"},
