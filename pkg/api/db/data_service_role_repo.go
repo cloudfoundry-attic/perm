@@ -30,7 +30,7 @@ func (s *DataService) CreateRole(
 		err = sqlx.Commit(logger, tx, err)
 	}()
 
-	var r2 *role
+	var r2 role
 	r2, err = createRoleAndAssignPermissions(ctx, logger, tx, name, permissions...)
 	if err != nil {
 		return

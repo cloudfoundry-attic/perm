@@ -29,31 +29,31 @@ func createRoleAndAssignPermissions(
 	conn squirrel.BaseRunner,
 	roleName string,
 	permissions ...*perm.Permission,
-) (*role, error) {
-	role, err := createRole(ctx, logger, conn, roleName)
+) (role, error) {
+	r, err := createRole(ctx, logger, conn, roleName)
 	if err != nil {
-		return nil, err
+		return role{}, err
 	}
 
 	for _, permission := range permissions {
 		_, err = createAction(ctx, logger, conn, permission.Action)
 		if err != nil && err != errActionAlreadyExistsInDB {
-			return nil, err
+			return role{}, err
 		}
 
 		action, err := findAction(ctx, logger, conn, permission.Action)
 		if err != nil {
-			return nil, err
+			return role{}, err
 		}
 
-		_, err = createPermission(ctx, logger, conn, action.ID, role.ID, permission.ResourcePattern, permission.Action)
+		_, err = createPermission(ctx, logger, conn, action.ID, r.ID, permission.ResourcePattern, permission.Action)
 		if err != nil {
-			return nil, err
+			return role{}, err
 		}
 
 	}
 
-	return role, nil
+	return r, nil
 }
 
 func createRole(
@@ -61,7 +61,7 @@ func createRole(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	name string,
-) (*role, error) {
+) (role, error) {
 	logger = logger.Session("create-role")
 	u := uuid.NewV4().Bytes()
 
@@ -76,27 +76,26 @@ func createRole(
 		roleID, err2 := result.LastInsertId()
 		if err2 != nil {
 			logger.Error(failedToRetrieveID, err2)
-			return nil, err2
+			return role{}, err2
 		}
 
-		role := &role{
+		return role{
 			ID: roleID,
 			Role: &perm.Role{
 				Name: name,
 			},
-		}
-		return role, nil
+		}, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errRoleAlreadyExists)
-			return nil, perm.ErrRoleAlreadyExists
+			return role{}, perm.ErrRoleAlreadyExists
 		}
 
 		logger.Error(failedToCreateRole, err)
-		return nil, err
+		return role{}, err
 	default:
 		logger.Error(failedToCreateRole, err)
-		return nil, err
+		return role{}, err
 	}
 }
 
@@ -105,7 +104,7 @@ func findRole(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	requestedRoleName string,
-) (*role, error) {
+) (role, error) {
 	logger = logger.Session("find-role")
 
 	var (
@@ -123,7 +122,7 @@ func findRole(
 
 	switch err {
 	case nil:
-		return &role{
+		return role{
 			ID: roleID,
 			Role: &perm.Role{
 				Name: roleName,
@@ -131,10 +130,10 @@ func findRole(
 		}, nil
 	case sql.ErrNoRows:
 		logger.Debug(errRoleNotFound)
-		return nil, perm.ErrRoleNotFound
+		return role{}, perm.ErrRoleNotFound
 	default:
 		logger.Error(failedToFindRole, err)
-		return nil, err
+		return role{}, err
 	}
 }
 
@@ -503,7 +502,7 @@ func listRolePermissions(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListRolePermissionsQuery,
-) ([]*permission, error) {
+) ([]permission, error) {
 	logger = logger.Session("list-role-permissions")
 
 	role, err := findRole(ctx, logger, conn, query.RoleName)
@@ -519,7 +518,7 @@ func createAction(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	name string,
-) (*action, error) {
+) (action, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
@@ -534,10 +533,10 @@ func createAction(
 		actionID, err2 := result.LastInsertId()
 		if err2 != nil {
 			logger.Error(failedToRetrieveID, err2)
-			return nil, err2
+			return action{}, err2
 		}
 
-		return &action{
+		return action{
 			ID: actionID,
 			Action: &perm.Action{
 				Name: name,
@@ -546,14 +545,14 @@ func createAction(
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errActionAlreadyExists)
-			return nil, errActionAlreadyExistsInDB
+			return action{}, errActionAlreadyExistsInDB
 		}
 
 		logger.Error(failedToCreateAction, err)
-		return nil, err
+		return action{}, err
 	default:
 		logger.Error(failedToCreateAction, err)
-		return nil, err
+		return action{}, err
 	}
 }
 
@@ -562,7 +561,7 @@ func findAction(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	actionName string,
-) (*action, error) {
+) (action, error) {
 	logger = logger.Session("find-permission-definition")
 
 	var (
@@ -580,7 +579,7 @@ func findAction(
 
 	switch err {
 	case nil:
-		return &action{
+		return action{
 			ID: actionID,
 			Action: &perm.Action{
 				Name: name,
@@ -588,10 +587,10 @@ func findAction(
 		}, nil
 	case sql.ErrNoRows:
 		logger.Debug(errActionNotFound)
-		return nil, errActionNotFoundDB
+		return action{}, errActionNotFoundDB
 	default:
 		logger.Error(failedToFindAction, err)
-		return nil, err
+		return action{}, err
 	}
 }
 
@@ -600,7 +599,7 @@ func findRolePermissions(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
-) ([]*permission, error) {
+) ([]permission, error) {
 	logger = logger.Session("find-role-permissions").WithData(lager.Data{
 		"role.id": roleID,
 	})
@@ -618,7 +617,7 @@ func findRolePermissions(
 	}
 	defer rows.Close()
 
-	var permissions []*permission
+	var permissions []permission
 	for rows.Next() {
 		var (
 			permissionID    int64
@@ -638,7 +637,7 @@ func findRolePermissions(
 				ResourcePattern: resourcePattern,
 			},
 		}
-		permissions = append(permissions, &p)
+		permissions = append(permissions, p)
 	}
 
 	err = rows.Err()
@@ -722,7 +721,7 @@ func createPermission(
 	roleID int64,
 	resourcePattern string,
 	action string,
-) (*permission, error) {
+) (permission, error) {
 	logger = logger.Session("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
@@ -737,28 +736,27 @@ func createPermission(
 		permissionID, err2 := result.LastInsertId()
 		if err2 != nil {
 			logger.Error(failedToRetrieveID, err2)
-			return nil, err2
+			return permission{}, err2
 		}
 
-		permission := &permission{
+		return permission{
 			ID: permissionID,
 			Permission: &perm.Permission{
 				Action:          action,
 				ResourcePattern: resourcePattern,
 			},
-		}
-		return permission, nil
+		}, nil
 	case *mysql.MySQLError:
 		if e.Number == MySQLErrorCodeDuplicateKey {
 			logger.Debug(errPermissionAlreadyExists)
-			return nil, errPermissionAlreadyExistsDB
+			return permission{}, errPermissionAlreadyExistsDB
 		}
 
 		logger.Error(failedToCreatePermission, err)
-		return nil, err
+		return permission{}, err
 	default:
 		logger.Error(failedToCreatePermission, err)
-		return nil, err
+		return permission{}, err
 	}
 }
 
