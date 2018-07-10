@@ -34,7 +34,7 @@ func BehavesLikeAPermissionRepo(
 		resourcePattern1, resourcePattern2, resourcePattern3 string
 
 		actor                    perm.Actor
-		permission1, permission2 *perm.Permission
+		permission1, permission2 perm.Permission
 	)
 
 	BeforeEach(func() {
@@ -51,8 +51,8 @@ func BehavesLikeAPermissionRepo(
 		resourcePattern2 = "resource-pattern-2"
 		resourcePattern3 = "resource-pattern-3"
 
-		permission1 = &perm.Permission{Action: sameAction, ResourcePattern: resourcePattern1}
-		permission2 = &perm.Permission{Action: sameAction, ResourcePattern: resourcePattern2}
+		permission1 = perm.Permission{Action: sameAction, ResourcePattern: resourcePattern1}
+		permission2 = perm.Permission{Action: sameAction, ResourcePattern: resourcePattern2}
 		actor = perm.Actor{
 			ID:        uuid.NewV4().String(),
 			Namespace: uuid.NewV4().String(),
@@ -158,7 +158,7 @@ func BehavesLikeAPermissionRepo(
 
 	Describe("#ListResourcePatterns", func() {
 		It("returns the list of resource patterns for which the actor has that permission", func() {
-			permission3 := &perm.Permission{
+			permission3 := perm.Permission{
 				Action:          "different-action",
 				ResourcePattern: resourcePattern3,
 			}
@@ -169,7 +169,7 @@ func BehavesLikeAPermissionRepo(
 			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			permissionForUnassignedRole := &perm.Permission{
+			permissionForUnassignedRole := perm.Permission{
 				Action:          sameAction,
 				ResourcePattern: "should-not-have-this-resource-pattern",
 			}
@@ -198,7 +198,7 @@ func BehavesLikeAPermissionRepo(
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := uuid.NewV4().String()
-			permission2 = &perm.Permission{
+			permission2 = perm.Permission{
 				Action:          sameAction,
 				ResourcePattern: resourcePattern1,
 			}
@@ -236,20 +236,20 @@ func BehavesLikeAPermissionRepo(
 
 		Context("when providing groups", func() {
 			var (
-				otherPermission *perm.Permission
+				otherPermission perm.Permission
 				otherRoleName   string
 			)
 
 			BeforeEach(func() {
 				otherRoleName = "other-role"
-				otherPermission = &perm.Permission{
+				otherPermission = perm.Permission{
 					Action:          "action-that-should-not-appear",
 					ResourcePattern: "other-resource-pattern",
 				}
 			})
 			Context("when both the actor and groups have assigned permissions", func() {
 				It("returns a list of all permissions", func() {
-					permission3 := &perm.Permission{
+					permission3 := perm.Permission{
 						Action:          sameAction,
 						ResourcePattern: resourcePattern3,
 					}

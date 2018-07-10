@@ -13,8 +13,8 @@ func (s *DataService) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
 	name string,
-	permissions ...*perm.Permission,
-) (r *perm.Role, err error) {
+	permissions ...perm.Permission,
+) (r perm.Role, err error) {
 	logger = logger.Session("data-service")
 
 	tx, err := s.conn.BeginTx(ctx, nil)
@@ -35,7 +35,7 @@ func (s *DataService) CreateRole(
 	if err != nil {
 		return
 	}
-	r = &r2.Role
+	r = r2.Role
 
 	return
 }
@@ -52,18 +52,15 @@ func (s *DataService) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListRolePermissionsQuery,
-) ([]*perm.Permission, error) {
+) ([]perm.Permission, error) {
 	p, err := listRolePermissions(ctx, logger.Session("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}
 
-	var permissions []*perm.Permission
+	var permissions []perm.Permission
 	for _, permission := range p {
-		permissions = append(permissions, &perm.Permission{
-			Action:          permission.Action,
-			ResourcePattern: permission.ResourcePattern,
-		})
+		permissions = append(permissions, permission.Permission)
 	}
 
 	return permissions, nil

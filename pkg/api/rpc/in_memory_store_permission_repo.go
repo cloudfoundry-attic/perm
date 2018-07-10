@@ -16,7 +16,7 @@ func (s *InMemoryStore) HasPermission(
 	// Actor-based check
 	assignments, _ := s.assignments[query.Actor]
 
-	var permissions []*perm.Permission
+	var permissions []perm.Permission
 	action := query.Action
 
 	for _, roleName := range assignments {
@@ -40,7 +40,7 @@ func (s *InMemoryStore) HasPermission(
 	for _, group := range query.Groups {
 		assignments, _ := s.groupAssignments[group]
 
-		var permissions []*perm.Permission
+		var permissions []perm.Permission
 		action := query.Action
 
 		for _, roleName := range assignments {
@@ -83,7 +83,7 @@ func (s *InMemoryStore) ListResourcePatterns(
 		return resourcePatterns, nil
 	}
 
-	var permissions []*perm.Permission
+	var permissions []perm.Permission
 	for _, roleName := range assignments {
 		p, ok := s.permissions[roleName]
 		if !ok {

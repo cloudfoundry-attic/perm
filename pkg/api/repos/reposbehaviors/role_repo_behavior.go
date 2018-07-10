@@ -29,7 +29,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		group     perm.Group
 
 		actor                    perm.Actor
-		permission1, permission2 *perm.Permission
+		permission1, permission2 perm.Permission
 	)
 
 	BeforeEach(func() {
@@ -43,8 +43,8 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		actorID = uuid.NewV4().String()
 		namespace = uuid.NewV4().String()
 
-		permission1 = &perm.Permission{Action: "permission-1", ResourcePattern: "resource-pattern-1"}
-		permission2 = &perm.Permission{Action: "permission-2", ResourcePattern: "resource-pattern-2"}
+		permission1 = perm.Permission{Action: "permission-1", ResourcePattern: "resource-pattern-1"}
+		permission2 = perm.Permission{Action: "permission-2", ResourcePattern: "resource-pattern-2"}
 		actor = perm.Actor{
 			ID:        uuid.NewV4().String(),
 			Namespace: uuid.NewV4().String(),
@@ -77,7 +77,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 	Describe("#DeleteRole", func() {
 		It("deletes the role if it exists", func() {
-			permission := &perm.Permission{Action: "a", ResourcePattern: "b"}
+			permission := perm.Permission{Action: "a", ResourcePattern: "b"}
 			_, err := subject.CreateRole(ctx, logger, name, permission)
 			Expect(err).NotTo(HaveOccurred())
 

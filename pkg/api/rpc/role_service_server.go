@@ -36,9 +36,9 @@ func (s *RoleServiceServer) CreateRole(
 	req *protos.CreateRoleRequest,
 ) (*protos.CreateRoleResponse, error) {
 	name := req.GetName()
-	var permissions []*perm.Permission
+	var permissions []perm.Permission
 	for _, p := range req.GetPermissions() {
-		permissions = append(permissions, &perm.Permission{
+		permissions = append(permissions, perm.Permission{
 			Action:          p.GetAction(),
 			ResourcePattern: p.GetResourcePattern(),
 		})
@@ -308,7 +308,7 @@ func (s *RoleServiceServer) ListRolePermissions(
 	permissions, err := s.roleRepo.ListRolePermissions(ctx, logger, query)
 	if err != nil {
 		if err == perm.ErrRoleNotFound {
-			permissions = []*perm.Permission{}
+			permissions = []perm.Permission{}
 		} else {
 			return nil, togRPCError(err)
 		}

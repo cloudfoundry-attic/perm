@@ -12,13 +12,13 @@ func (s *InMemoryStore) CreateRole(
 	ctx context.Context,
 	logger lager.Logger,
 	name string,
-	permissions ...*perm.Permission,
-) (*perm.Role, error) {
+	permissions ...perm.Permission,
+) (perm.Role, error) {
 	if _, exists := s.roles[name]; exists {
-		return nil, perm.ErrRoleAlreadyExists
+		return perm.Role{}, perm.ErrRoleAlreadyExists
 	}
 
-	role := &perm.Role{
+	role := perm.Role{
 		Name: name,
 	}
 	s.roles[name] = role
@@ -263,7 +263,7 @@ func (s *InMemoryStore) ListRolePermissions(
 	ctx context.Context,
 	logger lager.Logger,
 	query repos.ListRolePermissionsQuery,
-) ([]*perm.Permission, error) {
+) ([]perm.Permission, error) {
 	permissions, exists := s.permissions[query.RoleName]
 	if !exists {
 		return nil, perm.ErrRoleNotFound

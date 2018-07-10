@@ -28,7 +28,7 @@ func createRoleAndAssignPermissions(
 	logger lager.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
-	permissions ...*perm.Permission,
+	permissions ...perm.Permission,
 ) (role, error) {
 	r, err := createRole(ctx, logger, conn, roleName)
 	if err != nil {

@@ -26,8 +26,8 @@ type RoleRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		name string,
-		permissions ...*perm.Permission,
-	) (*perm.Role, error)
+		permissions ...perm.Permission,
+	) (perm.Role, error)
 
 	DeleteRole(
 		context.Context,
@@ -39,7 +39,7 @@ type RoleRepo interface {
 		ctx context.Context,
 		logger lager.Logger,
 		query ListRolePermissionsQuery,
-	) ([]*perm.Permission, error)
+	) ([]perm.Permission, error)
 
 	AssignRole(
 		ctx context.Context,
