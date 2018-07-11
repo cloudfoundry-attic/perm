@@ -26,7 +26,7 @@ func (h *ThreadSafeHistogram) Max() int64 {
 	h.rw.RLock()
 	defer h.rw.RUnlock()
 
-	return h.histogram.Current.Max()
+	return h.histogram.Merge().Max()
 }
 
 func (h *ThreadSafeHistogram) RecordValue(v int64) error {
