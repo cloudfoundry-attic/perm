@@ -184,12 +184,12 @@ func assignRole(
 ) error {
 	logger = logger.WithName("assign-role")
 
-	role, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return createRoleAssignment(ctx, logger, conn, role.ID, actorID, actorNamespace)
+	return createRoleAssignment(ctx, logger, conn, foundRole.ID, actorID, actorNamespace)
 }
 
 func createRoleAssignmentForGroup(
@@ -237,11 +237,11 @@ func assignRoleToGroup(
 ) error {
 	logger = logger.WithName("assign-role-to-group")
 
-	role, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
-	return createRoleAssignmentForGroup(ctx, logger, conn, role.ID, groupID)
+	return createRoleAssignmentForGroup(ctx, logger, conn, foundRole.ID, groupID)
 }
 
 func createRoleAssignment(
@@ -291,12 +291,12 @@ func unassignRole(ctx context.Context,
 ) error {
 	logger = logger.WithName("unassign-role")
 
-	role, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return deleteRoleAssignment(ctx, logger, conn, role.ID, actorID, actorNamespace)
+	return deleteRoleAssignment(ctx, logger, conn, foundRole.ID, actorID, actorNamespace)
 }
 
 func deleteRoleAssignment(
@@ -353,12 +353,12 @@ func unassignRoleFromGroup(ctx context.Context,
 ) error {
 	logger = logger.WithName("unassign-role-from-group")
 
-	role, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return deleteGroupRoleAssignment(ctx, logger, conn, role.ID, groupID)
+	return deleteGroupRoleAssignment(ctx, logger, conn, foundRole.ID, groupID)
 }
 
 func deleteGroupRoleAssignment(
@@ -411,12 +411,12 @@ func hasRole(
 	query repos.HasRoleQuery,
 ) (bool, error) {
 	logger = logger.WithName("has-role")
-	role, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
 	}
 
-	return findRoleAssignment(ctx, logger, conn, role.ID, query.Actor.ID, query.Actor.Namespace)
+	return findRoleAssignment(ctx, logger, conn, foundRole.ID, query.Actor.ID, query.Actor.Namespace)
 }
 
 func hasRoleForGroup(
@@ -426,12 +426,12 @@ func hasRoleForGroup(
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
 	logger = logger.WithName("has-role-for-group")
-	role, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
 	}
 
-	return findRoleAssignmentForGroup(ctx, logger, conn, role.ID, query.Group.ID)
+	return findRoleAssignmentForGroup(ctx, logger, conn, foundRole.ID, query.Group.ID)
 }
 
 func findRoleAssignment(
@@ -505,12 +505,12 @@ func listRolePermissions(
 ) ([]permission, error) {
 	logger = logger.WithName("list-role-permissions")
 
-	role, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
 	if err != nil {
 		return nil, err
 	}
 
-	return findRolePermissions(ctx, logger, conn, role.ID)
+	return findRolePermissions(ctx, logger, conn, foundRole.ID)
 }
 
 func createAction(
