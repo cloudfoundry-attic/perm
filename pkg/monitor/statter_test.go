@@ -63,12 +63,12 @@ var _ = Describe("Statter", func() {
 	})
 
 	Describe("SendCorrectProbe", func() {
-		It("sends successful and correct gauges, and 90, 99, 99.9th, and max quantile stats", func() {
+		It("sends successful and correct gauges", func() {
 			statter.RecordProbeDuration(logger, 1)
 
 			statter.SendCorrectProbe(logger)
 
-			Expect(statsd.GaugeCallCount()).To(Equal(6))
+			Expect(statsd.GaugeCallCount()).To(Equal(2))
 
 			metricName, value, rate := statsd.GaugeArgsForCall(0)
 			Expect(metricName).To(Equal("perm.probe.runs.success"))
@@ -79,26 +79,36 @@ var _ = Describe("Statter", func() {
 			Expect(metricName).To(Equal("perm.probe.runs.correct"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
+		})
+	})
+	Describe("SendStats", func() {
+		It("sends 90, 99, 99.9th, and max quantile stats", func() {
+			statter.RecordProbeDuration(logger, 1)
 
-			metricName, value, rate = statsd.GaugeArgsForCall(2)
+			statter.SendStats(logger)
+
+			Expect(statsd.GaugeCallCount()).To(Equal(4))
+
+			metricName, value, rate := statsd.GaugeArgsForCall(0)
 			Expect(metricName).To(Equal("perm.probe.responses.timing.p90"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
-			metricName, value, rate = statsd.GaugeArgsForCall(3)
+			metricName, value, rate = statsd.GaugeArgsForCall(1)
 			Expect(metricName).To(Equal("perm.probe.responses.timing.p99"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
-			metricName, value, rate = statsd.GaugeArgsForCall(4)
+			metricName, value, rate = statsd.GaugeArgsForCall(2)
 			Expect(metricName).To(Equal("perm.probe.responses.timing.p999"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 
-			metricName, value, rate = statsd.GaugeArgsForCall(5)
+			metricName, value, rate = statsd.GaugeArgsForCall(3)
 			Expect(metricName).To(Equal("perm.probe.responses.timing.max"))
 			Expect(value).To(Equal(int64(1)))
 			Expect(rate).To(Equal(float32(1.0)))
 		})
 	})
+
 })

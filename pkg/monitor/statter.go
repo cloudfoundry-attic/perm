@@ -31,6 +31,7 @@ type PermStatter interface {
 	SendFailedProbe(logger lager.Logger)
 	SendIncorrectProbe(logger lager.Logger)
 	SendCorrectProbe(logger lager.Logger)
+	SendStats(logger lager.Logger)
 }
 
 type Statter struct {
@@ -63,6 +64,9 @@ func (s *Statter) SendIncorrectProbe(logger lager.Logger) {
 func (s *Statter) SendCorrectProbe(logger lager.Logger) {
 	s.sendGauge(logger, MetricProbeRunsSuccess, MetricSuccess)
 	s.sendGauge(logger, MetricProbeRunsCorrect, MetricSuccess)
+}
+
+func (s *Statter) SendStats(logger lager.Logger) {
 	s.sendHistogramQuantile(logger, 90, MetricProbeTimingP90)
 	s.sendHistogramQuantile(logger, 99, MetricProbeTimingP99)
 	s.sendHistogramQuantile(logger, 99.9, MetricProbeTimingP999)

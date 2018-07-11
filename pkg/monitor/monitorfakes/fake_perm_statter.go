@@ -177,6 +177,11 @@ type FakePermStatter struct {
 	sendCorrectProbeArgsForCall []struct {
 		logger lager.Logger
 	}
+	SendStatsStub        func(logger lager.Logger)
+	sendStatsMutex       sync.RWMutex
+	sendStatsArgsForCall []struct {
+		logger lager.Logger
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -856,6 +861,30 @@ func (fake *FakePermStatter) SendCorrectProbeArgsForCall(i int) lager.Logger {
 	return fake.sendCorrectProbeArgsForCall[i].logger
 }
 
+func (fake *FakePermStatter) SendStats(logger lager.Logger) {
+	fake.sendStatsMutex.Lock()
+	fake.sendStatsArgsForCall = append(fake.sendStatsArgsForCall, struct {
+		logger lager.Logger
+	}{logger})
+	fake.recordInvocation("SendStats", []interface{}{logger})
+	fake.sendStatsMutex.Unlock()
+	if fake.SendStatsStub != nil {
+		fake.SendStatsStub(logger)
+	}
+}
+
+func (fake *FakePermStatter) SendStatsCallCount() int {
+	fake.sendStatsMutex.RLock()
+	defer fake.sendStatsMutex.RUnlock()
+	return len(fake.sendStatsArgsForCall)
+}
+
+func (fake *FakePermStatter) SendStatsArgsForCall(i int) lager.Logger {
+	fake.sendStatsMutex.RLock()
+	defer fake.sendStatsMutex.RUnlock()
+	return fake.sendStatsArgsForCall[i].logger
+}
+
 func (fake *FakePermStatter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -893,6 +922,8 @@ func (fake *FakePermStatter) Invocations() map[string][][]interface{} {
 	defer fake.sendIncorrectProbeMutex.RUnlock()
 	fake.sendCorrectProbeMutex.RLock()
 	defer fake.sendCorrectProbeMutex.RUnlock()
+	fake.sendStatsMutex.RLock()
+	defer fake.sendStatsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

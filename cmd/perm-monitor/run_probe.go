@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ProbeHistogramWindow      = 5 // Minutes
+	ProbeHistogramWindow      = 1 // Minutes
 	ProbeHistogramRefreshTime = 1 * time.Minute
 )
 
@@ -29,6 +29,7 @@ func RunProbeWithFrequency(
 		defer wg.Done()
 
 		for range time.NewTicker(ProbeHistogramRefreshTime).C {
+			statter.SendStats(logger)
 			statter.Rotate()
 		}
 	}()
