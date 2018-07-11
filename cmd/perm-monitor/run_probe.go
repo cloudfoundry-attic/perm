@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ProbeHistogramWindow      = 1 // Minutes
-	ProbeHistogramRefreshTime = 1 * time.Minute
+	ProbeHistogramWindow      = 5 // Minutes
+	ProbeHistogramRefreshTime = 5 * time.Minute
 )
 
 func RunProbeWithFrequency(
