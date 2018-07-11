@@ -30,16 +30,16 @@ func (h *Handler) HandleRPC(c context.Context, rpcStats stats.RPCStats) {
 	case *stats.InHeader:
 		h.statter.Inc("perm.count."+methodName, 1, statsSampleRate)
 	case *stats.End:
-		h.statter.TimingDuration("perm.requesttime."+methodName, s.EndTime.Sub(s.BeginTime), statsSampleRate)
+		h.statter.TimingDuration("perm.requestduration."+methodName, s.EndTime.Sub(s.BeginTime), statsSampleRate)
 		success := int64(0)
 		if s.Error == nil {
 			success = 1
 		}
-		h.statter.Inc("perm.success."+methodName, success, statsSampleRate)
+		h.statter.Gauge("perm.success."+methodName, success, statsSampleRate)
 	case *stats.InPayload:
-		h.statter.Inc("perm.requestsize."+methodName, int64(s.Length), statsSampleRate)
+		h.statter.Gauge("perm.requestsize."+methodName, int64(s.Length), statsSampleRate)
 	case *stats.OutPayload:
-		h.statter.Inc("perm.responsesize."+methodName, int64(s.Length), statsSampleRate)
+		h.statter.Gauge("perm.responsesize."+methodName, int64(s.Length), statsSampleRate)
 	}
 }
 
