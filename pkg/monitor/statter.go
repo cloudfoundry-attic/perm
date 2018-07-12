@@ -17,6 +17,7 @@ const (
 	MetricProbeRunsCorrect = "perm.probe.runs.correct"
 
 	MetricProbeTimingMax  = "perm.probe.responses.timing.max"  // gauge
+	MetricProbeTimingP50  = "perm.probe.responses.timing.p50"  // gauge
 	MetricProbeTimingP90  = "perm.probe.responses.timing.p90"  // gauge
 	MetricProbeTimingP99  = "perm.probe.responses.timing.p99"  // gauge
 	MetricProbeTimingP999 = "perm.probe.responses.timing.p999" // gauge
@@ -67,6 +68,7 @@ func (s *Statter) SendCorrectProbe(logger lager.Logger) {
 }
 
 func (s *Statter) SendStats(logger lager.Logger) {
+	s.sendHistogramQuantile(logger, 50, MetricProbeTimingP50)
 	s.sendHistogramQuantile(logger, 90, MetricProbeTimingP90)
 	s.sendHistogramQuantile(logger, 99, MetricProbeTimingP99)
 	s.sendHistogramQuantile(logger, 99.9, MetricProbeTimingP999)
