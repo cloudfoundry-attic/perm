@@ -22,6 +22,11 @@ type Claims struct {
 	Scopes []string `json:"scope"`
 }
 
+const (
+	AuthFailSignature = "AuthFail"
+	AuthPassSignature = "AuthPass"
+)
+
 func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger) grpc.UnaryServerInterceptor {
 	verifier := provider.Verifier(&oidc.Config{
 		ClientID: "perm",
@@ -30,27 +35,27 @@ func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			securityLogger.Log(ctx, "Auth", "Auth", logx.SecurityData{Key: "msg", Value: "no metadata"})
+			securityLogger.Log(ctx, AuthFailSignature, "missing token", logx.SecurityData{Key: "msg", Value: "no metadata"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		token, ok := md["token"]
 		if !ok {
-			securityLogger.Log(ctx, "Auth", "Auth", logx.SecurityData{Key: "msg", Value: "no token"})
+			securityLogger.Log(ctx, AuthFailSignature, "missing token", logx.SecurityData{Key: "msg", Value: "no token"})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		idToken, err := verifier.Verify(ctx, token[0])
 		if err != nil {
-			securityLogger.Log(ctx, "Auth", "Auth", logx.SecurityData{Key: "msg", Value: err.Error()})
+			securityLogger.Log(ctx, AuthFailSignature, "invalid token", logx.SecurityData{Key: "msg", Value: err.Error()})
 			return nil, perm.ErrUnauthenticated
 		}
 
 		extensions := []logx.SecurityData{
-			logx.SecurityData{Key: "msg", Value: "authentication succeeded"},
+			logx.SecurityData{Key: "msg", Value: "auth succeeded"},
 			logx.SecurityData{Key: "subject", Value: idToken.Subject},
 		}
-		securityLogger.Log(ctx, "Auth", "Auth", extensions...)
+		securityLogger.Log(ctx, AuthPassSignature, "auth succeeded", extensions...)
 		return handler(ctx, req)
 	}
 }

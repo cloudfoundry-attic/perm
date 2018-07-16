@@ -250,7 +250,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).ToNot(HaveOccurred())
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "authentication succeeded", "subject": "subject_id"})
+			expectSecurityLog("AuthPass", "auth succeeded", map[string]string{"msg": "auth succeeded", "subject": "subject_id"})
 		})
 
 		It("returns a unauthenticated error when the client does not send a JWT token", func() {
@@ -261,7 +261,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "no token"})
+			expectSecurityLog("AuthFail", "missing token", map[string]string{"msg": "no token"})
 		})
 
 		It("returns a malformed token error when the client's token is malformed", func() {
@@ -275,7 +275,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
 		})
 
 		It("returns a token invalid error when the client's token is signed by an unknown key", func() {
@@ -291,7 +291,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "failed to verify signature: failed to verify id token signature"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "failed to verify signature: failed to verify id token signature"})
 		})
 
 		It("returns a token invalid error when the client's token is expired", func() {
@@ -308,7 +308,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: token is expired"})
 		})
 
 		It("returns an unauthenticated error when the token issuer doesn't match provider issuer", func() {
@@ -324,7 +324,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			_, err = client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).To(MatchError("perm: unauthenticated"))
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(1))
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: id token issued by a different provider"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: id token issued by a different provider"})
 		})
 
 		It("refreshes the token when it does not have AccessToken and therefore invalid", func() {
@@ -345,8 +345,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(2))
 			// TODO: should the second message be a success?
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: malformed jwt: square/go-jose: compact JWS format must have three parts"})
 		})
 
 		It("refreshes the token when it is expired", func() {
@@ -368,8 +368,8 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			Expect(fakeSecurityLogger.LogCallCount()).To(Equal(2))
 			// TODO: should the second message be a success?
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
-			expectSecurityLog("Auth", "Auth", map[string]string{"msg": "oidc: token is expired"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: token is expired"})
+			expectSecurityLog("AuthFail", "invalid token", map[string]string{"msg": "oidc: token is expired"})
 		})
 	})
 
