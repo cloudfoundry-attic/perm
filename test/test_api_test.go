@@ -28,7 +28,8 @@ import (
 )
 
 const (
-	validPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+	eventuallyTimeout = 2
+	validPrivateKey   = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA918Nv+kmlGF1uz2MMJaJ8TFXzV9E5bFVVotKHxHl1HEQhjxF
 FVLkBiagjh61pu/eC5tjDdyA0gkYWpLfEvAnAatV/t+HxggjGb8fpA0babKztGfz
 RG59GmquRqzQQFwmpr/NClLdCcg0npmStJeGCFh0PRH/TVVClDs6dcUsoIDFSjvL
@@ -855,7 +856,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records request count", func() {
-				Eventually(fakeStatter.IncCallCount()).Should(Equal(1))
+				Eventually(fakeStatter.IncCallCount(), eventuallyTimeout).Should(Equal(1))
 				methodName, increment, rate := fakeStatter.IncArgsForCall(0)
 				Expect(methodName).To(Equal("perm.count.CreateRole"))
 				Expect(increment).To(Equal(int64(1)))
@@ -863,7 +864,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records the time taken to serve the rpc call", func() {
-				Eventually(fakeStatter.TimingDurationCallCount()).Should(Equal(1))
+				Eventually(fakeStatter.TimingDurationCallCount(), eventuallyTimeout).Should(Equal(1))
 				methodName, duration, rate := fakeStatter.TimingDurationArgsForCall(0)
 				Expect(methodName).To(Equal("perm.requestduration.CreateRole"))
 				Expect(duration).To(BeNumerically(">", 0))
@@ -871,7 +872,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records request size", func() {
-				Eventually(fakeStatter.GaugeCallCount()).Should(Equal(3))
+				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
 				methodName, size, rate := fakeStatter.GaugeArgsForCall(0)
 				Expect(methodName).To(Equal("perm.requestsize.CreateRole"))
 				Expect(size).To(Equal(int64(116))) //This is the length of Create Role request
@@ -879,7 +880,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records response size", func() {
-				Eventually(fakeStatter.GaugeCallCount()).Should(Equal(3))
+				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
 				methodName, size, rate := fakeStatter.GaugeArgsForCall(1)
 				Expect(methodName).To(Equal("perm.responsesize.CreateRole"))
 				Expect(size).To(Equal(int64(40))) //This is the length of Create Role response
@@ -887,7 +888,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records success", func() {
-				Eventually(fakeStatter.GaugeCallCount()).Should(Equal(3))
+				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
 				methodName, increment, rate := fakeStatter.GaugeArgsForCall(2)
 				Expect(methodName).To(Equal("perm.success.CreateRole"))
 				Expect(increment).To(Equal(int64(1)))
