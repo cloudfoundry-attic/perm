@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Statter", func() {
 	var (
-		histogram *ThreadSafeHistogram
+		histogram *HistogramSet
 		statsd    *monitorfakes.FakePermStatter
 
 		logger *lagertest.TestLogger

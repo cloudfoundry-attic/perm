@@ -8,44 +8,46 @@ import (
 	"github.com/codahale/hdrhistogram"
 )
 
-type ThreadSafeHistogram struct {
-	rw        *sync.RWMutex
-	histogram *hdrhistogram.WindowedHistogram
+type HistogramSet struct {
+	rw         *sync.RWMutex
+	histograms map[string]*hdrhistogram.WindowedHistogram
 }
 
-func NewThreadSafeHistogram(windowSize int, sigfigs int) *ThreadSafeHistogram {
-	h := hdrhistogram.NewWindowed(windowSize, 0, int64(time.Minute*10), sigfigs)
+func NewThreadSafeHistogram(windowSize int, sigfigs int) *HistogramSet {
+	h := map[string]*hdrhistogram.WindowedHistogram{
+		"total": hdrhistogram.NewWindowed(windowSize, 0, int64(time.Minute*10), sigfigs),
+	}
 
-	return &ThreadSafeHistogram{
-		rw:        &sync.RWMutex{},
-		histogram: h,
+	return &HistogramSet{
+		rw:         &sync.RWMutex{},
+		histograms: h,
 	}
 }
 
-func (h *ThreadSafeHistogram) Max() int64 {
+func (h *HistogramSet) Max(label string) int64 {
 	h.rw.RLock()
 	defer h.rw.RUnlock()
 
-	return h.histogram.Merge().Max()
+	return h.histograms[label].Merge().Max()
 }
 
-func (h *ThreadSafeHistogram) RecordValue(v int64) error {
+func (h *HistogramSet) RecordValue(label string, v int64) error {
 	h.rw.Lock()
 	defer h.rw.Unlock()
 
-	return h.histogram.Current.RecordValue(v)
+	return h.histograms[label].Current.RecordValue(v)
 }
 
-func (h *ThreadSafeHistogram) ValueAtQuantile(q float64) int64 {
+func (h *HistogramSet) ValueAtQuantile(label string, q float64) int64 {
 	h.rw.RLock()
 	defer h.rw.RUnlock()
 
-	return h.histogram.Merge().ValueAtQuantile(q)
+	return h.histograms[label].Merge().ValueAtQuantile(q)
 }
 
-func (h *ThreadSafeHistogram) Rotate() {
+func (h *HistogramSet) Rotate() {
 	h.rw.Lock()
 	defer h.rw.Unlock()
 
-	h.histogram.Rotate()
+	h.histograms["total"].Rotate()
 }
