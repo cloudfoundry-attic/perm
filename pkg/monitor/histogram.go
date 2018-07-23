@@ -22,10 +22,12 @@ const (
 func NewHistogramSet() *HistogramSet {
 	h := map[string]*hdrhistogram.WindowedHistogram{}
 
-	return &HistogramSet{
+	set := &HistogramSet{
 		rw:         &sync.RWMutex{},
 		histograms: h,
 	}
+	set.addHistogram("overall")
+	return set
 }
 
 func (h *HistogramSet) Max(label string) int64 {
@@ -49,6 +51,7 @@ func (h *HistogramSet) RecordValue(label string, v int64) error {
 		h.addHistogram(label)
 	}
 
+	h.histograms["overall"].Current.RecordValue(v)
 	return h.histograms[label].Current.RecordValue(v)
 }
 

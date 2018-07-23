@@ -45,7 +45,7 @@ func (s *Statter) Rotate() {
 }
 
 func (s *Statter) RecordProbeDuration(logger lager.Logger, d time.Duration) {
-	err := s.Histogram.RecordValue("total", int64(d))
+	err := s.Histogram.RecordValue("overall", int64(d))
 	if err != nil {
 		logger.Error(failedToRecordHistogramValue, err, lager.Data{
 			"value": int64(d),
@@ -85,11 +85,11 @@ func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {
 }
 
 func (s *Statter) sendHistogramQuantile(logger lager.Logger, quantile float64, metric string) {
-	v := s.Histogram.ValueAtQuantile("total", quantile)
+	v := s.Histogram.ValueAtQuantile("overall", quantile)
 	s.sendGauge(logger, metric, v)
 }
 
 func (s *Statter) sendHistogramMax(logger lager.Logger, metric string) {
-	v := s.Histogram.Max("total")
+	v := s.Histogram.Max("overall")
 	s.sendGauge(logger, metric, v)
 }
