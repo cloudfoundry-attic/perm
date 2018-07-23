@@ -12,12 +12,12 @@ import (
 //go:generate counterfeiter . Probe
 
 type Probe interface {
-	Cleanup(context.Context, time.Duration, lager.Logger, string) ([]time.Duration, error)
-	Setup(context.Context, lager.Logger, string) ([]time.Duration, error)
-	Run(context.Context, lager.Logger, string) (bool, []time.Duration, error)
+	Cleanup(context.Context, time.Duration, lager.Logger, string) ([]monitor.LabeledDuration, error)
+	Setup(context.Context, lager.Logger, string) ([]monitor.LabeledDuration, error)
+	Run(context.Context, lager.Logger, string) (bool, []monitor.LabeledDuration, error)
 }
 
-func GetProbeResults(logger lager.Logger, probe Probe, timeout time.Duration) (correct bool, durations []time.Duration, err error) {
+func GetProbeResults(logger lager.Logger, probe Probe, timeout time.Duration) (correct bool, durations []monitor.LabeledDuration, err error) {
 	uuid := guuid.NewV4()
 
 	defer func() {
@@ -62,10 +62,10 @@ func RecordProbeResults(
 	}
 	failedQuery := false
 	for _, d := range durations {
-		if d > requestDuration {
+		if d.Duration > requestDuration {
 			failedQuery = true
 		}
-		statter.RecordProbeDuration(logger.Session("metrics"), d)
+		statter.RecordProbeDuration(logger.Session("metrics"), d.Duration)
 	}
 	if failedQuery {
 		statter.SendFailedProbe(logger.Session("metrics"))

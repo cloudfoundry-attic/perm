@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 )
 
@@ -38,17 +39,23 @@ var _ = Describe("Running the Probes", func() {
 		var (
 			probe *cmdfakes.FakeProbe
 
-			expectedSetupDurations   []time.Duration
-			expectedRunDurations     []time.Duration
-			expectedCleanupDurations []time.Duration
+			expectedSetupDurations   []monitor.LabeledDuration
+			expectedRunDurations     []monitor.LabeledDuration
+			expectedCleanupDurations []monitor.LabeledDuration
 		)
 
 		BeforeEach(func() {
 			probe = new(cmdfakes.FakeProbe)
 
-			expectedSetupDurations = []time.Duration{1 * time.Second, 2 * time.Second}
-			expectedRunDurations = []time.Duration{3 * time.Second, 4 * time.Second}
-			expectedCleanupDurations = []time.Duration{5 * time.Second}
+			expectedSetupDurations = []monitor.LabeledDuration{
+				{Label: "CreateRole", Duration: 1 * time.Second},
+				{Label: "AssignRole", Duration: 2 * time.Second},
+			}
+			expectedRunDurations = []monitor.LabeledDuration{
+				{Label: "HasPermission", Duration: 3 * time.Second},
+				{Label: "HasPermission", Duration: 4 * time.Second},
+			}
+			expectedCleanupDurations = []monitor.LabeledDuration{{Label: "DeleteRole", Duration: 5 * time.Second}}
 			probe.RunReturns(true, expectedRunDurations, nil)
 			probe.CleanupReturns(expectedCleanupDurations, nil)
 			probe.SetupReturns(expectedSetupDurations, nil)
@@ -140,7 +147,7 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when cleanup fails", func() {
 			BeforeEach(func() {
-				probe.CleanupReturns([]time.Duration{}, someErr)
+				probe.CleanupReturns([]monitor.LabeledDuration{}, someErr)
 			})
 
 			It("returns the error", func() {
@@ -157,7 +164,7 @@ var _ = Describe("Running the Probes", func() {
 		Context("when setup and cleanup fail", func() {
 			BeforeEach(func() {
 				probe.SetupReturns(nil, someErr)
-				probe.CleanupReturns([]time.Duration{}, someOtherErr)
+				probe.CleanupReturns([]monitor.LabeledDuration{}, someOtherErr)
 			})
 
 			It("returns the setup error", func() {
@@ -171,7 +178,7 @@ var _ = Describe("Running the Probes", func() {
 		Context("when run and cleanup fail", func() {
 			BeforeEach(func() {
 				probe.RunReturns(false, nil, someErr)
-				probe.CleanupReturns([]time.Duration{}, someOtherErr)
+				probe.CleanupReturns([]monitor.LabeledDuration{}, someOtherErr)
 			})
 
 			It("returns the run error", func() {
@@ -199,21 +206,21 @@ var _ = Describe("Running the Probes", func() {
 		})
 
 		It("reports failed probe when probe's cleanup fails", func() {
-			probe.CleanupReturns([]time.Duration{}, errors.New("error in cleanup"))
+			probe.CleanupReturns([]monitor.LabeledDuration{}, errors.New("error in cleanup"))
 			timeout = time.Second * 0
 			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendFailedProbeCallCount()).To(Equal(1))
 		})
 
 		It("reports incorrect probe when the probe wasn't correct", func() {
-			probe.RunReturns(false, []time.Duration{}, nil)
+			probe.RunReturns(false, []monitor.LabeledDuration{}, nil)
 			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.SendIncorrectProbeCallCount()).To(Equal(1))
 		})
 
 		It("records probe durations and reports correct probe when durations are valid", func() {
-			qd := time.Millisecond * 30
-			durations := []time.Duration{qd, qd, qd}
+			qd := monitor.LabeledDuration{Label: "qd", Duration: time.Millisecond * 30}
+			durations := []monitor.LabeledDuration{qd, qd, qd}
 			probe.RunReturns(true, durations, nil)
 			RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 			Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))
@@ -222,8 +229,8 @@ var _ = Describe("Running the Probes", func() {
 
 		Context("when there is a duration that exceeds the query time window", func() {
 			It("records the durations but also records a failure", func() {
-				qd := time.Millisecond * 130
-				durations := []time.Duration{qd, qd, qd}
+				qd := monitor.LabeledDuration{Label: "qd", Duration: time.Millisecond * 130}
+				durations := []monitor.LabeledDuration{qd, qd, qd}
 				probe.RunReturns(true, durations, nil)
 				RecordProbeResults(logger, probe, statter, requestDuration, timeout)
 				Expect(statter.RecordProbeDurationCallCount()).To(Equal(3))

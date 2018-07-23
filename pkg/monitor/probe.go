@@ -37,16 +37,21 @@ type Probe struct {
 	client Client
 }
 
+type LabeledDuration struct {
+	Label    string
+	Duration time.Duration
+}
+
 func NewProbe(client Client) *Probe {
 	return &Probe{
 		client: client,
 	}
 }
 
-func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
+func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) ([]LabeledDuration, error) {
 	type setupResult struct {
 		Error     error
-		Durations []time.Duration
+		Durations []LabeledDuration
 	}
 
 	logger.Debug(starting)
@@ -55,7 +60,7 @@ func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix str
 
 	go func() {
 		duration, err := p.setupCreateRole(ctx, logger, uniqueSuffix)
-		result := setupResult{err, []time.Duration{duration}}
+		result := setupResult{err, []LabeledDuration{duration}}
 		if err != nil {
 			doneChan <- result
 			return
@@ -70,14 +75,14 @@ func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix str
 	for {
 		select {
 		case <-ctx.Done():
-			return []time.Duration{}, ctx.Err()
+			return []LabeledDuration{}, ctx.Err()
 		case result := <-doneChan:
 			return result.Durations, result.Error
 		}
 	}
 }
 
-func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
+func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (LabeledDuration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
 
 	start := time.Now()
@@ -100,13 +105,13 @@ func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, unique
 			"permissions": permissions,
 		})
 
-		return duration, err
+		return LabeledDuration{}, err
 	}
 
-	return duration, nil
+	return LabeledDuration{Label: "CreateRole", Duration: duration}, nil
 }
 
-func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (time.Duration, error) {
+func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (LabeledDuration, error) {
 	roleName := ProbeRoleName + "." + uniqueSuffix
 	start := time.Now()
 
@@ -122,16 +127,16 @@ func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, unique
 			"actor.namespace": ProbeActor.Namespace,
 		})
 
-		return duration, err
+		return LabeledDuration{}, err
 	}
 
-	return duration, nil
+	return LabeledDuration{Label: "AssignRole", Duration: duration}, nil
 }
 
-func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]time.Duration, error) {
+func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]LabeledDuration, error) {
 	type cleanupResult struct {
 		Error     error
-		Durations []time.Duration
+		Durations []LabeledDuration
 	}
 
 	doneChan := make(chan cleanupResult)
@@ -147,7 +152,7 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 		start := time.Now()
 		err := p.client.DeleteRole(ctx, roleName)
 		end := time.Now()
-		result.Durations = append(result.Durations, end.Sub(start))
+		result.Durations = append(result.Durations, LabeledDuration{Label: "DeleteRole", Duration: end.Sub(start)})
 
 		if err != nil && err != perm.ErrRoleNotFound {
 			logger.Error(failedToDeleteRole, err, lager.Data{
@@ -167,12 +172,12 @@ func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logge
 		case result := <-doneChan:
 			select {
 			case <-ctx.Done():
-				return []time.Duration{}, ctx.Err()
+				return []LabeledDuration{}, ctx.Err()
 			default:
 				return result.Durations, result.Error
 			}
 		case <-cleanupTimeoutTimer:
-			return []time.Duration{}, context.DeadlineExceeded
+			return []LabeledDuration{}, context.DeadlineExceeded
 		}
 	}
 }
@@ -181,13 +186,13 @@ func (p *Probe) Run(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
-) (correct bool, durations []time.Duration, err error) {
+) (correct bool, durations []LabeledDuration, err error) {
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
 	type result struct {
 		Correct   bool
-		Durations []time.Duration
+		Durations []LabeledDuration
 		Err       error
 	}
 
@@ -228,7 +233,7 @@ func (p *Probe) runAssignedPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
-) (bool, time.Duration, error) {
+) (bool, LabeledDuration, error) {
 	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
 		"actor.id":                   ProbeActor.ID,
 		"actor.namespace":            ProbeActor.Namespace,
@@ -243,7 +248,7 @@ func (p *Probe) runAssignedPermission(
 
 	if err != nil {
 		logger.Error(failedToFindPermissions, err)
-		return false, duration, err
+		return false, LabeledDuration{}, err
 	}
 
 	if !hasPermission {
@@ -251,17 +256,17 @@ func (p *Probe) runAssignedPermission(
 			"expected": "true",
 			"got":      "false",
 		})
-		return false, duration, nil
+		return false, LabeledDuration{}, nil
 	}
 
-	return true, duration, nil
+	return true, LabeledDuration{Label: "HasPermission", Duration: duration}, nil
 }
 
 func (p *Probe) runUnassignedPermission(
 	ctx context.Context,
 	logger lager.Logger,
 	uniqueSuffix string,
-) (bool, time.Duration, error) {
+) (bool, LabeledDuration, error) {
 	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
 		"actor.id":                   ProbeActor.ID,
 		"actor.namespace":            ProbeActor.Namespace,
@@ -276,7 +281,7 @@ func (p *Probe) runUnassignedPermission(
 
 	if err != nil {
 		logger.Error(failedToFindPermissions, err)
-		return false, duration, err
+		return false, LabeledDuration{}, err
 	}
 
 	if hasPermission {
@@ -284,8 +289,8 @@ func (p *Probe) runUnassignedPermission(
 			"expected": "false",
 			"got":      "true",
 		})
-		return false, duration, nil
+		return false, LabeledDuration{}, nil
 	}
 
-	return true, duration, nil
+	return true, LabeledDuration{Label: "HasPermission", Duration: duration}, nil
 }
