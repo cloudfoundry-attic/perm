@@ -20,7 +20,7 @@ var _ = Describe("Statter", func() {
 	)
 
 	BeforeEach(func() {
-		histogram = NewThreadSafeHistogram(1, 3)
+		histogram = NewHistogramSet()
 		statsd = new(monitorfakes.FakePermStatter)
 
 		logger = lagertest.NewTestLogger("statter")

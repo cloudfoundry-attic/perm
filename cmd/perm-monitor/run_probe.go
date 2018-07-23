@@ -9,11 +9,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/monitor"
 )
 
-const (
-	ProbeHistogramWindow      = 5 // Minutes
-	ProbeHistogramRefreshTime = 5 * time.Minute
-)
-
 func RunProbeWithFrequency(
 	logger lager.Logger,
 	probe *monitor.Probe,
@@ -28,7 +23,7 @@ func RunProbeWithFrequency(
 	go func() {
 		defer wg.Done()
 
-		for range time.NewTicker(ProbeHistogramRefreshTime).C {
+		for range time.NewTicker(monitor.ProbeHistogramRefreshTime).C {
 			statter.SendStats(logger)
 			statter.Rotate()
 		}

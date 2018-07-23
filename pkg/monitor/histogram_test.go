@@ -13,7 +13,7 @@ var _ = Describe("ThreadSafeHistogram", func() {
 	)
 
 	BeforeEach(func() {
-		subject = NewThreadSafeHistogram(5, 5)
+		subject = NewHistogramSet()
 	})
 
 	Describe("#Max", func() {

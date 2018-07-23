@@ -144,10 +144,7 @@ func main() {
 
 	probe := monitor.NewProbe(client)
 
-	probeHistogram := monitor.NewThreadSafeHistogram(
-		ProbeHistogramWindow,
-		3,
-	)
+	probeHistogram := monitor.NewHistogramSet()
 	statter := &monitor.Statter{
 		statsDClient,
 		probeHistogram,
