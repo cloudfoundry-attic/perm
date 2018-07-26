@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "code.cloudfoundry.org/clock"
+  packages = ["."]
+  revision = "02e53af36e6c978af692887ed449b74026d76fec"
+
+[[projects]]
   name = "code.cloudfoundry.org/lager"
   packages = [
     ".",
@@ -322,6 +328,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "86d36600474d8557d12d62b7cdc3efbb3e7ee67a0fff0925b63b4a67167fb828"
+  inputs-digest = "6e45b433cec76c287f880755825dbfa9f0b135c4d2223c02708dac84fc8da4d9"
   solver-name = "gps-cdcl"
   solver-version = 1
