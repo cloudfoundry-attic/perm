@@ -43,13 +43,15 @@ func (h *HistogramSet) Max(label string) int64 {
 }
 
 func (h *HistogramSet) RecordValue(label string, v int64) error {
-	h.rw.Lock()
-	defer h.rw.Unlock()
-
+	h.rw.RLock()
 	_, ok := h.histograms[label]
+	h.rw.RUnlock()
 	if !ok {
 		h.addHistogram(label)
 	}
+
+	h.rw.Lock()
+	defer h.rw.Unlock()
 
 	h.histograms["overall"].Current.RecordValue(v)
 	return h.histograms[label].Current.RecordValue(v)
@@ -77,5 +79,8 @@ func (h *HistogramSet) Rotate() {
 }
 
 func (h *HistogramSet) addHistogram(label string) {
+	h.rw.Lock()
+	defer h.rw.Unlock()
+
 	h.histograms[label] = hdrhistogram.NewWindowed(ProbeHistogramWindow, 0, int64(time.Minute*10), SigFigs)
 }
