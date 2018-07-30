@@ -16,9 +16,9 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
-	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/permstats"
+	"code.cloudfoundry.org/perm/pkg/permstats/permstatsfakes"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -97,12 +97,12 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
 		serverOpts  []api.ServerOption
 		clientConf  clientConfig
-		fakeStatter *monitorfakes.FakePermStatter
+		fakeStatter *permstatsfakes.FakeStatter
 	)
 
 	BeforeEach(func() {
 		serverOpts = serverOptsFactory()
-		fakeStatter = new(monitorfakes.FakePermStatter)
+		fakeStatter = new(permstatsfakes.FakeStatter)
 
 		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
 		Expect(err).NotTo(HaveOccurred())

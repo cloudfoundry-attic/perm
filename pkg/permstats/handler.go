@@ -3,8 +3,8 @@ package permstats
 import (
 	"context"
 	"strings"
+	"time"
 
-	"github.com/cactus/go-statsd-client/statsd"
 	"google.golang.org/grpc/stats"
 )
 
@@ -13,8 +13,16 @@ const (
 	statsSampleRate = 1
 )
 
+//go:generate counterfeiter . Statter
+
+type Statter interface {
+	Inc(string, int64, float32) error
+	Gauge(string, int64, float32) error
+	TimingDuration(string, time.Duration, float32) error
+}
+
 type Handler struct {
-	statter statsd.Statter
+	statter Statter
 }
 
 func (h *Handler) TagRPC(c context.Context, info *stats.RPCTagInfo) context.Context {
@@ -51,6 +59,6 @@ func (h *Handler) TagConn(c context.Context, info *stats.ConnTagInfo) context.Co
 // Not used, implemented to satisfy the stats.Handler interface
 func (h *Handler) HandleConn(context.Context, stats.ConnStats) {}
 
-func NewHandler(statter statsd.Statter) *Handler {
+func NewHandler(statter Statter) *Handler {
 	return &Handler{statter: statter}
 }
