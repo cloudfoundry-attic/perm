@@ -50,6 +50,19 @@ type FakeClient struct {
 	assignRoleReturnsOnCall map[int]struct {
 		result1 error
 	}
+	UnassignRoleStub        func(ctx context.Context, roleName string, actor perm.Actor) error
+	unassignRoleMutex       sync.RWMutex
+	unassignRoleArgsForCall []struct {
+		ctx      context.Context
+		roleName string
+		actor    perm.Actor
+	}
+	unassignRoleReturns struct {
+		result1 error
+	}
+	unassignRoleReturnsOnCall map[int]struct {
+		result1 error
+	}
 	HasPermissionStub        func(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
 	hasPermissionMutex       sync.RWMutex
 	hasPermissionArgsForCall []struct {
@@ -222,6 +235,56 @@ func (fake *FakeClient) AssignRoleReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeClient) UnassignRole(ctx context.Context, roleName string, actor perm.Actor) error {
+	fake.unassignRoleMutex.Lock()
+	ret, specificReturn := fake.unassignRoleReturnsOnCall[len(fake.unassignRoleArgsForCall)]
+	fake.unassignRoleArgsForCall = append(fake.unassignRoleArgsForCall, struct {
+		ctx      context.Context
+		roleName string
+		actor    perm.Actor
+	}{ctx, roleName, actor})
+	fake.recordInvocation("UnassignRole", []interface{}{ctx, roleName, actor})
+	fake.unassignRoleMutex.Unlock()
+	if fake.UnassignRoleStub != nil {
+		return fake.UnassignRoleStub(ctx, roleName, actor)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.unassignRoleReturns.result1
+}
+
+func (fake *FakeClient) UnassignRoleCallCount() int {
+	fake.unassignRoleMutex.RLock()
+	defer fake.unassignRoleMutex.RUnlock()
+	return len(fake.unassignRoleArgsForCall)
+}
+
+func (fake *FakeClient) UnassignRoleArgsForCall(i int) (context.Context, string, perm.Actor) {
+	fake.unassignRoleMutex.RLock()
+	defer fake.unassignRoleMutex.RUnlock()
+	return fake.unassignRoleArgsForCall[i].ctx, fake.unassignRoleArgsForCall[i].roleName, fake.unassignRoleArgsForCall[i].actor
+}
+
+func (fake *FakeClient) UnassignRoleReturns(result1 error) {
+	fake.UnassignRoleStub = nil
+	fake.unassignRoleReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) UnassignRoleReturnsOnCall(i int, result1 error) {
+	fake.UnassignRoleStub = nil
+	if fake.unassignRoleReturnsOnCall == nil {
+		fake.unassignRoleReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.unassignRoleReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeClient) HasPermission(ctx context.Context, actor perm.Actor, action string, resource string) (bool, error) {
 	fake.hasPermissionMutex.Lock()
 	ret, specificReturn := fake.hasPermissionReturnsOnCall[len(fake.hasPermissionArgsForCall)]
@@ -285,6 +348,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.deleteRoleMutex.RUnlock()
 	fake.assignRoleMutex.RLock()
 	defer fake.assignRoleMutex.RUnlock()
+	fake.unassignRoleMutex.RLock()
+	defer fake.unassignRoleMutex.RUnlock()
 	fake.hasPermissionMutex.RLock()
 	defer fake.hasPermissionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

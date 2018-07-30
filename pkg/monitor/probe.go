@@ -25,6 +25,7 @@ type Client interface {
 	CreateRole(ctx context.Context, name string, permissions ...perm.Permission) (perm.Role, error)
 	DeleteRole(ctx context.Context, name string) error
 	AssignRole(ctx context.Context, roleName string, actor perm.Actor) error
+	UnassignRole(ctx context.Context, roleName string, actor perm.Actor) error
 	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
 }
 

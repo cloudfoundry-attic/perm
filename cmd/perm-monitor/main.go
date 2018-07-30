@@ -24,6 +24,7 @@ import (
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
+	"code.cloudfoundry.org/perm/pkg/monitor/recording"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
@@ -133,13 +134,15 @@ func main() {
 	}
 
 	client, err := perm.Dial(addr, opts...)
+	recordedClient := recording.NewClient(client, &durationRecorder{})
+
 	if err != nil {
 		logger.Error(failedToCreatePermClient, err)
 		os.Exit(1)
 	}
 	defer client.Close()
 
-	probe := monitor.NewProbe(client)
+	probe := monitor.NewProbe(recordedClient)
 
 	statter := monitor.NewStatter(statsDClient)
 
@@ -148,4 +151,10 @@ func main() {
 		cmd.RecordProbeResults(logger, probe, statter, parserOpts.RequestDuration, parserOpts.Timeout)
 		statter.SendStats(logger)
 	}
+}
+
+type durationRecorder struct{}
+
+func (r *durationRecorder) Observe(duration time.Duration) error {
+	return nil
 }
