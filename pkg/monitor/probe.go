@@ -104,13 +104,14 @@ func (p *Probe) Run() error {
 	var hasPermission bool
 	start = p.clock.Now()
 	hasPermission, err = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
+	if err != nil {
+		return err
+	}
 	if p.clock.Since(start) > p.maxLatency {
 		failed = true
 	}
 	if !hasPermission {
 		err = ErrIncorrectHasPermission
-	}
-	if err != nil {
 		return err
 	}
 
@@ -119,13 +120,14 @@ func (p *Probe) Run() error {
 
 	start = p.clock.Now()
 	hasPermission, err = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
+	if err != nil {
+		return err
+	}
 	if p.clock.Since(start) > p.maxLatency {
 		failed = true
 	}
 	if hasPermission {
 		err = ErrIncorrectHasPermission
-	}
-	if err != nil {
 		return err
 	}
 

@@ -365,7 +365,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			hasPermissionErr := errors.New("error")
 
-			client.HasPermissionReturnsOnCall(0, true, hasPermissionErr)
+			client.HasPermissionReturnsOnCall(0, false, hasPermissionErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(hasPermissionErr))
@@ -465,7 +465,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedCleanuptTimeout)))
 		})
 
-		It("stops early and attempts to cleanup if the first HasPermission has an incorrect result", func() {
+		It("stops early and attempts to cleanup if the first HasPermission succeeds but has an incorrect result", func() {
 			start := time.Now()
 
 			client.HasPermissionReturnsOnCall(0, false, nil)
@@ -491,7 +491,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedCleanuptTimeout)))
 		})
 
-		It("stops early and attempts to cleanup if the second HasPermission has an incorrect result", func() {
+		It("stops early and attempts to cleanup if the second HasPermission succeeds but has an incorrect result", func() {
 			start := time.Now()
 
 			client.HasPermissionReturnsOnCall(1, true, nil)
