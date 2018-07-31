@@ -2,21 +2,23 @@ package monitor
 
 import (
 	"context"
-
+	"fmt"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/perm/pkg/perm"
+	uuid "github.com/satori/go.uuid"
 )
 
-const (
-	ProbeRoleName = "system.probe"
-
-	ProbeAssignedPermissionAction   = "system.probe.assigned-permission.action"
-	ProbeAssignedPermissionResource = "system.probe.assigned-permission.resource"
-
-	ProbeUnassignedPermissionAction   = "system.probe.unassigned-permission.action"
-	ProbeUnassignedPermissionResource = "system.probe.unassigned-permission.resource"
+var (
+	assignedActor = perm.Actor{
+		ID:        "actor-with-role",
+		Namespace: "probe.system",
+	}
+	unassignedActor = perm.Actor{
+		ID:        "actor-without-role",
+		Namespace: "probe.system",
+	}
 )
 
 //go:generate counterfeiter . Client
@@ -29,269 +31,130 @@ type Client interface {
 	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
 }
 
-var ProbeActor = perm.Actor{
-	ID:        "probe",
-	Namespace: "system",
-}
-
 type Probe struct {
-	client Client
+	client         Client
+	clock          clock.Clock
+	timeout        time.Duration
+	cleanupTimeout time.Duration
+	maxLatency     time.Duration
 }
 
-type LabeledDuration struct {
-	Label    string
-	Duration time.Duration
-}
+func NewProbe(client Client, opts ...Option) *Probe {
+	o := defaultOptions()
+	for _, opt := range opts {
+		opt(o)
+	}
 
-func NewProbe(client Client) *Probe {
 	return &Probe{
-		client: client,
+		client:         client,
+		clock:          o.clock,
+		timeout:        o.timeout,
+		cleanupTimeout: o.cleanupTimeout,
+		maxLatency:     o.maxLatency,
 	}
 }
 
-func (p *Probe) Setup(ctx context.Context, logger lager.Logger, uniqueSuffix string) ([]LabeledDuration, error) {
-	type setupResult struct {
-		Error     error
-		Durations []LabeledDuration
+func (p *Probe) Run() error {
+	var (
+		err    error
+		failed bool
+	)
+
+	suffix := uuid.NewV4().String()
+	roleName := fmt.Sprintf("probe-role-%s", suffix)
+	permission := perm.Permission{
+		Action:          "probe.run",
+		ResourcePattern: suffix,
 	}
 
-	logger.Debug(starting)
-	doneChan := make(chan setupResult)
-	defer logger.Debug(finished)
-
-	go func() {
-		duration, err := p.setupCreateRole(ctx, logger, uniqueSuffix)
-		result := setupResult{err, []LabeledDuration{duration}}
+	defer func() {
 		if err != nil {
-			doneChan <- result
-			return
+			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
+			defer cancel()
+
+			p.client.DeleteRole(ctx, roleName)
 		}
-		duration, err = p.setupAssignRole(ctx, logger, uniqueSuffix)
-		result.Error = err
-		result.Durations = append(result.Durations, duration)
-		doneChan <- result
-		return
 	}()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return []LabeledDuration{}, ctx.Err()
-		case result := <-doneChan:
-			return result.Durations, result.Error
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
+
+	start := p.clock.Now()
+	if _, err = p.client.CreateRole(ctx, roleName, permission); err != nil {
+		return err
 	}
-}
-
-func (p *Probe) setupCreateRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (LabeledDuration, error) {
-	roleName := ProbeRoleName + "." + uniqueSuffix
-
-	start := time.Now()
-
-	permissions := []perm.Permission{
-		perm.Permission{
-			Action:          ProbeAssignedPermissionAction,
-			ResourcePattern: ProbeAssignedPermissionResource,
-		},
-	}
-	_, err := p.client.CreateRole(ctx, roleName, permissions...)
-
-	end := time.Now()
-
-	duration := end.Sub(start)
-
-	if err != nil && err != perm.ErrRoleAlreadyExists {
-		logger.Error(failedToCreateRole, err, lager.Data{
-			"roleName":    roleName,
-			"permissions": permissions,
-		})
-
-		return LabeledDuration{}, err
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
 	}
 
-	return LabeledDuration{Label: "CreateRole", Duration: duration}, nil
-}
+	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
 
-func (p *Probe) setupAssignRole(ctx context.Context, logger lager.Logger, uniqueSuffix string) (LabeledDuration, error) {
-	roleName := ProbeRoleName + "." + uniqueSuffix
-	start := time.Now()
-
-	err := p.client.AssignRole(ctx, roleName, ProbeActor)
-
-	end := time.Now()
-	duration := end.Sub(start)
-
-	if err != nil && err != perm.ErrAssignmentAlreadyExists {
-		logger.Error(failedToAssignRole, err, lager.Data{
-			"roleName":        roleName,
-			"actor.id":        ProbeActor.ID,
-			"actor.namespace": ProbeActor.Namespace,
-		})
-
-		return LabeledDuration{}, err
+	start = p.clock.Now()
+	if err = p.client.AssignRole(ctx, roleName, assignedActor); err != nil {
+		return err
+	}
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
 	}
 
-	return LabeledDuration{Label: "AssignRole", Duration: duration}, nil
-}
+	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
 
-func (p *Probe) Cleanup(ctx context.Context, cleanupTimeout time.Duration, logger lager.Logger, uniqueSuffix string) ([]LabeledDuration, error) {
-	type cleanupResult struct {
-		Error     error
-		Durations []LabeledDuration
+	var hasPermission bool
+	start = p.clock.Now()
+	hasPermission, err = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
 	}
-
-	doneChan := make(chan cleanupResult)
-
-	cleanupTimeoutTimer := time.After(cleanupTimeout)
-	go func() {
-		result := cleanupResult{}
-		logger.Debug(starting)
-		defer logger.Debug(finished)
-
-		roleName := ProbeRoleName + "." + uniqueSuffix
-
-		start := time.Now()
-		err := p.client.DeleteRole(ctx, roleName)
-		end := time.Now()
-		result.Durations = append(result.Durations, LabeledDuration{Label: "DeleteRole", Duration: end.Sub(start)})
-
-		if err != nil && err != perm.ErrRoleNotFound {
-			logger.Error(failedToDeleteRole, err, lager.Data{
-				"roleName": roleName,
-			})
-			result.Error = err
-			doneChan <- result
-			return
-		}
-
-		doneChan <- result
-		return
-	}()
-
-	for {
-		select {
-		case result := <-doneChan:
-			select {
-			case <-ctx.Done():
-				return []LabeledDuration{}, ctx.Err()
-			default:
-				return result.Durations, result.Error
-			}
-		case <-cleanupTimeoutTimer:
-			return []LabeledDuration{}, context.DeadlineExceeded
-		}
-	}
-}
-
-func (p *Probe) Run(
-	ctx context.Context,
-	logger lager.Logger,
-	uniqueSuffix string,
-) (correct bool, durations []LabeledDuration, err error) {
-	logger.Debug(starting)
-	defer logger.Debug(finished)
-
-	type result struct {
-		Correct   bool
-		Durations []LabeledDuration
-		Err       error
-	}
-
-	doneChan := make(chan result)
-	go func() {
-		permission, duration, runErr := p.runAssignedPermission(ctx, logger, uniqueSuffix)
-		r := result{}
-		r.Durations = append(r.Durations, duration)
-		if runErr != nil || !permission {
-			r.Err = runErr
-			r.Correct = permission
-			doneChan <- r
-			return
-		}
-
-		permission, duration, runErr = p.runUnassignedPermission(ctx, logger, uniqueSuffix)
-		r.Durations = append(r.Durations, duration)
-		r.Err = runErr
-		r.Correct = permission
-		doneChan <- r
-	}()
-
-	for {
-		select {
-		case <-ctx.Done():
-			err = ctx.Err()
-			return
-		case result := <-doneChan:
-			correct = result.Correct
-			durations = result.Durations
-			err = result.Err
-			return
-		}
-	}
-}
-
-func (p *Probe) runAssignedPermission(
-	ctx context.Context,
-	logger lager.Logger,
-	uniqueSuffix string,
-) (bool, LabeledDuration, error) {
-	logger = logger.Session("has-assigned-permission").WithData(lager.Data{
-		"actor.id":                   ProbeActor.ID,
-		"actor.namespace":            ProbeActor.Namespace,
-		"permission.action":          ProbeAssignedPermissionAction,
-		"permission.resourcePattern": ProbeAssignedPermissionResource,
-	})
-
-	start := time.Now()
-	hasPermission, err := p.client.HasPermission(ctx, ProbeActor, ProbeAssignedPermissionAction, ProbeAssignedPermissionResource)
-	end := time.Now()
-	duration := end.Sub(start)
-
-	if err != nil {
-		logger.Error(failedToFindPermissions, err)
-		return false, LabeledDuration{}, err
-	}
-
 	if !hasPermission {
-		logger.Info("incorrect-response", lager.Data{
-			"expected": "true",
-			"got":      "false",
-		})
-		return false, LabeledDuration{}, nil
+		err = ErrIncorrectHasPermission
 	}
-
-	return true, LabeledDuration{Label: "HasPermission", Duration: duration}, nil
-}
-
-func (p *Probe) runUnassignedPermission(
-	ctx context.Context,
-	logger lager.Logger,
-	uniqueSuffix string,
-) (bool, LabeledDuration, error) {
-	logger = logger.Session("has-unassigned-permission").WithData(lager.Data{
-		"actor.id":                   ProbeActor.ID,
-		"actor.namespace":            ProbeActor.Namespace,
-		"permission.action":          ProbeUnassignedPermissionAction,
-		"permission.resourcePattern": ProbeUnassignedPermissionResource,
-	})
-
-	start := time.Now()
-	hasPermission, err := p.client.HasPermission(ctx, ProbeActor, ProbeUnassignedPermissionAction, ProbeUnassignedPermissionResource)
-	end := time.Now()
-	duration := end.Sub(start)
-
 	if err != nil {
-		logger.Error(failedToFindPermissions, err)
-		return false, LabeledDuration{}, err
+		return err
 	}
 
+	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
+
+	start = p.clock.Now()
+	hasPermission, err = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
+	}
 	if hasPermission {
-		logger.Info("incorrect-response", lager.Data{
-			"expected": "false",
-			"got":      "true",
-		})
-		return false, LabeledDuration{}, nil
+		err = ErrIncorrectHasPermission
+	}
+	if err != nil {
+		return err
 	}
 
-	return true, LabeledDuration{Label: "HasPermission", Duration: duration}, nil
+	start = p.clock.Now()
+	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
+
+	start = p.clock.Now()
+	if err = p.client.UnassignRole(ctx, roleName, assignedActor); err != nil {
+		return err
+	}
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
+	defer cancel()
+
+	start = p.clock.Now()
+	if err = p.client.DeleteRole(ctx, roleName); err != nil {
+		return err
+	}
+	if p.clock.Since(start) > p.maxLatency {
+		failed = true
+	}
+
+	if failed {
+		return ErrExceededMaxLatency
+	}
+
+	return nil
 }
