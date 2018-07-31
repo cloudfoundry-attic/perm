@@ -16,9 +16,12 @@ import (
 )
 
 var _ = Describe("Logging", func() {
-	var securityLogger *Logger
-	var logOutput *gbytes.Buffer
-	var rt = time.Date(1999, 12, 31, 23, 59, 59, 59, time.UTC)
+	var (
+		logOutput      *gbytes.Buffer
+		securityLogger *Logger
+		rt             = time.Date(1999, 12, 31, 23, 59, 59, 59, time.UTC)
+	)
+
 	BeforeEach(func() {
 		logOutput = gbytes.NewBuffer()
 		securityLogger = NewLogger(logOutput, "cloud_foundry", "unittest", "0.0.1", "hook", 443)
@@ -55,39 +58,80 @@ var _ = Describe("Logging", func() {
 		})
 
 		Context("when there are custom extensions", func() {
-			var (
-				customExtension1 logx.SecurityData
-				customExtension2 logx.SecurityData
-			)
-			BeforeEach(func() {
-				customExtension1 = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
-				customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
+			Context("when there is only 1 custom extension", func() {
+				var customExtension logx.SecurityData
+
+				BeforeEach(func() {
+					customExtension = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
+				})
+
+				It("logs the extension without 'cs' labels", func() {
+					p := &peer.Peer{}
+					p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+					ctx := peer.NewContext(context.Background(), p)
+					securityLogger.Log(ctx, "test-signature", "test-name", customExtension)
+
+					Eventually(logOutput).Should(gbytes.Say("roleName=my-role-name"))
+				})
+
+				Context("when the extension provided is invalid", func() {
+					var invalidExtension logx.SecurityData
+
+					BeforeEach(func() {
+						invalidExtension = logx.SecurityData{Value: "no-key"}
+					})
+
+					It("should log that the extension is invalid", func() {
+						p := &peer.Peer{}
+						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+						ctx := peer.NewContext(context.Background(), p)
+						securityLogger.Log(ctx, "test-signature", "test-name", invalidExtension)
+
+						Eventually(logOutput).Should(gbytes.Say("msg=ERROR:invalid-custom-extension;"))
+						Consistently(logOutput).ShouldNot(gbytes.Say("=no-key"))
+					})
+				})
 			})
 
-			It("logs each extension", func() {
-				p := &peer.Peer{}
-				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
-				ctx := peer.NewContext(context.Background(), p)
-				securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+			Context("when there are more than one custom extension", func() {
+				var (
+					customExtension1 logx.SecurityData
+					customExtension2 logx.SecurityData
+				)
 
-				Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
-				Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
-				Eventually(logOutput).Should(gbytes.Say("cs2Label=roleBlame"))
-				Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
-			})
+				BeforeEach(func() {
+					customExtension1 = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
+					customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
+				})
 
-			It("does not append a msg= when no error is present", func() {
-				p := &peer.Peer{}
-				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
-				ctx := peer.NewContext(context.Background(), p)
-				securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+				It("logs each extension", func() {
+					p := &peer.Peer{}
+					p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+					ctx := peer.NewContext(context.Background(), p)
+					securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
 
-				Consistently(logOutput).ShouldNot(gbytes.Say("msg="))
+					Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
+					Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
+					Eventually(logOutput).Should(gbytes.Say("cs2Label=roleBlame"))
+					Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
+				})
+
+				It("does not append a msg= when no error is present", func() {
+					p := &peer.Peer{}
+					p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+					ctx := peer.NewContext(context.Background(), p)
+					securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+
+					Consistently(logOutput).ShouldNot(gbytes.Say("msg="))
+				})
 			})
 
 			Context("when the extension provided is invalid", func() {
-				var invalidExtension logx.SecurityData
-				var validExtension logx.SecurityData
+				var (
+					invalidExtension logx.SecurityData
+					validExtension   logx.SecurityData
+				)
+
 				BeforeEach(func() {
 					validExtension = logx.SecurityData{Key: "key", Value: "value"}
 				})
@@ -138,11 +182,12 @@ var _ = Describe("Logging", func() {
 						Eventually(logOutput).Should(gbytes.Say("cs1=value"))
 					})
 				})
-
 			})
 
 			Context("when there are more than 6 custom extensions", func() {
 				var (
+					customExtension1 logx.SecurityData
+					customExtension2 logx.SecurityData
 					customExtension3 logx.SecurityData
 					customExtension4 logx.SecurityData
 					customExtension5 logx.SecurityData
@@ -151,6 +196,8 @@ var _ = Describe("Logging", func() {
 				)
 
 				BeforeEach(func() {
+					customExtension1 = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
+					customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
 					customExtension3 = logx.SecurityData{Key: "roleDame", Value: "my-role-dame"}
 					customExtension4 = logx.SecurityData{Key: "roleFame", Value: "my-role-fame"}
 					customExtension5 = logx.SecurityData{Key: "roleBeshame", Value: "my-role-beshame"}
@@ -221,7 +268,6 @@ var _ = Describe("Logging", func() {
 					})
 				})
 			})
-
 		})
 	})
 })
