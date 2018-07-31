@@ -1,4 +1,4 @@
-package monitor_test
+package stats_test
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "code.cloudfoundry.org/perm/pkg/monitor"
+	. "code.cloudfoundry.org/perm/pkg/monitor/stats"
 )
 
 var _ = Describe("Histogram", func() {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/monitor/stats"
 	"github.com/cactus/go-statsd-client/statsd"
 )
 
@@ -36,12 +37,12 @@ type PermStatter interface {
 
 type Statter struct {
 	statsd.Statter
-	histogram *Histogram
+	histogram *stats.Histogram
 }
 
 func NewStatter(statter statsd.Statter) *Statter {
 	s := &Statter{
-		histogram: NewHistogram(HistogramOptions{
+		histogram: stats.NewHistogram(stats.HistogramOptions{
 			Name:        "perm.probe.responses.timing",
 			MaxDuration: time.Second * 3,
 			Buckets:     []float64{50, 90, 99, 99.9},

@@ -1,4 +1,4 @@
-package monitor
+package stats
 
 import (
 	"fmt"
