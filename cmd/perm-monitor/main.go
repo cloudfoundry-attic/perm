@@ -108,13 +108,9 @@ func main() {
 	}
 
 	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
-	var client *perm.Client
-	if !parserOpts.Perm.RequireAuth {
-		client, err = perm.Dial(
-			addr,
-			perm.WithTLSConfig(&tls.Config{RootCAs: pool}),
-		)
-	} else {
+	opts := []perm.DialOption{perm.WithTLSConfig(&tls.Config{RootCAs: pool})}
+
+	if parserOpts.Perm.RequireAuth {
 		tsConfig := clientcredentials.Config{
 			ClientID:     parserOpts.Perm.ClientID,
 			ClientSecret: parserOpts.Perm.ClientSecret,
@@ -131,14 +127,14 @@ func main() {
 		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &uaaClient)
 
 		tokenSource := tsConfig.TokenSource(ctx)
-		client, err = perm.Dial(
-			addr,
-			perm.WithTLSConfig(&tls.Config{RootCAs: pool}),
-			perm.WithTokenSource(tokenSource),
-		)
+
+		opts = append(opts, perm.WithTokenSource(tokenSource))
 	}
+
+	client, err := perm.Dial(addr, opts...)
 	if err != nil {
 		logger.Error(failedToCreatePermClient, err)
+		os.Exit(1)
 	}
 	defer client.Close()
 
