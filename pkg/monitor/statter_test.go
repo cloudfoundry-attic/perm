@@ -1,6 +1,8 @@
 package monitor_test
 
 import (
+	"time"
+
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -11,8 +13,7 @@ import (
 
 var _ = Describe("Statter", func() {
 	var (
-		histogram *HistogramSet
-		statsd    *monitorfakes.FakePermStatter
+		statsd *monitorfakes.FakePermStatter
 
 		logger *lagertest.TestLogger
 
@@ -20,15 +21,11 @@ var _ = Describe("Statter", func() {
 	)
 
 	BeforeEach(func() {
-		histogram = NewHistogramSet()
 		statsd = new(monitorfakes.FakePermStatter)
 
 		logger = lagertest.NewTestLogger("statter")
 
-		statter = &Statter{
-			statsd,
-			histogram,
-		}
+		statter = NewStatter(statsd)
 	})
 
 	Describe("SendFailedProbe", func() {
@@ -81,39 +78,27 @@ var _ = Describe("Statter", func() {
 			Expect(rate).To(Equal(float32(1.0)))
 		})
 	})
+
 	Describe("SendStats", func() {
 		It("sends 50, 90, 99, 99.9th, and max quantile stats", func() {
-			statter.RecordProbeDuration(logger, 1)
+			statter.RecordProbeDuration(logger, time.Second)
 
 			statter.SendStats(logger)
 
 			Expect(statsd.GaugeCallCount()).To(Equal(5))
 
-			metricName, value, rate := statsd.GaugeArgsForCall(0)
-			Expect(metricName).To(Equal("perm.probe.responses.timing.p50"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
+			var metricNames []string
 
-			metricName, value, rate = statsd.GaugeArgsForCall(1)
-			Expect(metricName).To(Equal("perm.probe.responses.timing.p90"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
+			for i := 0; i < 5; i++ {
+				metricName, _, _ := statsd.GaugeArgsForCall(i)
+				metricNames = append(metricNames, metricName)
+			}
 
-			metricName, value, rate = statsd.GaugeArgsForCall(2)
-			Expect(metricName).To(Equal("perm.probe.responses.timing.p99"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
-
-			metricName, value, rate = statsd.GaugeArgsForCall(3)
-			Expect(metricName).To(Equal("perm.probe.responses.timing.p999"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
-
-			metricName, value, rate = statsd.GaugeArgsForCall(4)
-			Expect(metricName).To(Equal("perm.probe.responses.timing.max"))
-			Expect(value).To(Equal(int64(1)))
-			Expect(rate).To(Equal(float32(1.0)))
+			Expect(metricNames).To(ContainElement("perm.probe.responses.timing.max"))
+			Expect(metricNames).To(ContainElement("perm.probe.responses.timing.p50"))
+			Expect(metricNames).To(ContainElement("perm.probe.responses.timing.p90"))
+			Expect(metricNames).To(ContainElement("perm.probe.responses.timing.p99"))
+			Expect(metricNames).To(ContainElement("perm.probe.responses.timing.p999"))
 		})
 	})
-
 })

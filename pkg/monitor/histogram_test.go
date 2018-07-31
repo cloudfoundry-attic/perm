@@ -1,137 +1,155 @@
 package monitor_test
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 )
 
-var _ = Describe("ThreadSafeHistogram", func() {
+var _ = Describe("Histogram", func() {
 	var (
-		subject *HistogramSet
+		histogramOptions HistogramOptions
 	)
 
 	BeforeEach(func() {
-		subject = NewHistogramSet()
+		histogramOptions = HistogramOptions{
+			Name: "test.histogram",
+		}
 	})
 
-	Describe("#Max", func() {
-		BeforeEach(func() {
-			Expect(subject.Max("some-label")).To(Equal(int64(0)))
+	Describe("#Observe", func() {
+		It("records the expected max", func() {
+			histogramOptions.MaxDuration = time.Second
+			subject := NewHistogram(histogramOptions)
 
-			subject.RecordValue("some-label", 10)
-			subject.RecordValue("some-label", 12345)
-			subject.RecordValue("some-label", -30)
-			subject.RecordValue("some-label", 678)
+			err := subject.Observe(time.Millisecond)
+			Expect(err).NotTo(HaveOccurred())
+			err = subject.Observe(time.Millisecond * 30)
+			Expect(err).NotTo(HaveOccurred())
+			err = subject.Observe(time.Millisecond * 55)
+			Expect(err).NotTo(HaveOccurred())
 
-			subject.RecordValue("some-other-label", 67890)
+			values := subject.Collect()
+			Expect(values).To(HaveKeyWithValue("test.histogram.max", int64(55)))
 		})
 
-		It("returns the highest recorded value", func() {
-			Expect(subject.Max("some-label")).To(Equal(int64(12345)))
-			Expect(subject.Max("some-other-label")).To(Equal(int64(67890)))
+		It("fails if the value is larger than the MaxDuration", func() {
+			histogramOptions.MaxDuration = time.Second
+			subject := NewHistogram(histogramOptions)
+
+			err := subject.Observe(time.Second)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.Observe(time.Hour)
+			Expect(err).To(HaveOccurred())
 		})
 
-		It("returns the highest recorded overall value", func() {
-			Expect(subject.Max("overall")).To(Equal(int64(67890)))
+		It("fails if the value is negative", func() {
+			histogramOptions.MaxDuration = time.Minute
+			subject := NewHistogram(histogramOptions)
+
+			err := subject.Observe(0)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.Observe(time.Second * -1)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	Describe("#ValueAtQuantile", func() {
-		It("returns the value at the given quantile", func() {
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(0)))
+	Describe("#Collect", func() {
+		It("returns labeled values for all buckets, including max", func() {
+			histogramOptions.Buckets = []float64{50, 75, 99.9}
+			subject := NewHistogram(histogramOptions)
 
-			subject.RecordValue("some-label", 1)
-			subject.RecordValue("some-label", 2)
-			subject.RecordValue("some-label", 3)
-
-			Expect(subject.ValueAtQuantile("some-label", 84)).To(Equal(int64(3)))
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
+			values := subject.Collect()
+			Expect(values).To(HaveLen(len(histogramOptions.Buckets) + 1)) // 1 per bucket + max
+			Expect(values).To(HaveKeyWithValue("test.histogram.max", int64(0)))
+			Expect(values).To(HaveKeyWithValue("test.histogram.p50", int64(0)))
+			Expect(values).To(HaveKeyWithValue("test.histogram.p75", int64(0)))
+			Expect(values).To(HaveKeyWithValue("test.histogram.p999", int64(0)))
 		})
 
-		It("understands p100 as a max", func() {
-			for j := int64(1); j <= 5; j++ {
-				for i := int64(0); i <= 100; i++ {
-					subject.RecordValue("some-label", i+j)
-				}
+		It("contains no values larger than the max", func() {
+			histogramOptions.MaxDuration = time.Second
+			subject := NewHistogram(histogramOptions)
+
+			err := subject.Observe(time.Millisecond)
+			Expect(err).NotTo(HaveOccurred())
+			err = subject.Observe(time.Minute)
+			Expect(err).To(HaveOccurred())
+
+			values := subject.Collect()
+			for _, v := range values {
+				Expect(v).To(BeNumerically("<=", int64(time.Second/time.Millisecond)))
 			}
-			maxValue := int64(105)
-			Expect(subject.ValueAtQuantile("some-label", 100)).To(Equal(maxValue))
-			Expect(subject.Max("some-label")).To(Equal(maxValue))
 		})
-		It("reports quantiles and max from the same time window", func() {
-			for j := int64(5); j > 0; j-- {
-				subject.Rotate()
-				for i := int64(100); i > 0; i-- {
-					subject.RecordValue("some-label", i+j)
-				}
+
+		It("contains the expected values for each bucket", func() {
+			histogramOptions.MaxDuration = time.Millisecond * 5
+			histogramOptions.Buckets = []float64{50, 85}
+			subject := NewHistogram(histogramOptions)
+
+			err := subject.Observe(time.Millisecond)
+			Expect(err).NotTo(HaveOccurred())
+			err = subject.Observe(time.Millisecond * 2)
+			Expect(err).NotTo(HaveOccurred())
+			err = subject.Observe(time.Millisecond * 3)
+			Expect(err).NotTo(HaveOccurred())
+
+			values := subject.Collect()
+			Expect(values).To(HaveKeyWithValue("test.histogram.p50", int64(2)))
+			Expect(values).To(HaveKeyWithValue("test.histogram.p85", int64(3)))
+		})
+
+		It("rotates values if enough data has been collected, based on the most granular bucket", func() {
+			histogramOptions.MaxDuration = time.Millisecond * 5
+			histogramOptions.Buckets = []float64{25, 50} // should rotate every 4 data points
+			subject := NewHistogram(histogramOptions)
+
+			countBeforeRotation := 4
+
+			for i := 0; i < countBeforeRotation; i++ {
+				err := subject.Observe(time.Millisecond * 1)
+				Expect(err).NotTo(HaveOccurred())
 			}
-			maxValue := int64(105)
-			Expect(subject.ValueAtQuantile("some-label", 100)).To(Equal(maxValue))
-			Expect(subject.Max("some-label")).To(Equal(maxValue))
-		})
 
-		It("records the overall quantiles if separate values are recorded", func() {
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(0)))
+			// Should be:
+			//   1 [1] 1 1
+			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(1)))
 
-			subject.RecordValue("some-label", 1)
-			subject.RecordValue("some-label", 2)
-			subject.RecordValue("some-label", 3)
-			subject.RecordValue("some-other-label", 4)
-			subject.RecordValue("yet-another-label", 5)
+			for i := 0; i < countBeforeRotation; i++ {
+				err := subject.Observe(time.Millisecond * 2)
+				Expect(err).NotTo(HaveOccurred())
+			}
 
-			Expect(subject.ValueAtQuantile("some-label", 99)).To(Equal(int64(3)))
-			Expect(subject.ValueAtQuantile("overall", 99)).To(Equal(int64(5)))
+			// Should be:
+			//   1 1 1 [1] 2 2 2 2
+			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(1)))
 
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-		})
-	})
+			for i := 0; i < countBeforeRotation; i++ {
+				err := subject.Observe(time.Millisecond * 3)
+				Expect(err).NotTo(HaveOccurred())
+			}
 
-	Describe("#Rotate", func() {
-		It("resets the values once it's rotated out of the window size", func() {
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(0)))
+			// Should be:
+			//   2 2 2 [2] 3 3 3 3
+			// Without rotation, would be:
+			//  1 1 1 1 2 [2] 2 2 3 3 3 3
+			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(2)))
 
-			subject.RecordValue("some-label", 1)
-			subject.RecordValue("some-label", 2)
-			subject.RecordValue("some-label", 3)
+			for i := 0; i < countBeforeRotation; i++ {
+				err := subject.Observe(time.Millisecond * 4)
+				Expect(err).NotTo(HaveOccurred())
+			}
 
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(2)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(0)))
-		})
-
-		It("rotates all values including the overall histogram's once they're out of the window size", func() {
-			Expect(subject.ValueAtQuantile("some-label", 50)).To(Equal(int64(0)))
-
-			subject.RecordValue("some-label", 1)
-			subject.RecordValue("some-label", 2)
-			subject.RecordValue("some-label", 3)
-			subject.RecordValue("some-other-label", 4)
-			subject.RecordValue("yet-another-label", 5)
-
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(3)))
-			subject.Rotate()
-			Expect(subject.ValueAtQuantile("overall", 50)).To(Equal(int64(0)))
+			// Should be:
+			//   3 3 3 [3] 4 4 4 4
+			// Without rotation, would be:
+			//  1 1 1 1 2 2 2 [2] 3 3 3 3 4 4 4 4
+			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(3)))
 		})
 	})
 })

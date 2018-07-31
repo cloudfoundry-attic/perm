@@ -20,6 +20,7 @@ import (
 
 	"time"
 
+	"code.cloudfoundry.org/perm/cmd"
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
@@ -140,11 +141,11 @@ func main() {
 
 	probe := monitor.NewProbe(client)
 
-	probeHistogram := monitor.NewHistogramSet()
-	statter := &monitor.Statter{
-		statsDClient,
-		probeHistogram,
-	}
+	statter := monitor.NewStatter(statsDClient)
 
-	RunProbeWithFrequency(logger.Session("probe"), probe, statter, parserOpts.Frequency, parserOpts.RequestDuration, parserOpts.Timeout)
+	ticker := time.NewTicker(parserOpts.Frequency)
+	for range ticker.C {
+		cmd.RecordProbeResults(logger, probe, statter, parserOpts.RequestDuration, parserOpts.Timeout)
+		statter.SendStats(logger)
+	}
 }

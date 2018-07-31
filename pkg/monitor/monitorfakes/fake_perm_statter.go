@@ -153,9 +153,6 @@ type FakePermStatter struct {
 	closeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RotateStub                     func()
-	rotateMutex                    sync.RWMutex
-	rotateArgsForCall              []struct{}
 	RecordProbeDurationStub        func(logger lager.Logger, d time.Duration)
 	recordProbeDurationMutex       sync.RWMutex
 	recordProbeDurationArgsForCall []struct {
@@ -748,22 +745,6 @@ func (fake *FakePermStatter) CloseReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakePermStatter) Rotate() {
-	fake.rotateMutex.Lock()
-	fake.rotateArgsForCall = append(fake.rotateArgsForCall, struct{}{})
-	fake.recordInvocation("Rotate", []interface{}{})
-	fake.rotateMutex.Unlock()
-	if fake.RotateStub != nil {
-		fake.RotateStub()
-	}
-}
-
-func (fake *FakePermStatter) RotateCallCount() int {
-	fake.rotateMutex.RLock()
-	defer fake.rotateMutex.RUnlock()
-	return len(fake.rotateArgsForCall)
-}
-
 func (fake *FakePermStatter) RecordProbeDuration(logger lager.Logger, d time.Duration) {
 	fake.recordProbeDurationMutex.Lock()
 	fake.recordProbeDurationArgsForCall = append(fake.recordProbeDurationArgsForCall, struct {
@@ -912,8 +893,6 @@ func (fake *FakePermStatter) Invocations() map[string][][]interface{} {
 	defer fake.setPrefixMutex.RUnlock()
 	fake.closeMutex.RLock()
 	defer fake.closeMutex.RUnlock()
-	fake.rotateMutex.RLock()
-	defer fake.rotateMutex.RUnlock()
 	fake.recordProbeDurationMutex.RLock()
 	defer fake.recordProbeDurationMutex.RUnlock()
 	fake.sendFailedProbeMutex.RLock()

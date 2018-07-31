@@ -27,7 +27,6 @@ const (
 
 type PermStatter interface {
 	statsd.Statter
-	Rotate()
 	RecordProbeDuration(logger lager.Logger, d time.Duration)
 	SendFailedProbe(logger lager.Logger)
 	SendIncorrectProbe(logger lager.Logger)
@@ -37,18 +36,27 @@ type PermStatter interface {
 
 type Statter struct {
 	statsd.Statter
-	Histogram *HistogramSet
+	histogram *Histogram
 }
 
-func (s *Statter) Rotate() {
-	s.Histogram.Rotate()
+func NewStatter(statter statsd.Statter) *Statter {
+	s := &Statter{
+		histogram: NewHistogram(HistogramOptions{
+			Name:        "perm.probe.responses.timing",
+			MaxDuration: time.Second * 3,
+			Buckets:     []float64{50, 90, 99, 99.9},
+		}),
+	}
+	s.Statter = statter
+
+	return s
 }
 
 func (s *Statter) RecordProbeDuration(logger lager.Logger, d time.Duration) {
-	err := s.Histogram.RecordValue("overall", int64(d))
+	err := s.histogram.Observe(d)
 	if err != nil {
 		logger.Error(failedToRecordHistogramValue, err, lager.Data{
-			"value": int64(d),
+			"value": d,
 		})
 	}
 }
@@ -68,15 +76,13 @@ func (s *Statter) SendCorrectProbe(logger lager.Logger) {
 }
 
 func (s *Statter) SendStats(logger lager.Logger) {
-	s.sendHistogramQuantile(logger, 50, MetricProbeTimingP50)
-	s.sendHistogramQuantile(logger, 90, MetricProbeTimingP90)
-	s.sendHistogramQuantile(logger, 99, MetricProbeTimingP99)
-	s.sendHistogramQuantile(logger, 99.9, MetricProbeTimingP999)
-	s.sendHistogramMax(logger, MetricProbeTimingMax)
+	for k, v := range s.histogram.Collect() {
+		s.Statter.Gauge(k, v, AlwaysSendMetric)
+	}
 }
 
 func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {
-	err := s.Gauge(name, value, AlwaysSendMetric)
+	err := s.Statter.Gauge(name, value, AlwaysSendMetric)
 	if err != nil {
 		logger.Error(failedToSendMetric, err, lager.Data{
 			"metric": name,
@@ -84,12 +90,10 @@ func (s *Statter) sendGauge(logger lager.Logger, name string, value int64) {
 	}
 }
 
-func (s *Statter) sendHistogramQuantile(logger lager.Logger, quantile float64, metric string) {
-	v := s.Histogram.ValueAtQuantile("overall", quantile)
-	s.sendGauge(logger, metric, v)
+type histogramRecorder struct {
+	recordHistogram func(map[string]int64) error
 }
 
-func (s *Statter) sendHistogramMax(logger lager.Logger, metric string) {
-	v := s.Histogram.Max("overall")
-	s.sendGauge(logger, metric, v)
+func (r *histogramRecorder) RecordHistogram(values map[string]int64) error {
+	return r.recordHistogram(values)
 }

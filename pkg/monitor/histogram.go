@@ -1,86 +1,83 @@
 package monitor
 
 import (
-	"sync"
-
+	"fmt"
+	"math"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/codahale/hdrhistogram"
 )
 
-type HistogramSet struct {
-	rw         *sync.RWMutex
-	histograms map[string]*hdrhistogram.WindowedHistogram
+type Histogram struct {
+	name                string
+	buckets             []float64
+	countBeforeRotation int64
+	histogram           *hdrhistogram.WindowedHistogram
 }
 
-const (
-	ProbeHistogramWindow      = 5 // Minutes
-	ProbeHistogramRefreshTime = 5 * time.Minute
-	SigFigs                   = 5
-)
-
-func NewHistogramSet() *HistogramSet {
-	h := map[string]*hdrhistogram.WindowedHistogram{}
-
-	set := &HistogramSet{
-		rw:         &sync.RWMutex{},
-		histograms: h,
-	}
-	set.addHistogram("overall")
-	return set
+type HistogramOptions struct {
+	Name        string
+	Buckets     []float64
+	MinDuration time.Duration
+	MaxDuration time.Duration
 }
 
-func (h *HistogramSet) Max(label string) int64 {
-	h.rw.RLock()
-	defer h.rw.RUnlock()
+func NewHistogram(opts HistogramOptions) *Histogram {
+	var countBeforeRotation int64
+	// e.g., you need >= 2 data points for 50, >= 4 for 25 or 75, >= 100 for 99, >= 1000 for 99.9, etc.
+	// Doesn't currently work well if the number has a repeating decimal, e.g., 66.6...
+	for _, b := range opts.Buckets {
+		m := int64(100)
+		for b != math.Trunc(b) {
+			m *= 10
+			b *= 10
+		}
 
-	_, ok := h.histograms[label]
-	if !ok {
-		return 0
-	}
-
-	return h.histograms[label].Merge().Max()
-}
-
-func (h *HistogramSet) RecordValue(label string, v int64) error {
-	h.rw.RLock()
-	_, ok := h.histograms[label]
-	h.rw.RUnlock()
-	if !ok {
-		h.addHistogram(label)
+		count := m / gcd(int64(math.Trunc(b)), m)
+		if count > countBeforeRotation {
+			countBeforeRotation = count
+		}
 	}
 
-	h.rw.Lock()
-	defer h.rw.Unlock()
-
-	h.histograms["overall"].Current.RecordValue(v)
-	return h.histograms[label].Current.RecordValue(v)
-}
-
-func (h *HistogramSet) ValueAtQuantile(label string, q float64) int64 {
-	h.rw.RLock()
-	defer h.rw.RUnlock()
-
-	_, ok := h.histograms[label]
-	if !ok {
-		return 0
-	}
-
-	return h.histograms[label].Merge().ValueAtQuantile(q)
-}
-
-func (h *HistogramSet) Rotate() {
-	h.rw.Lock()
-	defer h.rw.Unlock()
-
-	for _, histogram := range h.histograms {
-		histogram.Rotate()
+	return &Histogram{
+		name:                opts.Name,
+		buckets:             opts.Buckets,
+		countBeforeRotation: countBeforeRotation,
+		histogram:           hdrhistogram.NewWindowed(2, 0, durationToMilliseconds(opts.MaxDuration), 1),
 	}
 }
 
-func (h *HistogramSet) addHistogram(label string) {
-	h.rw.Lock()
-	defer h.rw.Unlock()
+func (h *Histogram) Observe(duration time.Duration) error {
+	if h.histogram.Current.TotalCount() >= h.countBeforeRotation {
+		h.histogram.Rotate()
+	}
 
-	h.histograms[label] = hdrhistogram.NewWindowed(ProbeHistogramWindow, 0, int64(time.Minute*10), SigFigs)
+	return h.histogram.Current.RecordValue(durationToMilliseconds(duration))
+}
+
+func (h *Histogram) Collect() map[string]int64 {
+	histogram := h.histogram.Merge()
+	values := make(map[string]int64)
+	values[fmt.Sprintf("%s.max", h.name)] = histogram.Max()
+
+	for _, b := range h.buckets {
+		quantileLabel := strings.Replace(strconv.FormatFloat(b, 'f', -1, 64), ".", "", -1)
+		values[fmt.Sprintf("%s.p%s", h.name, quantileLabel)] = histogram.ValueAtQuantile(b)
+	}
+
+	return values
+}
+
+func durationToMilliseconds(d time.Duration) int64 {
+	return int64(d / time.Millisecond)
+}
+
+func gcd(x, y int64) int64 {
+	for y != 0 {
+		x, y = y, x%y
+	}
+
+	return x
 }
