@@ -9,7 +9,7 @@ import (
 
 func TestBuild(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Perm Binary Suite")
+	RunSpecs(t, "Perm Monitor Binary Suite")
 }
 
 // Having this file here will cause Ginkgo to compile the perm binary. This
