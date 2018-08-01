@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/clock/fakeclock"
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
@@ -22,18 +21,22 @@ func TestMonitor(t *testing.T) {
 
 func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Duration, allowedLatency time.Duration, opts ...Option) {
 	var (
-		client *monitorfakes.FakeClient
+		testDuration time.Duration
+		zeroDuration time.Duration
+		fakeClient   *monitorfakes.FakeClient
 
 		subject *Probe
 	)
 
 	BeforeEach(func() {
-		client = new(monitorfakes.FakeClient)
+		testDuration = time.Millisecond * 10
+		zeroDuration = time.Duration(0)
+		fakeClient = new(monitorfakes.FakeClient)
 
-		client.HasPermissionReturnsOnCall(0, true, nil)
-		client.HasPermissionReturnsOnCall(1, false, nil)
+		fakeClient.HasPermissionReturnsOnCall(0, true, testDuration, nil)
+		fakeClient.HasPermissionReturnsOnCall(1, false, testDuration, nil)
 
-		subject = NewProbe(client, opts...)
+		subject = NewProbe(fakeClient, opts...)
 	})
 
 	Describe("#Run", func() {
@@ -41,40 +44,39 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			err := subject.Run()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-
-			_, roleName, permissions := client.CreateRoleArgsForCall(0)
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, permissions := fakeClient.CreateRoleArgsForCall(0)
 			Expect(permissions).To(HaveLen(1))
 
 			permission := permissions[0]
 
-			_, assignedRole, assignedActor := client.AssignRoleArgsForCall(0)
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			_, assignedRole, assignedActor := fakeClient.AssignRoleArgsForCall(0)
 			Expect(assignedRole).To(Equal(roleName))
 
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 
-			_, actorWithPermission, action, resource := client.HasPermissionArgsForCall(0)
+			_, actorWithPermission, action, resource := fakeClient.HasPermissionArgsForCall(0)
 			Expect(actorWithPermission).To(Equal(assignedActor))
 			Expect(perm.Permission{
 				Action:          action,
 				ResourcePattern: resource,
 			}).To(Equal(permission))
 
-			_, actorWithoutPermission, action, resource := client.HasPermissionArgsForCall(1)
+			_, actorWithoutPermission, action, resource := fakeClient.HasPermissionArgsForCall(1)
 			Expect(actorWithoutPermission).NotTo(Equal(assignedActor))
 			Expect(perm.Permission{
 				Action:          action,
 				ResourcePattern: resource,
 			}).To(Equal(permission))
 
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			_, unassignedRole, unassignedActor := client.UnassignRoleArgsForCall(0)
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			_, unassignedRole, unassignedActor := fakeClient.UnassignRoleArgsForCall(0)
 			Expect(unassignedRole).To(Equal(roleName))
 			Expect(unassignedActor).To(Equal(assignedActor))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
-			_, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
+			_, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 		})
 
@@ -86,44 +88,38 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			end := time.Now()
 
-			ctx, _, _ := client.CreateRoleArgsForCall(0)
+			ctx, _, _ := fakeClient.CreateRoleArgsForCall(0)
 			deadline, ok := ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
 
-			ctx, _, _ = client.AssignRoleArgsForCall(0)
+			ctx, _, _ = fakeClient.AssignRoleArgsForCall(0)
 			deadline, ok = ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
 
-			ctx, _, _, _ = client.HasPermissionArgsForCall(0)
+			ctx, _, _, _ = fakeClient.HasPermissionArgsForCall(0)
 			deadline, ok = ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
 
-			ctx, _, _, _ = client.HasPermissionArgsForCall(1)
+			ctx, _, _, _ = fakeClient.HasPermissionArgsForCall(1)
 			deadline, ok = ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
 
-			ctx, _, _ = client.UnassignRoleArgsForCall(0)
+			ctx, _, _ = fakeClient.UnassignRoleArgsForCall(0)
 			deadline, ok = ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
 
-			ctx, _ = client.DeleteRoleArgsForCall(0)
+			ctx, _ = fakeClient.DeleteRoleArgsForCall(0)
 			deadline, ok = ctx.Deadline()
-
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedTimeout)))
@@ -133,15 +129,15 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			err := subject.Run()
 			Expect(err).NotTo(HaveOccurred())
 
-			_, firstRole, _ := client.CreateRoleArgsForCall(0)
+			_, firstRole, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			client.HasPermissionReturnsOnCall(2, true, nil)
-			client.HasPermissionReturnsOnCall(3, false, nil)
+			fakeClient.HasPermissionReturnsOnCall(2, true, testDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(3, false, testDuration, nil)
 
 			err = subject.Run()
 			Expect(err).NotTo(HaveOccurred())
 
-			_, secondRole, _ := client.CreateRoleArgsForCall(1)
+			_, secondRole, _ := fakeClient.CreateRoleArgsForCall(1)
 
 			Expect(firstRole).NotTo(Equal(secondRole))
 		})
@@ -150,180 +146,136 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			err := subject.Run()
 			Expect(err).NotTo(HaveOccurred())
 
-			_, _, firstPermissions := client.CreateRoleArgsForCall(0)
+			_, _, firstPermissions := fakeClient.CreateRoleArgsForCall(0)
 			firstPermission := firstPermissions[0]
 
-			client.HasPermissionReturnsOnCall(2, true, nil)
-			client.HasPermissionReturnsOnCall(3, false, nil)
+			fakeClient.HasPermissionReturnsOnCall(2, true, testDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(3, false, testDuration, nil)
 
 			err = subject.Run()
 			Expect(err).NotTo(HaveOccurred())
 
-			_, _, secondPermissions := client.CreateRoleArgsForCall(1)
+			_, _, secondPermissions := fakeClient.CreateRoleArgsForCall(1)
 			secondPermission := secondPermissions[0]
 
 			Expect(firstPermission).NotTo(Equal(secondPermission))
 		})
 
 		It("runs all other calls but returns an error if CreateRole takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
-			client.CreateRoleStub = func(context.Context, string, ...perm.Permission) (perm.Role, error) {
-				clock.Increment(allowedLatency * 2)
-				return perm.Role{}, nil
-			}
+			fakeClient.CreateRoleReturns(perm.Role{}, allowedLatency*2, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("runs all other calls but returns an error if AssignRole takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
-			client.AssignRoleStub = func(context.Context, string, perm.Actor) error {
-				clock.Increment(allowedLatency * 2)
-				return nil
-			}
+			fakeClient.AssignRoleReturns(allowedLatency*2, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("runs all other calls but returns an error if the first HasPermission call takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
 			var called bool
-			client.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, error) {
+			fakeClient.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, time.Duration, error) {
 				if !called {
 					called = true
-					clock.Increment(allowedLatency * 2)
-					return true, nil
+					return true, allowedLatency * 2, nil
 				} else {
-					return false, nil
+					return false, time.Duration(0), nil
 				}
 			}
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("runs all other calls but returns an error if the second HasPermission call takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
 			var called bool
-			client.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, error) {
+			fakeClient.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, time.Duration, error) {
 				if !called {
 					called = true
-					return true, nil
+					return true, time.Duration(0), nil
 				} else {
-					clock.Increment(allowedLatency * 2)
-					return false, nil
+					return false, allowedLatency * 2, nil
 				}
 			}
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("runs all other calls but returns an error if UnassignRole takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
-			client.UnassignRoleStub = func(context.Context, string, perm.Actor) error {
-				clock.Increment(allowedLatency * 2)
-				return nil
-			}
+			fakeClient.UnassignRoleReturns(allowedLatency*2, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("runs all other calls but returns an error if DeleteRole takes an unacceptable amount of time", func() {
-			now := time.Now()
-			clock := fakeclock.NewFakeClock(now)
-
-			subject = NewProbe(client, append(opts, WithClock(clock))...)
-
-			client.DeleteRoleStub = func(context.Context, string) error {
-				clock.Increment(allowedLatency * 2)
-				return nil
-			}
+			fakeClient.DeleteRoleReturns(allowedLatency*2, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
 
-			Expect(client.CreateRoleCallCount()).To(Equal(1))
-			Expect(client.AssignRoleCallCount()).To(Equal(1))
-			Expect(client.HasPermissionCallCount()).To(Equal(2))
-			Expect(client.UnassignRoleCallCount()).To(Equal(1))
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 		})
 
 		It("stops early and attempts to cleanup if CreateRole fails", func() {
 			start := time.Now()
 
 			createRoleErr := errors.New("error")
-
-			client.CreateRoleReturns(perm.Role{}, createRoleErr)
+			fakeClient.CreateRoleReturns(perm.Role{}, zeroDuration, createRoleErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(createRoleErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.AssignRoleCallCount()).To(Equal(0))
-			Expect(client.HasPermissionCallCount()).To(Equal(0))
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(0))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -336,22 +288,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			start := time.Now()
 
 			assignRoleErr := errors.New("error")
-
-			client.AssignRoleReturns(assignRoleErr)
+			fakeClient.AssignRoleReturns(zeroDuration, assignRoleErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(assignRoleErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.HasPermissionCallCount()).To(Equal(0))
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(0))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -364,22 +317,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			start := time.Now()
 
 			hasPermissionErr := errors.New("error")
-
-			client.HasPermissionReturnsOnCall(0, false, hasPermissionErr)
+			fakeClient.HasPermissionReturnsOnCall(0, false, zeroDuration, hasPermissionErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(hasPermissionErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.HasPermissionCallCount()).To(Equal(1))
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(1))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -392,21 +346,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			start := time.Now()
 
 			hasPermissionErr := errors.New("error")
-
-			client.HasPermissionReturnsOnCall(1, false, hasPermissionErr)
+			fakeClient.HasPermissionReturnsOnCall(1, false, zeroDuration, hasPermissionErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(hasPermissionErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -419,19 +375,22 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			start := time.Now()
 
 			unassignRoleErr := errors.New("error")
-
-			client.UnassignRoleReturns(unassignRoleErr)
+			fakeClient.UnassignRoleReturns(zeroDuration, unassignRoleErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(unassignRoleErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -444,19 +403,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			start := time.Now()
 
 			deleteRoleErr := errors.New("error")
-
-			client.DeleteRoleReturnsOnCall(0, deleteRoleErr)
+			fakeClient.DeleteRoleReturnsOnCall(0, zeroDuration, deleteRoleErr)
 
 			err := subject.Run()
 			Expect(err).To(Equal(deleteRoleErr))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(1)
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(1)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -468,21 +431,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		It("stops early and attempts to cleanup if the first HasPermission succeeds but has an incorrect result", func() {
 			start := time.Now()
 
-			client.HasPermissionReturnsOnCall(0, false, nil)
+			fakeClient.HasPermissionReturnsOnCall(0, false, zeroDuration, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError("probe: incorrect HasPermission result"))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.HasPermissionCallCount()).To(Equal(1))
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(1))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()
@@ -494,20 +459,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		It("stops early and attempts to cleanup if the second HasPermission succeeds but has an incorrect result", func() {
 			start := time.Now()
 
-			client.HasPermissionReturnsOnCall(1, true, nil)
+			fakeClient.HasPermissionReturnsOnCall(1, true, zeroDuration, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError("probe: incorrect HasPermission result"))
 
 			end := time.Now()
 
-			_, roleName, _ := client.CreateRoleArgsForCall(0)
+			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
+			_, roleName, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			Expect(client.UnassignRoleCallCount()).To(Equal(0))
+			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
+			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(0))
 
-			Expect(client.DeleteRoleCallCount()).To(Equal(1))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
-			ctx, deletedRoleName := client.DeleteRoleArgsForCall(0)
+			ctx, deletedRoleName := fakeClient.DeleteRoleArgsForCall(0)
 			Expect(deletedRoleName).To(Equal(roleName))
 
 			deadline, ok := ctx.Deadline()

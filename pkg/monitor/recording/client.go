@@ -5,98 +5,122 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
-//go:generate counterfeiter . DurationRecorder
+//go:generate counterfeiter . Client
 
-type DurationRecorder interface {
+type Client interface {
+	AssignRole(ctx context.Context, roleName string, actor perm.Actor) error
+	CreateRole(ctx context.Context, name string, permissions ...perm.Permission) (perm.Role, error)
+	DeleteRole(ctx context.Context, name string) error
+	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
+	UnassignRole(ctx context.Context, roleName string, actor perm.Actor) error
+}
+
+//go:generate counterfeiter . Recorder
+
+type Recorder interface {
 	Observe(duration time.Duration) error
 }
 
-type Client struct {
-	client   monitor.Client
-	recorder DurationRecorder
+type RecordingClient struct {
+	client   Client
+	recorder Recorder
 	clock    clock.Clock
 }
 
-func NewClient(client monitor.Client, recorder DurationRecorder, opts ...Option) *Client {
+func NewClient(client Client, recorder Recorder, opts ...Option) *RecordingClient {
 	o := defaultOptions()
 	for _, opt := range opts {
 		opt(o)
 	}
 
-	return &Client{
+	return &RecordingClient{
 		client:   client,
 		recorder: recorder,
 		clock:    o.clock,
 	}
 }
 
-func (c *Client) AssignRole(ctx context.Context, roleName string, actor perm.Actor) error {
+func (c *RecordingClient) AssignRole(ctx context.Context, roleName string, actor perm.Actor) (time.Duration, error) {
 	start := c.clock.Now()
+
 	if err := c.client.AssignRole(ctx, roleName, actor); err != nil {
-		return err
+		return 0, err
 	}
 
-	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return FailedToObserveDurationError{Err: err}
+	duration := c.clock.Since(start)
+
+	if err := c.recorder.Observe(duration); err != nil {
+		return duration, FailedToObserveDurationError{Err: err}
 	}
 
-	return nil
+	return duration, nil
 }
 
-func (c *Client) CreateRole(ctx context.Context, roleName string, permissions ...perm.Permission) (perm.Role, error) {
+func (c *RecordingClient) CreateRole(ctx context.Context, roleName string, permissions ...perm.Permission) (perm.Role, time.Duration, error) {
 	start := c.clock.Now()
+
 	role, err := c.client.CreateRole(ctx, roleName, permissions...)
 	if err != nil {
-		return perm.Role{}, err
+		return perm.Role{}, 0, err
 	}
 
-	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return role, FailedToObserveDurationError{Err: err}
+	duration := c.clock.Since(start)
+
+	if err := c.recorder.Observe(duration); err != nil {
+		return role, duration, FailedToObserveDurationError{Err: err}
 	}
 
-	return role, nil
+	return role, duration, nil
 }
 
-func (c *Client) DeleteRole(ctx context.Context, roleName string) error {
+func (c *RecordingClient) DeleteRole(ctx context.Context, roleName string) (time.Duration, error) {
 	start := c.clock.Now()
+
 	if err := c.client.DeleteRole(ctx, roleName); err != nil {
-		return err
+		return 0, err
 	}
 
-	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return FailedToObserveDurationError{Err: err}
+	duration := c.clock.Since(start)
+
+	if err := c.recorder.Observe(duration); err != nil {
+		return duration, FailedToObserveDurationError{Err: err}
 	}
 
-	return nil
+	return duration, nil
 }
 
-func (c *Client) UnassignRole(ctx context.Context, roleName string, actor perm.Actor) error {
+func (c *RecordingClient) HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, time.Duration, error) {
 	start := c.clock.Now()
-	if err := c.client.UnassignRole(ctx, roleName, actor); err != nil {
-		return err
-	}
 
-	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return FailedToObserveDurationError{Err: err}
-	}
-
-	return nil
-}
-
-func (c *Client) HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error) {
-	start := c.clock.Now()
 	hasPermission, err := c.client.HasPermission(ctx, actor, action, resource)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
-	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return false, FailedToObserveDurationError{Err: err}
+	duration := c.clock.Since(start)
+
+	if err := c.recorder.Observe(duration); err != nil {
+		return false, duration, FailedToObserveDurationError{Err: err}
 	}
 
-	return hasPermission, nil
+	return hasPermission, duration, nil
+}
+
+func (c *RecordingClient) UnassignRole(ctx context.Context, roleName string, actor perm.Actor) (time.Duration, error) {
+	start := c.clock.Now()
+
+	if err := c.client.UnassignRole(ctx, roleName, actor); err != nil {
+		return 0, err
+	}
+
+	duration := c.clock.Since(start)
+
+	if err := c.recorder.Observe(duration); err != nil {
+		return duration, FailedToObserveDurationError{Err: err}
+	}
+
+	return duration, nil
 }

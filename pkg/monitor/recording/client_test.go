@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock/fakeclock"
-	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	. "code.cloudfoundry.org/perm/pkg/monitor/recording"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording/recordingfakes"
 	"code.cloudfoundry.org/perm/pkg/perm"
@@ -19,11 +18,11 @@ var _ = Describe("Client", func() {
 	var (
 		now time.Time
 
-		fakeClient   *monitorfakes.FakeClient
-		fakeRecorder *recordingfakes.FakeDurationRecorder
+		fakeClient   *recordingfakes.FakeClient
+		fakeRecorder *recordingfakes.FakeRecorder
 		fakeClock    *fakeclock.FakeClock
 
-		subject *Client
+		subject *RecordingClient
 
 		roleName    string
 		actor       perm.Actor
@@ -31,14 +30,15 @@ var _ = Describe("Client", func() {
 		action      string
 		resource    string
 
-		ctx context.Context
+		ctx          context.Context
+		testDuration time.Duration
 	)
 
 	BeforeEach(func() {
 		now = time.Now()
 
-		fakeClient = new(monitorfakes.FakeClient)
-		fakeRecorder = new(recordingfakes.FakeDurationRecorder)
+		fakeClient = new(recordingfakes.FakeClient)
+		fakeRecorder = new(recordingfakes.FakeRecorder)
 		fakeClock = fakeclock.NewFakeClock(now)
 
 		subject = NewClient(fakeClient, fakeRecorder, WithClock(fakeClock))
@@ -58,46 +58,47 @@ var _ = Describe("Client", func() {
 		resource = uuid.NewV4().String()
 
 		ctx = context.Background()
+		testDuration = time.Millisecond * 10
 	})
 
 	Describe("#AssignRole", func() {
-		Context("when no errors are encountered", func() {
+		Context("when no errors are encountered from AssignRole", func() {
 			BeforeEach(func() {
 				fakeClient.AssignRoleStub = func(context.Context, string, perm.Actor) error {
-					fakeClock.Increment(time.Second * 5)
+					fakeClock.Increment(testDuration)
 					return nil
 				}
 			})
 
-			It("should record the duration of the call", func() {
-				err := subject.AssignRole(ctx, roleName, actor)
+			It("records the duration of the call", func() {
+				duration, err := subject.AssignRole(ctx, roleName, actor)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(duration).To(Equal(testDuration))
 
 				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
-
-				duration := fakeRecorder.ObserveArgsForCall(0)
-				Expect(duration).To(Equal(time.Second * 5))
+				Expect(fakeRecorder.ObserveArgsForCall(0)).To(Equal(testDuration))
 			})
 
-			It("returns an error if recording fails", func() {
-				observeErr := errors.New("test err")
-				fakeRecorder.ObserveStub = func(time.Duration) error {
-					return observeErr
-				}
+			Context("when an error is encountered recording the duration", func() {
+				It("returns the error and the duration", func() {
+					observeErr := errors.New("test err")
+					fakeRecorder.ObserveReturns(observeErr)
 
-				err := subject.AssignRole(ctx, roleName, actor)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					duration, err := subject.AssignRole(ctx, roleName, actor)
+					Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					Expect(duration).To(Equal(testDuration))
+				})
 			})
 		})
 
-		Context("when an error is encountered", func() {
-			It("should return the error and not record the duration of the call", func() {
+		Context("when an error is encountered from AssignRole", func() {
+			It("returns the error and does not record the duration of the call", func() {
 				returnedErr := errors.New("AssignRole error")
 				fakeClient.AssignRoleReturns(returnedErr)
 
-				err := subject.AssignRole(ctx, roleName, actor)
+				duration, err := subject.AssignRole(ctx, roleName, actor)
 				Expect(err).To(MatchError(returnedErr))
+				Expect(duration).To(BeZero())
 
 				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
 			})
@@ -105,41 +106,43 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("#CreateRole", func() {
-		Context("when no errors are encountered", func() {
-			It("should record the duration of the call", func() {
+		Context("when no errors are encountered from CreateRole", func() {
+			BeforeEach(func() {
 				fakeClient.CreateRoleStub = func(context.Context, string, ...perm.Permission) (perm.Role, error) {
-					fakeClock.Increment(time.Second * 5)
+					fakeClock.Increment(testDuration)
 					return perm.Role{}, nil
 				}
-
-				_, err := subject.CreateRole(ctx, roleName, permissions...)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
-
-				duration := fakeRecorder.ObserveArgsForCall(0)
-				Expect(duration).To(Equal(duration))
 			})
 
-			It("returns an error if recording fails", func() {
-				observeErr := errors.New("test err")
-				fakeRecorder.ObserveStub = func(time.Duration) error {
-					return observeErr
-				}
+			It("records the duration of the call", func() {
+				_, duration, err := subject.CreateRole(ctx, roleName, permissions...)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(duration).To(Equal(testDuration))
 
-				_, err := subject.CreateRole(ctx, roleName, permissions...)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
+				Expect(fakeRecorder.ObserveArgsForCall(0)).To(Equal(testDuration))
+			})
+
+			Context("when an error is encountered recording the duration", func() {
+				It("returns the error and the duration", func() {
+					observeErr := errors.New("test err")
+					fakeRecorder.ObserveReturns(observeErr)
+
+					_, duration, err := subject.CreateRole(ctx, roleName, permissions...)
+					Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					Expect(duration).To(Equal(testDuration))
+				})
 			})
 		})
 
-		Context("when an error is encountered", func() {
-			It("should return the error and not record the duration of the call", func() {
+		Context("when an error is encountered from CreateRole", func() {
+			It("returns the error and does not record the duration of the call", func() {
 				returnedErr := errors.New("CreateRole error")
 				fakeClient.CreateRoleReturns(perm.Role{}, returnedErr)
 
-				_, err := subject.CreateRole(ctx, roleName, permissions...)
+				_, duration, err := subject.CreateRole(ctx, roleName, permissions...)
 				Expect(err).To(MatchError(returnedErr))
+				Expect(duration).To(BeZero())
 
 				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
 			})
@@ -147,83 +150,43 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("#DeleteRole", func() {
-		Context("when no errors are encountered", func() {
-			It("should record the duration of the call", func() {
+		Context("when no errors are encountered from DeleteRole", func() {
+			BeforeEach(func() {
 				fakeClient.DeleteRoleStub = func(context.Context, string) error {
-					fakeClock.Increment(time.Second * 5)
+					fakeClock.Increment(testDuration)
 					return nil
 				}
-
-				err := subject.DeleteRole(ctx, roleName)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
-
-				duration := fakeRecorder.ObserveArgsForCall(0)
-				Expect(duration).To(Equal(duration))
 			})
 
-			It("returns an error if recording fails", func() {
-				observeErr := errors.New("test err")
-				fakeRecorder.ObserveStub = func(time.Duration) error {
-					return observeErr
-				}
+			It("records the duration of the call", func() {
+				duration, err := subject.DeleteRole(ctx, roleName)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(duration).To(Equal(testDuration))
 
-				err := subject.DeleteRole(ctx, roleName)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
+				Expect(fakeRecorder.ObserveArgsForCall(0)).To(Equal(testDuration))
+			})
+
+			Context("when an error is encountered recording the duration", func() {
+				It("returns the error and the duration", func() {
+					observeErr := errors.New("test err")
+					fakeRecorder.ObserveReturns(observeErr)
+
+					duration, err := subject.DeleteRole(ctx, roleName)
+					Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					Expect(duration).To(Equal(testDuration))
+				})
 			})
 		})
 
-		Context("when an error is encountered", func() {
-			It("should return the error and not record the duration of the call", func() {
+		Context("when an error is encountered from DeleteRole", func() {
+			It("returns the error and does not record the duration of the call", func() {
 				returnedErr := errors.New("DeleteRole error")
 				fakeClient.DeleteRoleReturns(returnedErr)
 
-				err := subject.DeleteRole(ctx, roleName)
+				duration, err := subject.DeleteRole(ctx, roleName)
 				Expect(err).To(MatchError(returnedErr))
-
-				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
-			})
-		})
-	})
-
-	Describe("#UnassignRole", func() {
-		Context("when no errors are encountered", func() {
-			It("should record the duration of the call", func() {
-				fakeClient.UnassignRoleStub = func(context.Context, string, perm.Actor) error {
-					fakeClock.Increment(time.Second * 5)
-					return nil
-				}
-
-				err := subject.UnassignRole(ctx, roleName, actor)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
-
-				duration := fakeRecorder.ObserveArgsForCall(0)
-				Expect(duration).To(Equal(duration))
-			})
-
-			It("returns an error if recording fails", func() {
-				observeErr := errors.New("test err")
-				fakeRecorder.ObserveStub = func(time.Duration) error {
-					return observeErr
-				}
-
-				err := subject.UnassignRole(ctx, roleName, actor)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
-			})
-		})
-
-		Context("when an error is encountered", func() {
-			It("should return the error and not record the duration of the call", func() {
-				returnedErr := errors.New("UnassignRole error")
-				fakeClient.UnassignRoleReturns(returnedErr)
-
-				err := subject.UnassignRole(ctx, roleName, actor)
-				Expect(err).To(MatchError(returnedErr))
+				Expect(duration).To(BeZero())
 
 				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
 			})
@@ -231,41 +194,87 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("#HasPermission", func() {
-		Context("when no errors are encountered", func() {
-			It("should record the duration of the call", func() {
+		Context("when no errors are encountered from HasPermission", func() {
+			BeforeEach(func() {
 				fakeClient.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, error) {
-					fakeClock.Increment(time.Second * 5)
+					fakeClock.Increment(testDuration)
 					return false, nil
 				}
-
-				_, _ = subject.HasPermission(ctx, actor, action, resource)
-
-				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
-
-				duration := fakeRecorder.ObserveArgsForCall(0)
-				Expect(duration).To(Equal(duration))
 			})
 
-			It("returns an error if recording fails", func() {
-				observeErr := errors.New("test err")
-				fakeRecorder.ObserveStub = func(time.Duration) error {
-					return observeErr
-				}
+			It("records the duration of the call", func() {
+				_, duration, err := subject.HasPermission(ctx, actor, action, resource)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(duration).To(Equal(testDuration))
 
-				_, err := subject.HasPermission(ctx, actor, action, resource)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
+				Expect(fakeRecorder.ObserveArgsForCall(0)).To(Equal(testDuration))
+			})
+
+			Context("when an error is encountered recording the duration", func() {
+				It("returns the error and the duration", func() {
+					observeErr := errors.New("test err")
+					fakeRecorder.ObserveReturns(observeErr)
+
+					_, duration, err := subject.HasPermission(ctx, actor, action, resource)
+					Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					Expect(duration).To(Equal(testDuration))
+				})
 			})
 		})
 
-		Context("when an error is encountered", func() {
-			It("should return the error and not record the duration of the call", func() {
+		Context("when an error is encountered from HasPermission", func() {
+			It("returns the error and does not record the duration of the call", func() {
 				returnedErr := errors.New("HasPermission error")
 				fakeClient.HasPermissionReturns(false, returnedErr)
 
-				hasPermission, err := subject.HasPermission(ctx, actor, action, resource)
-				Expect(hasPermission).To(BeFalse())
+				_, duration, err := subject.HasPermission(ctx, actor, action, resource)
 				Expect(err).To(MatchError(returnedErr))
+				Expect(duration).To(BeZero())
+
+				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
+			})
+		})
+	})
+
+	Describe("#UnassignRole", func() {
+		Context("when no errors are encountered from UnassignRole", func() {
+			BeforeEach(func() {
+				fakeClient.UnassignRoleStub = func(context.Context, string, perm.Actor) error {
+					fakeClock.Increment(testDuration)
+					return nil
+				}
+			})
+
+			It("records the duration of the call", func() {
+				duration, err := subject.UnassignRole(ctx, roleName, actor)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(duration).To(Equal(testDuration))
+
+				Expect(fakeRecorder.ObserveCallCount()).To(Equal(1))
+				Expect(fakeRecorder.ObserveArgsForCall(0)).To(Equal(testDuration))
+			})
+
+			Context("when an error is encountered recording the duration", func() {
+				It("returns the error and the duration", func() {
+					observeErr := errors.New("test err")
+					fakeRecorder.ObserveReturns(observeErr)
+
+					duration, err := subject.UnassignRole(ctx, roleName, actor)
+					Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
+					Expect(duration).To(Equal(testDuration))
+				})
+			})
+		})
+
+		Context("when an error is encountered from UnassignRole", func() {
+			It("returns the error and does not record the duration of the call", func() {
+				returnedErr := errors.New("UnassignRole error")
+				fakeClient.UnassignRoleReturns(returnedErr)
+
+				duration, err := subject.UnassignRole(ctx, roleName, actor)
+				Expect(err).To(MatchError(returnedErr))
+				Expect(duration).To(BeZero())
 
 				Expect(fakeRecorder.ObserveCallCount()).To(Equal(0))
 			})

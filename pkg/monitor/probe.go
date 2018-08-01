@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -24,16 +23,15 @@ var (
 //go:generate counterfeiter . Client
 
 type Client interface {
-	CreateRole(ctx context.Context, name string, permissions ...perm.Permission) (perm.Role, error)
-	DeleteRole(ctx context.Context, name string) error
-	AssignRole(ctx context.Context, roleName string, actor perm.Actor) error
-	UnassignRole(ctx context.Context, roleName string, actor perm.Actor) error
-	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, error)
+	AssignRole(ctx context.Context, roleName string, actor perm.Actor) (time.Duration, error)
+	CreateRole(ctx context.Context, name string, permissions ...perm.Permission) (perm.Role, time.Duration, error)
+	DeleteRole(ctx context.Context, name string) (time.Duration, error)
+	HasPermission(ctx context.Context, actor perm.Actor, action, resource string) (bool, time.Duration, error)
+	UnassignRole(ctx context.Context, roleName string, actor perm.Actor) (time.Duration, error)
 }
 
 type Probe struct {
 	client         Client
-	clock          clock.Clock
 	timeout        time.Duration
 	cleanupTimeout time.Duration
 	maxLatency     time.Duration
@@ -47,7 +45,6 @@ func NewProbe(client Client, opts ...Option) *Probe {
 
 	return &Probe{
 		client:         client,
-		clock:          o.clock,
 		timeout:        o.timeout,
 		cleanupTimeout: o.cleanupTimeout,
 		maxLatency:     o.maxLatency,
@@ -56,8 +53,10 @@ func NewProbe(client Client, opts ...Option) *Probe {
 
 func (p *Probe) Run() error {
 	var (
-		err    error
-		failed bool
+		hasPermission      bool
+		duration           time.Duration
+		err                error
+		exceededMaxLatency bool
 	)
 
 	suffix := uuid.NewV4().String()
@@ -72,43 +71,36 @@ func (p *Probe) Run() error {
 			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
 			defer cancel()
 
-			p.client.DeleteRole(ctx, roleName)
+			_, _ = p.client.DeleteRole(ctx, roleName)
 		}
 	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	start := p.clock.Now()
-	if _, err = p.client.CreateRole(ctx, roleName, permission); err != nil {
+	if _, duration, err = p.client.CreateRole(ctx, roleName, permission); err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	start = p.clock.Now()
-	if err = p.client.AssignRole(ctx, roleName, assignedActor); err != nil {
+	if duration, err = p.client.AssignRole(ctx, roleName, assignedActor); err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	var hasPermission bool
-	start = p.clock.Now()
-	hasPermission, err = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
+	hasPermission, duration, err = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
 	if err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 	if !hasPermission {
 		err = ErrIncorrectHasPermission
@@ -117,44 +109,37 @@ func (p *Probe) Run() error {
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	start = p.clock.Now()
-	hasPermission, err = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
+	hasPermission, duration, err = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
 	if err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 	if hasPermission {
 		err = ErrIncorrectHasPermission
 		return err
 	}
 
-	start = p.clock.Now()
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	start = p.clock.Now()
-	if err = p.client.UnassignRole(ctx, roleName, assignedActor); err != nil {
+	if duration, err = p.client.UnassignRole(ctx, roleName, assignedActor); err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-
-	start = p.clock.Now()
-	if err = p.client.DeleteRole(ctx, roleName); err != nil {
+	if duration, err = p.client.DeleteRole(ctx, roleName); err != nil {
 		return err
 	}
-	if p.clock.Since(start) > p.maxLatency {
-		failed = true
+	if duration > p.maxLatency {
+		exceededMaxLatency = true
 	}
 
-	if failed {
+	if exceededMaxLatency {
 		return ErrExceededMaxLatency
 	}
 

@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
 )
 
-type FakeDurationRecorder struct {
+type FakeRecorder struct {
 	ObserveStub        func(duration time.Duration) error
 	observeMutex       sync.RWMutex
 	observeArgsForCall []struct {
@@ -24,7 +24,7 @@ type FakeDurationRecorder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDurationRecorder) Observe(duration time.Duration) error {
+func (fake *FakeRecorder) Observe(duration time.Duration) error {
 	fake.observeMutex.Lock()
 	ret, specificReturn := fake.observeReturnsOnCall[len(fake.observeArgsForCall)]
 	fake.observeArgsForCall = append(fake.observeArgsForCall, struct {
@@ -41,26 +41,26 @@ func (fake *FakeDurationRecorder) Observe(duration time.Duration) error {
 	return fake.observeReturns.result1
 }
 
-func (fake *FakeDurationRecorder) ObserveCallCount() int {
+func (fake *FakeRecorder) ObserveCallCount() int {
 	fake.observeMutex.RLock()
 	defer fake.observeMutex.RUnlock()
 	return len(fake.observeArgsForCall)
 }
 
-func (fake *FakeDurationRecorder) ObserveArgsForCall(i int) time.Duration {
+func (fake *FakeRecorder) ObserveArgsForCall(i int) time.Duration {
 	fake.observeMutex.RLock()
 	defer fake.observeMutex.RUnlock()
 	return fake.observeArgsForCall[i].duration
 }
 
-func (fake *FakeDurationRecorder) ObserveReturns(result1 error) {
+func (fake *FakeRecorder) ObserveReturns(result1 error) {
 	fake.ObserveStub = nil
 	fake.observeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeDurationRecorder) ObserveReturnsOnCall(i int, result1 error) {
+func (fake *FakeRecorder) ObserveReturnsOnCall(i int, result1 error) {
 	fake.ObserveStub = nil
 	if fake.observeReturnsOnCall == nil {
 		fake.observeReturnsOnCall = make(map[int]struct {
@@ -72,7 +72,7 @@ func (fake *FakeDurationRecorder) ObserveReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDurationRecorder) Invocations() map[string][][]interface{} {
+func (fake *FakeRecorder) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.observeMutex.RLock()
@@ -84,7 +84,7 @@ func (fake *FakeDurationRecorder) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeDurationRecorder) recordInvocation(key string, args []interface{}) {
+func (fake *FakeRecorder) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -96,4 +96,4 @@ func (fake *FakeDurationRecorder) recordInvocation(key string, args []interface{
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ recording.DurationRecorder = new(FakeDurationRecorder)
+var _ recording.Recorder = new(FakeRecorder)
