@@ -41,7 +41,7 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor perm.Act
 	}
 
 	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return ErrFailedToObserveDuration
+		return FailedToObserveDurationError{Err: err}
 	}
 
 	return nil
@@ -55,7 +55,7 @@ func (c *Client) CreateRole(ctx context.Context, roleName string, permissions ..
 	}
 
 	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return role, ErrFailedToObserveDuration
+		return role, FailedToObserveDurationError{Err: err}
 	}
 
 	return role, nil
@@ -68,7 +68,7 @@ func (c *Client) DeleteRole(ctx context.Context, roleName string) error {
 	}
 
 	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return ErrFailedToObserveDuration
+		return FailedToObserveDurationError{Err: err}
 	}
 
 	return nil
@@ -81,7 +81,7 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor perm.A
 	}
 
 	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return ErrFailedToObserveDuration
+		return FailedToObserveDurationError{Err: err}
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (c *Client) HasPermission(ctx context.Context, actor perm.Actor, action, re
 	}
 
 	if err := c.recorder.Observe(c.clock.Since(start)); err != nil {
-		return false, ErrFailedToObserveDuration
+		return false, FailedToObserveDurationError{Err: err}
 	}
 
 	return hasPermission, nil

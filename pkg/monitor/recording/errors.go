@@ -1,7 +1,9 @@
 package recording
 
-import "errors"
+type FailedToObserveDurationError struct {
+	Err error
+}
 
-var (
-	ErrFailedToObserveDuration = errors.New("probe: failed to observe duration")
-)
+func (e FailedToObserveDurationError) Error() string {
+	return e.Err.Error()
+}

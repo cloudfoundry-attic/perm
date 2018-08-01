@@ -87,7 +87,7 @@ var _ = Describe("Client", func() {
 
 				err := subject.AssignRole(ctx, roleName, actor)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ErrFailedToObserveDuration))
+				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
 			})
 		})
 
@@ -129,7 +129,7 @@ var _ = Describe("Client", func() {
 
 				_, err := subject.CreateRole(ctx, roleName, permissions...)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ErrFailedToObserveDuration))
+				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
 			})
 		})
 
@@ -171,7 +171,7 @@ var _ = Describe("Client", func() {
 
 				err := subject.DeleteRole(ctx, roleName)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ErrFailedToObserveDuration))
+				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
 			})
 		})
 
@@ -213,7 +213,7 @@ var _ = Describe("Client", func() {
 
 				err := subject.UnassignRole(ctx, roleName, actor)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ErrFailedToObserveDuration))
+				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
 			})
 		})
 
@@ -254,7 +254,7 @@ var _ = Describe("Client", func() {
 
 				_, err := subject.HasPermission(ctx, actor, action, resource)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ErrFailedToObserveDuration))
+				Expect(err).To(MatchError(FailedToObserveDurationError{Err: observeErr}))
 			})
 		})
 
