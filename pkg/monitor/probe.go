@@ -103,7 +103,7 @@ func (p *Probe) Run() error {
 		exceededMaxLatency = true
 	}
 	if !hasPermission {
-		err = ErrIncorrectHasPermission
+		err = ErrHasAssignedPermission
 		return err
 	}
 
@@ -117,7 +117,7 @@ func (p *Probe) Run() error {
 		exceededMaxLatency = true
 	}
 	if hasPermission {
-		err = ErrIncorrectHasPermission
+		err = ErrHasUnassignedPermission
 		return err
 	}
 

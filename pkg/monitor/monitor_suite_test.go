@@ -434,7 +434,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.HasPermissionReturnsOnCall(0, false, zeroDuration, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError("probe: incorrect HasPermission result"))
+			Expect(err).To(MatchError(ErrHasAssignedPermission))
 
 			end := time.Now()
 
@@ -462,7 +462,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.HasPermissionReturnsOnCall(1, true, zeroDuration, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError("probe: incorrect HasPermission result"))
+			Expect(err).To(MatchError(ErrHasUnassignedPermission))
 
 			end := time.Now()
 
