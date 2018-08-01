@@ -100,21 +100,3 @@ func (c *Client) HasPermission(ctx context.Context, actor perm.Actor, action, re
 
 	return hasPermission, nil
 }
-
-type Option func(*options)
-
-func WithClock(c clock.Clock) Option {
-	return func(o *options) {
-		o.clock = c
-	}
-}
-
-type options struct {
-	clock clock.Clock
-}
-
-func defaultOptions() *options {
-	return &options{
-		clock: clock.NewClock(),
-	}
-}
