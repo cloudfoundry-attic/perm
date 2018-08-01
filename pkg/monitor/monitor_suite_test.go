@@ -21,7 +21,7 @@ func TestMonitor(t *testing.T) {
 
 func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Duration, allowedLatency time.Duration, opts ...Option) {
 	var (
-		testDuration time.Duration
+		delta        time.Duration
 		zeroDuration time.Duration
 		fakeClient   *monitorfakes.FakeClient
 
@@ -29,12 +29,12 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 	)
 
 	BeforeEach(func() {
-		testDuration = time.Millisecond * 10
+		delta = time.Duration(10)
 		zeroDuration = time.Duration(0)
 		fakeClient = new(monitorfakes.FakeClient)
 
-		fakeClient.HasPermissionReturnsOnCall(0, true, testDuration, nil)
-		fakeClient.HasPermissionReturnsOnCall(1, false, testDuration, nil)
+		fakeClient.HasPermissionReturnsOnCall(0, true, zeroDuration, nil)
+		fakeClient.HasPermissionReturnsOnCall(1, false, zeroDuration, nil)
 
 		subject = NewProbe(fakeClient, opts...)
 	})
@@ -131,8 +131,8 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			_, firstRole, _ := fakeClient.CreateRoleArgsForCall(0)
 
-			fakeClient.HasPermissionReturnsOnCall(2, true, testDuration, nil)
-			fakeClient.HasPermissionReturnsOnCall(3, false, testDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(2, true, zeroDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(3, false, zeroDuration, nil)
 
 			err = subject.Run()
 			Expect(err).NotTo(HaveOccurred())
@@ -149,8 +149,8 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			_, _, firstPermissions := fakeClient.CreateRoleArgsForCall(0)
 			firstPermission := firstPermissions[0]
 
-			fakeClient.HasPermissionReturnsOnCall(2, true, testDuration, nil)
-			fakeClient.HasPermissionReturnsOnCall(3, false, testDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(2, true, zeroDuration, nil)
+			fakeClient.HasPermissionReturnsOnCall(3, false, zeroDuration, nil)
 
 			err = subject.Run()
 			Expect(err).NotTo(HaveOccurred())
@@ -162,7 +162,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		})
 
 		It("runs all other calls but returns an error if CreateRole takes an unacceptable amount of time", func() {
-			fakeClient.CreateRoleReturns(perm.Role{}, allowedLatency*2, nil)
+			fakeClient.CreateRoleReturns(perm.Role{}, allowedLatency+delta, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
@@ -175,7 +175,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		})
 
 		It("runs all other calls but returns an error if AssignRole takes an unacceptable amount of time", func() {
-			fakeClient.AssignRoleReturns(allowedLatency*2, nil)
+			fakeClient.AssignRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
@@ -192,7 +192,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.HasPermissionStub = func(context.Context, perm.Actor, string, string) (bool, time.Duration, error) {
 				if !called {
 					called = true
-					return true, allowedLatency * 2, nil
+					return true, allowedLatency + delta, nil
 				} else {
 					return false, time.Duration(0), nil
 				}
@@ -215,7 +215,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 					called = true
 					return true, time.Duration(0), nil
 				} else {
-					return false, allowedLatency * 2, nil
+					return false, allowedLatency + delta, nil
 				}
 			}
 
@@ -230,7 +230,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		})
 
 		It("runs all other calls but returns an error if UnassignRole takes an unacceptable amount of time", func() {
-			fakeClient.UnassignRoleReturns(allowedLatency*2, nil)
+			fakeClient.UnassignRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))
@@ -243,7 +243,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		})
 
 		It("runs all other calls but returns an error if DeleteRole takes an unacceptable amount of time", func() {
-			fakeClient.DeleteRoleReturns(allowedLatency*2, nil)
+			fakeClient.DeleteRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
 			Expect(err).To(MatchError(ErrExceededMaxLatency))

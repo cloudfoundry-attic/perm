@@ -19,17 +19,17 @@ var _ = Describe("Probe", func() {
 	})
 
 	Describe("with a timeout provided", func() {
-		timeout := time.Hour
+		timeout := defaultTimeout * 2
 		testProbe(timeout, defaultCleanupTimeout, defaultMaxLatency, WithTimeout(timeout))
 	})
 
 	Describe("with a cleanup timeout provided", func() {
-		cleanupTimeout := time.Hour
+		cleanupTimeout := defaultCleanupTimeout * 2
 		testProbe(defaultTimeout, cleanupTimeout, defaultMaxLatency, WithCleanupTimeout(cleanupTimeout))
 	})
 
 	Describe("with a max latency provided", func() {
-		maxLatency := time.Minute
+		maxLatency := defaultMaxLatency * 2
 		testProbe(defaultTimeout, defaultCleanupTimeout, maxLatency, WithMaxLatency(maxLatency))
 	})
 })
