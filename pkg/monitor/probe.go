@@ -55,7 +55,7 @@ func (p *Probe) Run() error {
 	var (
 		hasPermission      bool
 		duration           time.Duration
-		err                error
+		cleanupErr         error
 		exceededMaxLatency bool
 	)
 
@@ -66,8 +66,20 @@ func (p *Probe) Run() error {
 		ResourcePattern: suffix,
 	}
 
+	// cleanup
 	defer func() {
-		if err != nil {
+		if cleanupErr == nil {
+			return
+		}
+
+		switch cleanupErr.(type) {
+		case HasAssignedPermissionError:
+			// do nothing
+		case HasUnassignedPermissionError:
+			// do nothing
+		case ExceededMaxLatencyError:
+			// do nothing
+		default:
 			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
 			defer cancel()
 
@@ -77,8 +89,8 @@ func (p *Probe) Run() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	if _, duration, err = p.client.CreateRole(ctx, roleName, permission); err != nil {
-		return err
+	if _, duration, cleanupErr = p.client.CreateRole(ctx, roleName, permission); cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
@@ -86,8 +98,8 @@ func (p *Probe) Run() error {
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	if duration, err = p.client.AssignRole(ctx, roleName, assignedActor); err != nil {
-		return err
+	if duration, cleanupErr = p.client.AssignRole(ctx, roleName, assignedActor); cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
@@ -95,36 +107,36 @@ func (p *Probe) Run() error {
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	hasPermission, duration, err = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
-	if err != nil {
-		return err
+	hasPermission, duration, cleanupErr = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
+	if cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
 	}
 	if !hasPermission {
-		err = HasAssignedPermissionError{}
-		return err
+		cleanupErr = HasAssignedPermissionError{}
+		return cleanupErr
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	hasPermission, duration, err = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
-	if err != nil {
-		return err
+	hasPermission, duration, cleanupErr = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
+	if cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
 	}
 	if hasPermission {
-		err = HasUnassignedPermissionError{}
-		return err
+		cleanupErr = HasUnassignedPermissionError{}
+		return cleanupErr
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	if duration, err = p.client.UnassignRole(ctx, roleName, assignedActor); err != nil {
-		return err
+	if duration, cleanupErr = p.client.UnassignRole(ctx, roleName, assignedActor); cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
@@ -132,15 +144,16 @@ func (p *Probe) Run() error {
 
 	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	if duration, err = p.client.DeleteRole(ctx, roleName); err != nil {
-		return err
+	if duration, cleanupErr = p.client.DeleteRole(ctx, roleName); cleanupErr != nil {
+		return cleanupErr
 	}
 	if duration > p.maxLatency {
 		exceededMaxLatency = true
 	}
 
 	if exceededMaxLatency {
-		return ExceededMaxLatencyError{}
+		cleanupErr = ExceededMaxLatencyError{}
+		return cleanupErr
 	}
 
 	return nil
