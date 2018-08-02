@@ -10,21 +10,27 @@ import (
 	"github.com/codahale/hdrhistogram"
 )
 
-type Histogram struct {
-	name                string
-	buckets             []float64
-	countBeforeRotation int64
-	histogram           *hdrhistogram.WindowedHistogram
-}
-
 type HistogramOptions struct {
 	Name        string
 	Buckets     []float64
-	MinDuration time.Duration
 	MaxDuration time.Duration
 }
 
+type Histogram struct {
+	name    string
+	buckets []float64
+
+	// this is the max number of values to store in a window
+	// when this value is reached, all values in the oldest window will be discarded
+	// ie. if there are 2 windows, we will have between countBeforeRotation to 2*countBeforeRotation
+	// number of values for histogram calculations
+	countBeforeRotation int64
+
+	histogram *hdrhistogram.WindowedHistogram
+}
+
 func NewHistogram(opts HistogramOptions) *Histogram {
+	// countBeforeRotation is optimized for a 2 window histogram
 	var countBeforeRotation int64
 	// e.g., you need >= 2 data points for 50, >= 4 for 25 or 75, >= 100 for 99, >= 1000 for 99.9, etc.
 	// Doesn't currently work well if the number has a repeating decimal, e.g., 66.6...
@@ -70,7 +76,13 @@ func (h *Histogram) Collect() map[string]int64 {
 	return values
 }
 
+// CountBeforeRotation is for testing
+func (h *Histogram) CountBeforeRotation() int64 {
+	return h.countBeforeRotation
+}
+
 func durationToMilliseconds(d time.Duration) int64 {
+	// division between two int64 values will round down
 	return int64(d / time.Millisecond)
 }
 
