@@ -140,9 +140,9 @@ func main() {
 	// Setup Probe
 	//////////////////////
 	histogram := stats.NewHistogram(stats.HistogramOptions{
-		Name:        "perm.probe.responses.timing",
+		Name:        probeQuantileMetricPrefix,
 		Buckets:     []float64{50, 90, 95, 99, 99.9},
-		MaxDuration: parserOpts.Probe.MaxLatency,
+		MaxDuration: parserOpts.Probe.Timeout,
 	})
 
 	recordingClient := recording.NewClient(client, histogram)
