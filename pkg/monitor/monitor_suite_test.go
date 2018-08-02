@@ -165,7 +165,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.CreateRoleReturns(perm.Role{}, allowedLatency+delta, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -178,7 +178,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.AssignRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -199,7 +199,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			}
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -220,7 +220,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			}
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -233,7 +233,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.UnassignRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -246,7 +246,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.DeleteRoleReturns(allowedLatency+delta, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrExceededMaxLatency))
+			Expect(err).To(MatchError(ExceededMaxLatencyError{}))
 
 			Expect(fakeClient.CreateRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
@@ -434,7 +434,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.HasPermissionReturnsOnCall(0, false, zeroDuration, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrHasAssignedPermission))
+			Expect(err).To(MatchError(HasAssignedPermissionError{}))
 
 			end := time.Now()
 
@@ -462,7 +462,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			fakeClient.HasPermissionReturnsOnCall(1, true, zeroDuration, nil)
 
 			err := subject.Run()
-			Expect(err).To(MatchError(ErrHasUnassignedPermission))
+			Expect(err).To(MatchError(HasUnassignedPermissionError{}))
 
 			end := time.Now()
 
