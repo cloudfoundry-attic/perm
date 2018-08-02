@@ -22,18 +22,18 @@ type Histogram struct {
 
 	// this is the max number of values to store in a window
 	// when this value is reached, all values in the oldest window will be discarded
-	// ie. if there are 2 windows, we will have between countBeforeRotation to 2*countBeforeRotation
-	// number of values for histogram calculations
+	// ie. if there are 2 windows, at any time there will be between countBeforeRotation
+	// to 2*countBeforeRotation number of values for histogram calculations
 	countBeforeRotation int64
 
 	histogram *hdrhistogram.WindowedHistogram
 }
 
 func NewHistogram(opts HistogramOptions) *Histogram {
-	// countBeforeRotation is optimized for a 2 window histogram
-	var countBeforeRotation int64
 	// e.g., you need >= 2 data points for 50, >= 4 for 25 or 75, >= 100 for 99, >= 1000 for 99.9, etc.
 	// Doesn't currently work well if the number has a repeating decimal, e.g., 66.6...
+	var minCountNeeded int64
+
 	for _, b := range opts.Buckets {
 		m := int64(100)
 		for b != math.Trunc(b) {
@@ -42,16 +42,23 @@ func NewHistogram(opts HistogramOptions) *Histogram {
 		}
 
 		count := m / gcd(int64(math.Trunc(b)), m)
-		if count > countBeforeRotation {
-			countBeforeRotation = count
+		if count > minCountNeeded {
+			minCountNeeded = count
 		}
 	}
 
 	return &Histogram{
-		name:                opts.Name,
-		buckets:             opts.Buckets,
-		countBeforeRotation: countBeforeRotation,
-		histogram:           hdrhistogram.NewWindowed(2, 0, durationToMilliseconds(opts.MaxDuration), 1),
+		name:    opts.Name,
+		buckets: opts.Buckets,
+		// 10% rounded up of the min number of data points needed
+		countBeforeRotation: int64(math.Ceil(float64(minCountNeeded) / 10)),
+		// set to 11 windows so that combined, the histogram windows will always contain the min number
+		// of data points needed for the most granular percentile, and additionally up to 10% more data
+		// points for rotating the histogram windows
+		// more histogram windows means that the oldest data will be dropped more frequently, minimizing
+		// the number of times the same max value will be sent, thus reducing skew in graphs of max values
+		// NOTE: 11 windows become suboptimal when there are less than 10 datapoints needed
+		histogram: hdrhistogram.NewWindowed(11, 0, durationToMilliseconds(opts.MaxDuration), 1),
 	}
 }
 

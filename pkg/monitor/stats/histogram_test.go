@@ -19,47 +19,56 @@ var _ = Describe("Histogram", func() {
 
 	Describe("#NewHistogram", func() {
 		It("correctly determines the window size for rotation", func() {
+			// requires a minimum of 10 data points
+			// window sizes are calculated as 10% of this min count
 			histogramOptions.Buckets = []float64{10}
 			subject := NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(10)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
 
+			// requires a minimum of 4 data points
 			histogramOptions.Buckets = []float64{25}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(4)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
 
+			// requires a minimum of 2 data points
 			histogramOptions.Buckets = []float64{50}
+			subject = NewHistogram(histogramOptions)
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
+
+			// requires a minimum of 4 data points
+			histogramOptions.Buckets = []float64{75}
+			subject = NewHistogram(histogramOptions)
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
+
+			// requires a minimum of 10 data points
+			histogramOptions.Buckets = []float64{90}
+			subject = NewHistogram(histogramOptions)
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
+
+			// requires a minimum of 20 data points
+			histogramOptions.Buckets = []float64{95}
 			subject = NewHistogram(histogramOptions)
 			Expect(subject.CountBeforeRotation()).To(Equal(int64(2)))
 
-			histogramOptions.Buckets = []float64{75}
-			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(4)))
-
-			histogramOptions.Buckets = []float64{90}
+			// requires a minimum of 100 data points
+			histogramOptions.Buckets = []float64{99}
 			subject = NewHistogram(histogramOptions)
 			Expect(subject.CountBeforeRotation()).To(Equal(int64(10)))
 
-			histogramOptions.Buckets = []float64{95}
-			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(20)))
-
-			histogramOptions.Buckets = []float64{99}
-			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(100)))
-
+			// requires a minimum of 1000 data points
 			histogramOptions.Buckets = []float64{99.9}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1000)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(100)))
 		})
 
 		It("correctly determines the window size when multiple percentiles are requested", func() {
 			histogramOptions.Buckets = []float64{10, 50, 95, 99.9}
 			subject := NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1000)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(100)))
 
-			histogramOptions.Buckets = []float64{95, 99.9, 10, 50}
+			histogramOptions.Buckets = []float64{95, 99, 10, 50}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1000)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(10)))
 		})
 	})
 
@@ -103,12 +112,12 @@ var _ = Describe("Histogram", func() {
 
 		It("rotates values if enough data has been collected, based on the most granular bucket", func() {
 			histogramOptions.MaxDuration = time.Millisecond * 5
-			histogramOptions.Buckets = []float64{25, 50} // should rotate every 4 data points
+			histogramOptions.Buckets = []float64{25, 50} // should rotate every data point
 			subject := NewHistogram(histogramOptions)
 
-			countBeforeRotation := 4
+			count := 4
 
-			for i := 0; i < countBeforeRotation; i++ {
+			for i := 0; i < count; i++ {
 				err := subject.Observe(time.Millisecond * 1)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -117,7 +126,7 @@ var _ = Describe("Histogram", func() {
 			//   1 [1] 1 1
 			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(1)))
 
-			for i := 0; i < countBeforeRotation; i++ {
+			for i := 0; i < count; i++ {
 				err := subject.Observe(time.Millisecond * 2)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -126,24 +135,24 @@ var _ = Describe("Histogram", func() {
 			//   1 1 1 [1] 2 2 2 2
 			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(1)))
 
-			for i := 0; i < countBeforeRotation; i++ {
+			for i := 0; i < count; i++ {
 				err := subject.Observe(time.Millisecond * 3)
 				Expect(err).NotTo(HaveOccurred())
 			}
 
 			// Should be:
-			//   2 2 2 [2] 3 3 3 3
+			//  1 1 1 2 2 [2] 2 3 3 3 3
 			// Without rotation, would be:
 			//  1 1 1 1 2 [2] 2 2 3 3 3 3
 			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(2)))
 
-			for i := 0; i < countBeforeRotation; i++ {
+			for i := 0; i < count; i++ {
 				err := subject.Observe(time.Millisecond * 4)
 				Expect(err).NotTo(HaveOccurred())
 			}
 
 			// Should be:
-			//   3 3 3 [3] 4 4 4 4
+			//  2 2 2 3 3 [3] 3 4 4 4 4
 			// Without rotation, would be:
 			//  1 1 1 1 2 2 2 [2] 3 3 3 3 4 4 4 4
 			Expect(subject.Collect()).To(HaveKeyWithValue("test.histogram.p50", int64(3)))
