@@ -2,29 +2,26 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"net"
 	"net/http"
 	"os"
-
-	"github.com/cactus/go-statsd-client/statsd"
-	flags "github.com/jessevdk/go-flags"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
-
-	"code.cloudfoundry.org/lager"
-
-	"crypto/tls"
-	"crypto/x509"
-
 	"strconv"
-
 	"time"
 
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
+	"code.cloudfoundry.org/perm/pkg/monitor/stats"
 	"code.cloudfoundry.org/perm/pkg/perm"
+	"github.com/cactus/go-statsd-client/statsd"
+	flags "github.com/jessevdk/go-flags"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type options struct {
@@ -32,11 +29,9 @@ type options struct {
 
 	StatsD statsDOptions `group:"StatsD" namespace:"statsd"`
 
-	Logger cmdflags.LagerFlag
+	Probe probeOptions `group:"Probe" namespace:"probe"`
 
-	Frequency       time.Duration `long:"frequency" description:"Frequency with which the probe is issued" default:"5s"`
-	RequestDuration time.Duration `long:"request-duration" description:"Time after which a request is considered to have failed" default:"100ms"`
-	Timeout         time.Duration `long:"timeout" description:"Time after which the probe will cancel a run" default:"10s"`
+	Logger cmdflags.LagerFlag
 }
 
 type permOptions struct {
@@ -55,6 +50,10 @@ type statsDOptions struct {
 }
 
 type probeOptions struct {
+	Frequency      time.Duration `long:"frequency" description:"The amount of time between probe runs" default:"5s"`
+	Timeout        time.Duration `long:"timeout" description:"The amount of time for each API call to complete; if exceeded, the probe will error its current run" default:"1s"`
+	CleanupTimeout time.Duration `long:"cleanup-timeout" description:"If a probe run errors, this is the max allowed time for cleanup" default:"10s"`
+	MaxLatency     time.Duration `long:"max-latency" description:"If any API call in the current probe run exceeds this value, a latency KPI failure will be recorded" default:"100ms"`
 }
 
 func main() {
@@ -67,43 +66,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, _ := parserOpts.Logger.Logger("perm-monitor")
+	l, _ := parserOpts.Logger.Logger("perm-monitor")
+	logger := lagerx.NewLogger(l)
 
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
 	//////////////////////
 	// Setup StatsD Client
+	//////////////////////
 	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
 	statsDClient, err := statsd.NewBufferedClient(statsDAddr, "", 0, 0)
 	if err != nil {
-		logger.Error(failedToConnectToStatsD, err, lager.Data{
-			"addr": statsDAddr,
+		logger.Error(failedToConnectToStatsD, err, logx.Data{
+			Key:   "addr",
+			Value: statsDAddr,
 		})
 		os.Exit(1)
 	}
 	defer statsDClient.Close()
-	//////////////////////
 
 	//////////////////////
 	// Setup Perm GRPC Client
-	//
-	//// Setup TLS Credentials
+	//////////////////////
 	pool := x509.NewCertPool()
 
 	for _, certPath := range parserOpts.Perm.CACertificate {
 		caPem, e := certPath.Bytes(ioutilx.InjectableOS{}, ioutilx.InjectableIOReader{})
+		certLogger := logger.WithData(logx.Data{Key: "location", Value: certPath})
 		if e != nil {
-			logger.Error(failedToReadCertificate, e, lager.Data{
-				"location": certPath,
-			})
+			certLogger.Error(failedToReadCertificate, e)
 			os.Exit(1)
 		}
 
 		if ok := pool.AppendCertsFromPEM(caPem); !ok {
-			logger.Error(failedToAppendCertToPool, e, lager.Data{
-				"location": certPath,
-			})
+			certLogger.Error(failedToAppendCertToPool, e)
 			os.Exit(1)
 		}
 	}
@@ -133,25 +130,29 @@ func main() {
 	}
 
 	client, err := perm.Dial(addr, opts...)
-	recordedClient := recording.NewClient(client, &durationRecorder{})
-
 	if err != nil {
 		logger.Error(failedToCreatePermClient, err)
 		os.Exit(1)
 	}
 	defer client.Close()
 
-	probe := monitor.NewProbe(recordedClient)
+	//////////////////////
+	// Setup Probe
+	//////////////////////
+	histogram := stats.NewHistogram(stats.HistogramOptions{
+		Name:        "perm.probe.responses.timing",
+		Buckets:     []float64{50, 90, 95, 99, 99.9},
+		MaxDuration: parserOpts.Probe.MaxLatency,
+	})
 
-	ticker := time.NewTicker(parserOpts.Frequency)
+	recordingClient := recording.NewClient(client, histogram)
 
-	for range ticker.C {
-		_ = probe.Run()
+	probeOptions := []monitor.Option{
+		monitor.WithTimeout(parserOpts.Probe.Timeout),
+		monitor.WithCleanupTimeout(parserOpts.Probe.CleanupTimeout),
+		monitor.WithMaxLatency(parserOpts.Probe.MaxLatency),
 	}
-}
+	probe := monitor.NewProbe(recordingClient, probeOptions...)
 
-type durationRecorder struct{}
-
-func (r *durationRecorder) Observe(duration time.Duration) error {
-	return nil
+	Probe(statsDClient, histogram, probe, parserOpts.Probe.Frequency, logger)
 }
