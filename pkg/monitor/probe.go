@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/perm/pkg/monitor/recording"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -73,13 +74,15 @@ func (p *Probe) Run() error {
 		}
 
 		switch cleanupErr.(type) {
+		case recording.FailedToObserveDurationError:
+			// do nothing
 		case HasAssignedPermissionError:
 			// do nothing
 		case HasUnassignedPermissionError:
 			// do nothing
 		case ExceededMaxLatencyError:
 			// do nothing
-		default:
+		default: // only cleanup if an API call failed
 			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
 			defer cancel()
 

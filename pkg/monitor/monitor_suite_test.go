@@ -7,6 +7,7 @@ import (
 
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
+	"code.cloudfoundry.org/perm/pkg/monitor/recording"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -426,6 +427,16 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(ok).To(BeTrue())
 			Expect(deadline).To(BeTemporally(">=", start.Add(expectedCleanuptTimeout)))
 			Expect(deadline).To(BeTemporally("<=", end.Add(expectedCleanuptTimeout)))
+		})
+
+		It("does not run cleanup if FailedToObserveDurationError occurs", func() {
+			returnedErr := recording.FailedToObserveDurationError{}
+			fakeClient.AssignRoleReturns(zeroDuration, returnedErr)
+
+			err := subject.Run()
+			Expect(err).To(MatchError(returnedErr))
+
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(0))
 		})
 
 		It("does not run cleanup if HasAssignedPermissionError occurs", func() {
