@@ -14,18 +14,17 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-const CEFTimeFormat = "Jan 2 2006 15:04:05"
-
 type Vendor string
 type Product string
 type Version string
 type Hostname string
-
 type Logger struct {
 	logger   *ceflog.Logger
 	hostname string
 	destPort int
 }
+
+const CEFTimeFormat = "Jan 2 2006 15:04:05"
 
 func NewLogger(writer io.Writer, vendor Vendor, product Product, version Version, hostname Hostname, destPort int) *Logger {
 	return &Logger{
@@ -36,15 +35,17 @@ func NewLogger(writer io.Writer, vendor Vendor, product Product, version Version
 }
 
 func (l *Logger) Log(ctx context.Context, signature string, name string, args ...logx.SecurityData) {
+	peer, ok := peer.FromContext(ctx)
+
 	var srcAddr net.IP
 	var srcPort int
-
-	peer, ok := peer.FromContext(ctx)
 	if ok {
 		switch addr := peer.Addr.(type) {
 		case *net.TCPAddr:
 			srcAddr = addr.IP
 			srcPort = addr.Port
+		default:
+
 		}
 	}
 
@@ -54,43 +55,29 @@ func (l *Logger) Log(ctx context.Context, signature string, name string, args ..
 		ceflog.Pair{Key: "dpt", Value: strconv.FormatInt(int64(l.destPort), 10)},
 		ceflog.Pair{Key: "spt", Value: strconv.FormatInt(int64(srcPort), 10)},
 	}
-
 	if rt, ok := contextx.ReceiptTimeFromContext(ctx); ok {
 		extension = append(extension, ceflog.Pair{Key: "rt", Value: fmt.Sprintf("\"%s\"", rt.Format(CEFTimeFormat))})
 	}
 
+	counter := 1
+	invalidFound := false
 	var msgBuffer bytes.Buffer
-
-	if len(args) == 1 {
-		ce := args[0]
-		if ce.Key == "" || ce.Value == "" {
+	for _, ce := range args {
+		if ce.Key == "" || ce.Value == "" && invalidFound == false {
 			msgBuffer.WriteString("ERROR:invalid-custom-extension;")
+			invalidFound = true
 		} else {
-			extension = append(extension, ceflog.Pair{Key: ce.Key, Value: ce.Value})
-		}
-	} else {
-		counter := 1
-		invalidFound := false
-
-		for _, ce := range args {
-			if ce.Key == "" || ce.Value == "" && invalidFound == false {
-				msgBuffer.WriteString("ERROR:invalid-custom-extension;")
-				invalidFound = true
-			} else {
-				extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%dLabel", counter), Value: ce.Key})
-				extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%d", counter), Value: ce.Value})
-				counter++
-				if counter > 6 {
-					msgBuffer.WriteString("ERROR:too-many-custom-extensions;")
-					break
-				}
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%dLabel", counter), Value: fmt.Sprintf("%s", ce.Key)})
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%d", counter), Value: fmt.Sprintf("%s", ce.Value)})
+			counter++
+			if counter > 6 {
+				msgBuffer.WriteString("ERROR:too-many-custom-extensions;")
+				break
 			}
 		}
 	}
-
 	if msgBuffer.String() != "" {
 		extension = append(extension, ceflog.Pair{Key: "msg", Value: msgBuffer.String()})
 	}
-
 	l.logger.LogEvent(signature, name, 0, extension)
 }
