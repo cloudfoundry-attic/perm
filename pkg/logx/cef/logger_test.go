@@ -11,17 +11,28 @@ import (
 	"code.cloudfoundry.org/perm/cmd/contextx"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	. "code.cloudfoundry.org/perm/pkg/logx/cef"
+	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
 	"github.com/onsi/gomega/gbytes"
 	"google.golang.org/grpc/peer"
 )
 
-var _ = Describe("Logging", func() {
-	var securityLogger *Logger
-	var logOutput *gbytes.Buffer
-	var rt = time.Date(1999, 12, 31, 23, 59, 59, 59, time.UTC)
+var _ = Describe("Logger", func() {
+	var (
+		logOutput *gbytes.Buffer
+		errLogger *logxfakes.FakeLogger
+
+		logger *Logger
+
+		rt time.Time
+	)
+
 	BeforeEach(func() {
 		logOutput = gbytes.NewBuffer()
-		securityLogger = NewLogger(logOutput, "cloud_foundry", "unittest", "0.0.1", "hook", 443)
+		errLogger = new(logxfakes.FakeLogger)
+
+		logger = NewLogger(logOutput, "cloud_foundry", "unittest", "0.0.1", "hook", 443, errLogger)
+
+		rt = time.Date(1999, 12, 31, 23, 59, 59, 59, time.UTC)
 	})
 
 	Describe("#Log", func() {
@@ -30,7 +41,7 @@ var _ = Describe("Logging", func() {
 				p := &peer.Peer{}
 				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 				ctx := contextx.WithReceiptTime(peer.NewContext(context.Background(), p), rt)
-				securityLogger.Log(ctx, "test-signature", "test-name")
+				logger.Log(ctx, "test-signature", "test-name")
 
 				Eventually(logOutput).Should(gbytes.Say("test-signature"))
 				Eventually(logOutput).Should(gbytes.Say("test-name"))
@@ -47,7 +58,7 @@ var _ = Describe("Logging", func() {
 				p := &peer.Peer{}
 				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 				ctx := peer.NewContext(context.Background(), p)
-				securityLogger.Log(ctx, "test-signature", "test-name")
+				logger.Log(ctx, "test-signature", "test-name")
 
 				output := string(logOutput.Contents())
 				Expect(output).NotTo(ContainSubstring("rt="))
@@ -59,6 +70,7 @@ var _ = Describe("Logging", func() {
 				customExtension1 logx.SecurityData
 				customExtension2 logx.SecurityData
 			)
+
 			BeforeEach(func() {
 				customExtension1 = logx.SecurityData{Key: "roleName", Value: "my-role-name"}
 				customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
@@ -68,7 +80,7 @@ var _ = Describe("Logging", func() {
 				p := &peer.Peer{}
 				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 				ctx := peer.NewContext(context.Background(), p)
-				securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+				logger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
 
 				Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
 				Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
@@ -76,18 +88,21 @@ var _ = Describe("Logging", func() {
 				Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
 			})
 
-			It("does not append a msg= when no error is present", func() {
+			It("does not call error logger when no errors occur", func() {
 				p := &peer.Peer{}
 				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 				ctx := peer.NewContext(context.Background(), p)
-				securityLogger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+				logger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
 
-				Consistently(logOutput).ShouldNot(gbytes.Say("msg="))
+				Expect(errLogger.ErrorCallCount()).To(Equal(0))
 			})
 
 			Context("when the extension provided is invalid", func() {
-				var invalidExtension logx.SecurityData
-				var validExtension logx.SecurityData
+				var (
+					invalidExtension logx.SecurityData
+					validExtension   logx.SecurityData
+				)
+
 				BeforeEach(func() {
 					validExtension = logx.SecurityData{Key: "key", Value: "value"}
 				})
@@ -99,12 +114,16 @@ var _ = Describe("Logging", func() {
 						p := &peer.Peer{}
 						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 						ctx := peer.NewContext(context.Background(), p)
-						securityLogger.Log(ctx, "test-signature", "test-name", invalidExtension, validExtension)
+						logger.Log(ctx, "test-signature", "test-name", invalidExtension, validExtension)
 					})
 
 					It("should log that there were invalid extensions", func() {
-						Eventually(logOutput).Should(gbytes.Say("msg=ERROR:invalid-custom-extension;"))
 						Consistently(logOutput).ShouldNot(gbytes.Say("cs1=no-key"))
+
+						Expect(errLogger.ErrorCallCount()).To(Equal(1))
+						msg, err, _ := errLogger.ErrorArgsForCall(0)
+						Expect(msg).To(Equal("invalid-cef-custom-extension"))
+						Expect(err).To(MatchError("the extension key and/or value is empty"))
 					})
 
 					It("should still log correct extensions", func() {
@@ -114,31 +133,32 @@ var _ = Describe("Logging", func() {
 				})
 
 				Context("because there is no value", func() {
-					BeforeEach(func() {
+					It("should log that there were invalid extensions", func() {
+						p := &peer.Peer{}
+						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+						ctx := peer.NewContext(context.Background(), p)
+						logger.Log(ctx, "test-signature", "test-name", invalidExtension)
+
+						Consistently(logOutput).ShouldNot(gbytes.Say("cs1Label=noValue"))
+
+						Expect(errLogger.ErrorCallCount()).To(Equal(1))
+						msg, err, _ := errLogger.ErrorArgsForCall(0)
+						Expect(msg).To(Equal("invalid-cef-custom-extension"))
+						Expect(err).To(MatchError("the extension key and/or value is empty"))
+					})
+
+					It("should still log correct extensions", func() {
 						invalidExtension = logx.SecurityData{Key: "noValue"}
 
 						p := &peer.Peer{}
 						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
 						ctx := peer.NewContext(context.Background(), p)
-						securityLogger.Log(ctx, "test-signature", "test-name", invalidExtension, validExtension)
-					})
+						logger.Log(ctx, "test-signature", "test-name", invalidExtension, validExtension)
 
-					It("should log that there were invalid extensions", func() {
-						p := &peer.Peer{}
-						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
-						ctx := peer.NewContext(context.Background(), p)
-						securityLogger.Log(ctx, "test-signature", "test-name", invalidExtension)
-
-						Eventually(logOutput).Should(gbytes.Say("msg=ERROR:invalid-custom-extension"))
-						Consistently(logOutput).ShouldNot(gbytes.Say("cs1Label=noValue"))
-					})
-
-					It("should still log correct extensions", func() {
 						Eventually(logOutput).Should(gbytes.Say("cs1Label=key"))
 						Eventually(logOutput).Should(gbytes.Say("cs1=value"))
 					})
 				})
-
 			})
 
 			Context("when there are more than 6 custom extensions", func() {
@@ -172,7 +192,7 @@ var _ = Describe("Logging", func() {
 						extraExtension,
 					}
 
-					securityLogger.Log(ctx, "test-signature", "test-name", args...)
+					logger.Log(ctx, "test-signature", "test-name", args...)
 
 					Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
 					Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
@@ -187,13 +207,18 @@ var _ = Describe("Logging", func() {
 					Eventually(logOutput).Should(gbytes.Say("cs6Label=roleEndgame"))
 					Eventually(logOutput).Should(gbytes.Say("cs6=my-role-endgame"))
 
-					Eventually(logOutput).Should(gbytes.Say("msg=ERROR:too-many-custom-extensions;"))
 					Consistently(logOutput).ShouldNot(gbytes.Say("cs7Label=dog"))
 					Consistently(logOutput).ShouldNot(gbytes.Say("cs7=cat"))
+
+					Expect(errLogger.ErrorCallCount()).To(Equal(1))
+					msg, err, _ := errLogger.ErrorArgsForCall(0)
+					Expect(msg).To(Equal("invalid-cef-custom-extension"))
+					Expect(err).To(MatchError("cannot provide more than 6 custom extensions"))
 				})
 
 				Context("when there is also as an invalid extension", func() {
 					var badExtension logx.SecurityData
+
 					BeforeEach(func() {
 						badExtension = logx.SecurityData{Value: "no-key"}
 					})
@@ -212,16 +237,25 @@ var _ = Describe("Logging", func() {
 							customExtension6,
 							extraExtension,
 						}
+						logger.Log(ctx, "test-signature", "test-name", args...)
 
-						securityLogger.Log(ctx, "test-signature", "test-name", args...)
 						Consistently(logOutput).ShouldNot(gbytes.Say("cs1=no-key"))
+
 						Eventually(logOutput).Should(gbytes.Say("cs6Label=roleEndgame"))
 						Eventually(logOutput).Should(gbytes.Say("cs6=my-role-endgame"))
-						Eventually(logOutput).Should(gbytes.Say("msg=ERROR:invalid-custom-extension;ERROR:too-many-custom-extensions;"))
+
+						Expect(errLogger.ErrorCallCount()).To(Equal(2))
+
+						msg, err, _ := errLogger.ErrorArgsForCall(0)
+						Expect(msg).To(Equal("invalid-cef-custom-extension"))
+						Expect(err).To(MatchError("the extension key and/or value is empty"))
+
+						msg, err, _ = errLogger.ErrorArgsForCall(1)
+						Expect(msg).To(Equal("invalid-cef-custom-extension"))
+						Expect(err).To(MatchError("cannot provide more than 6 custom extensions"))
 					})
 				})
 			})
-
 		})
 	})
 })

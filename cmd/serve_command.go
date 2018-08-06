@@ -18,9 +18,9 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api"
-	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
@@ -72,7 +72,9 @@ func (cmd ServeCommand) Execute([]string) error {
 		return hostErr
 	}
 
-	securityLogger := cef.NewLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port)
+	// TODO: use lagerx.Logger for the entire package instead of lager.Logger
+	errLogger := lagerx.NewLogger(logger)
+	securityLogger := cef.NewLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port, errLogger)
 
 	cert, certErr := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
 	if certErr != nil {
