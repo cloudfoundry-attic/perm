@@ -5,6 +5,8 @@ type Data struct {
 	Value interface{}
 }
 
+//go:generate counterfeiter . Logger
+
 type Logger interface {
 	WithName(name string) Logger
 	WithData(data ...Data) Logger

@@ -140,7 +140,7 @@ func main() {
 	// Setup Probe
 	//////////////////////
 	histogram := stats.NewHistogram(stats.HistogramOptions{
-		Name:        probeQuantileMetricPrefix,
+		Name:        "perm.probe.responses.timing",
 		Buckets:     []float64{50, 90, 95, 99, 99.9},
 		MaxDuration: parserOpts.Probe.Timeout,
 	})
@@ -152,7 +152,9 @@ func main() {
 		monitor.WithCleanupTimeout(parserOpts.Probe.CleanupTimeout),
 		monitor.WithMaxLatency(parserOpts.Probe.MaxLatency),
 	}
-	probe := monitor.NewProbe(recordingClient, probeOptions...)
+	probe := monitor.NewProbe(recordingClient, histogram, statsDClient, logger, probeOptions...)
 
-	Probe(statsDClient, histogram, probe, parserOpts.Probe.Frequency, logger)
+	for range time.NewTicker(parserOpts.Probe.Frequency).C {
+		probe.Run()
+	}
 }
