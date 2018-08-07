@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/logx"
 	. "code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/perm/pkg/permauth"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
@@ -99,6 +100,18 @@ var _ = Describe("Logger", func() {
 
 						Consistently(logOutput).ShouldNot(Say("cs1"))
 					})
+				})
+			})
+
+			Context("when the user can be extracted from the context", func() {
+				BeforeEach(func() {
+					ctx = permauth.NewUserContext(ctx, permauth.User{ID: "user-id"})
+				})
+
+				It("should log the user id as an additional extension", func() {
+					logger.Log(ctx, "test-signature", "test-name")
+
+					Eventually(logOutput).Should(Say("suid=user-id"))
 				})
 			})
 

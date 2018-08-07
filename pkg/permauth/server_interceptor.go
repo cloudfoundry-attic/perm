@@ -27,6 +27,21 @@ const (
 	AuthPassSignature = "AuthPass"
 )
 
+type ctxKey struct{}
+
+type User struct {
+	ID string
+}
+
+func NewUserContext(ctx context.Context, user User) context.Context {
+	return context.WithValue(ctx, ctxKey{}, user)
+}
+
+func UserFromContext(ctx context.Context) (User, bool) {
+	user, ok := ctx.Value(ctxKey{}).(User)
+	return user, ok
+}
+
 func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger) grpc.UnaryServerInterceptor {
 	verifier := provider.Verifier(&oidc.Config{
 		ClientID: "perm",
@@ -56,6 +71,11 @@ func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger
 			logx.SecurityData{Key: "subject", Value: idToken.Subject},
 		}
 		securityLogger.Log(ctx, AuthPassSignature, "auth succeeded", extensions...)
-		return handler(ctx, req)
+
+		user := User{
+			ID: idToken.Subject,
+		}
+
+		return handler(NewUserContext(ctx, user), req)
 	}
 }

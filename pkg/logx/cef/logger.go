@@ -10,6 +10,7 @@ import (
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
 	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/xoebus/ceflog"
 	"google.golang.org/grpc/peer"
 )
@@ -60,6 +61,11 @@ func (l *Logger) Log(ctx context.Context, signature string, name string, extensi
 		ceflog.Pair{Key: "src", Value: srcAddr.String()},
 		ceflog.Pair{Key: "dpt", Value: strconv.FormatInt(int64(l.destPort), 10)},
 		ceflog.Pair{Key: "spt", Value: strconv.FormatInt(int64(srcPort), 10)},
+	}
+
+	user, ok := permauth.UserFromContext(ctx)
+	if ok {
+		extension = append(extension, ceflog.Pair{Key: "suid", Value: user.ID})
 	}
 
 	if rt, ok := contextx.ReceiptTimeFromContext(ctx); ok {
