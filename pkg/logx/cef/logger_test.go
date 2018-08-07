@@ -76,25 +76,38 @@ var _ = Describe("Logger", func() {
 				customExtension2 = logx.SecurityData{Key: "roleBlame", Value: "my-role-blame"}
 			})
 
-			It("logs each extension", func() {
-				p := &peer.Peer{}
-				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
-				ctx := peer.NewContext(context.Background(), p)
-				logger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+			Context("when the custom extensions are valid", func() {
+				BeforeEach(func() {
+					p := &peer.Peer{}
+					p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+					ctx := peer.NewContext(context.Background(), p)
+					logger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+				})
 
-				Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
-				Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
-				Eventually(logOutput).Should(gbytes.Say("cs2Label=roleBlame"))
-				Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
-			})
+				It("logs each extension", func() {
+					Eventually(logOutput).Should(gbytes.Say("cs1Label=roleName"))
+					Eventually(logOutput).Should(gbytes.Say("cs1=my-role-name"))
+					Eventually(logOutput).Should(gbytes.Say("cs2Label=roleBlame"))
+					Eventually(logOutput).Should(gbytes.Say("cs2=my-role-blame"))
+				})
 
-			It("does not call error logger when no errors occur", func() {
-				p := &peer.Peer{}
-				p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
-				ctx := peer.NewContext(context.Background(), p)
-				logger.Log(ctx, "test-signature", "test-name", customExtension1, customExtension2)
+				It("does not call error logger when no errors occur", func() {
+					Expect(errLogger.ErrorCallCount()).To(Equal(0))
+				})
 
-				Expect(errLogger.ErrorCallCount()).To(Equal(0))
+				Context("when the custom extension is a 'msg' pair", func() {
+					It("does not use custom labels for the extension key pair", func() {
+						msgExtension := logx.SecurityData{Key: "msg", Value: "some-msg"}
+						p := &peer.Peer{}
+						p.Addr = &net.TCPAddr{IP: net.IPv4(1, 1, 1, 1), Port: 12345}
+						ctx := peer.NewContext(context.Background(), p)
+						logger.Log(ctx, "test-signature", "test-name", msgExtension)
+
+						Eventually(logOutput).Should(gbytes.Say("msg=some-msg"))
+
+						Consistently(logOutput).ShouldNot(gbytes.Say("cs1"))
+					})
+				})
 			})
 
 			Context("when the extension provided is invalid", func() {
@@ -173,7 +186,7 @@ var _ = Describe("Logger", func() {
 				BeforeEach(func() {
 					customExtension3 = logx.SecurityData{Key: "roleDame", Value: "my-role-dame"}
 					customExtension4 = logx.SecurityData{Key: "roleFame", Value: "my-role-fame"}
-					customExtension5 = logx.SecurityData{Key: "roleBeshame", Value: "my-role-beshame"}
+					customExtension5 = logx.SecurityData{Key: "msg", Value: "some-msg"}
 					customExtension6 = logx.SecurityData{Key: "roleEndgame", Value: "my-role-endgame"}
 					extraExtension = logx.SecurityData{Key: "dog", Value: "cat"}
 				})
@@ -202,13 +215,12 @@ var _ = Describe("Logger", func() {
 					Eventually(logOutput).Should(gbytes.Say("cs3=my-role-dame"))
 					Eventually(logOutput).Should(gbytes.Say("cs4Label=roleFame"))
 					Eventually(logOutput).Should(gbytes.Say("cs4=my-role-fame"))
-					Eventually(logOutput).Should(gbytes.Say("cs5Label=roleBeshame"))
-					Eventually(logOutput).Should(gbytes.Say("cs5=my-role-beshame"))
-					Eventually(logOutput).Should(gbytes.Say("cs6Label=roleEndgame"))
-					Eventually(logOutput).Should(gbytes.Say("cs6=my-role-endgame"))
+					Eventually(logOutput).Should(gbytes.Say("msg=some-msg"))
+					Eventually(logOutput).Should(gbytes.Say("cs5Label=roleEndgame"))
+					Eventually(logOutput).Should(gbytes.Say("cs5=my-role-endgame"))
 
-					Consistently(logOutput).ShouldNot(gbytes.Say("cs7Label=dog"))
-					Consistently(logOutput).ShouldNot(gbytes.Say("cs7=cat"))
+					Consistently(logOutput).ShouldNot(gbytes.Say("cs6Label=dog"))
+					Consistently(logOutput).ShouldNot(gbytes.Say("cs6=cat"))
 
 					Expect(errLogger.ErrorCallCount()).To(Equal(1))
 					msg, err, _ := errLogger.ErrorArgsForCall(0)
@@ -241,8 +253,8 @@ var _ = Describe("Logger", func() {
 
 						Consistently(logOutput).ShouldNot(gbytes.Say("cs1=no-key"))
 
-						Eventually(logOutput).Should(gbytes.Say("cs6Label=roleEndgame"))
-						Eventually(logOutput).Should(gbytes.Say("cs6=my-role-endgame"))
+						Eventually(logOutput).Should(gbytes.Say("cs5Label=roleEndgame"))
+						Eventually(logOutput).Should(gbytes.Say("cs5=my-role-endgame"))
 
 						Expect(errLogger.ErrorCallCount()).To(Equal(2))
 

@@ -40,7 +40,7 @@ func NewLogger(writer io.Writer, vendor Vendor, product Product, version Version
 	}
 }
 
-func (l *Logger) Log(ctx context.Context, signature string, name string, args ...logx.SecurityData) {
+func (l *Logger) Log(ctx context.Context, signature string, name string, extensions ...logx.SecurityData) {
 	var (
 		srcAddr net.IP
 		srcPort int
@@ -67,20 +67,26 @@ func (l *Logger) Log(ctx context.Context, signature string, name string, args ..
 	}
 
 	counter := 1
+	labelCounter := 1
 	invalidFound := false
 
-	for _, ce := range args {
+	for _, ce := range extensions {
 		if ce.Key == "" || ce.Value == "" && invalidFound == false {
 			l.errLogger.Error(invalidCEFCustomExtension, errors.New("the extension key and/or value is empty"))
 			invalidFound = true
-		} else {
-			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%dLabel", counter), Value: fmt.Sprintf("%s", ce.Key)})
-			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%d", counter), Value: fmt.Sprintf("%s", ce.Value)})
+		} else if ce.Key == "msg" {
+			extension = append(extension, ceflog.Pair{Key: ce.Key, Value: ce.Value})
 			counter++
-			if counter > 6 {
-				l.errLogger.Error(invalidCEFCustomExtension, errors.New("cannot provide more than 6 custom extensions"))
-				break
-			}
+		} else {
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%dLabel", labelCounter), Value: ce.Key})
+			extension = append(extension, ceflog.Pair{Key: fmt.Sprintf("cs%d", labelCounter), Value: ce.Value})
+			counter++
+			labelCounter++
+		}
+
+		if counter > 6 {
+			l.errLogger.Error(invalidCEFCustomExtension, errors.New("cannot provide more than 6 custom extensions"))
+			break
 		}
 	}
 
