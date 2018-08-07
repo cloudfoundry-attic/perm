@@ -47,6 +47,10 @@ func NewHistogram(opts HistogramOptions) *Histogram {
 		}
 	}
 
+	// Attempt to keep enough data points to smooth over noise,
+	// e.g., so that the most granular non-max bucket is distinguishable from max
+	minCountNeeded *= 3
+
 	return &Histogram{
 		name:    opts.Name,
 		buckets: opts.Buckets,

@@ -19,56 +19,56 @@ var _ = Describe("Histogram", func() {
 
 	Describe("#NewHistogram", func() {
 		It("correctly determines the window size for rotation", func() {
-			// requires a minimum of 10 data points
+			// requires a minimum of 30 (10 * 3) data points
 			// window sizes are calculated as 10% of this min count
 			histogramOptions.Buckets = []float64{10}
 			subject := NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(3)))
 
-			// requires a minimum of 4 data points
+			// requires a minimum of 12 (4 * 3) data points
 			histogramOptions.Buckets = []float64{25}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(2)))
 
-			// requires a minimum of 2 data points
+			// requires a minimum of 6 (2 * 3) data points
 			histogramOptions.Buckets = []float64{50}
 			subject = NewHistogram(histogramOptions)
 			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
 
-			// requires a minimum of 4 data points
+			// requires a minimum of 12 (4 * 3) data points
 			histogramOptions.Buckets = []float64{75}
-			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
-
-			// requires a minimum of 10 data points
-			histogramOptions.Buckets = []float64{90}
-			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(1)))
-
-			// requires a minimum of 20 data points
-			histogramOptions.Buckets = []float64{95}
 			subject = NewHistogram(histogramOptions)
 			Expect(subject.CountBeforeRotation()).To(Equal(int64(2)))
 
-			// requires a minimum of 100 data points
+			// requires a minimum of 30 (10 * 3) data points
+			histogramOptions.Buckets = []float64{90}
+			subject = NewHistogram(histogramOptions)
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(3)))
+
+			// requires a minimum of 60 (20 * 3) data points
+			histogramOptions.Buckets = []float64{95}
+			subject = NewHistogram(histogramOptions)
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(6)))
+
+			// requires a minimum of 300 (100 * 3) data points
 			histogramOptions.Buckets = []float64{99}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(10)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(30)))
 
-			// requires a minimum of 1000 data points
+			// requires a minimum of 3000 (1000 * 3) data points
 			histogramOptions.Buckets = []float64{99.9}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(100)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(300)))
 		})
 
 		It("correctly determines the window size when multiple percentiles are requested", func() {
 			histogramOptions.Buckets = []float64{10, 50, 95, 99.9}
 			subject := NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(100)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(300)))
 
 			histogramOptions.Buckets = []float64{95, 99, 10, 50}
 			subject = NewHistogram(histogramOptions)
-			Expect(subject.CountBeforeRotation()).To(Equal(int64(10)))
+			Expect(subject.CountBeforeRotation()).To(Equal(int64(30)))
 		})
 	})
 
@@ -112,7 +112,7 @@ var _ = Describe("Histogram", func() {
 
 		It("rotates values if enough data has been collected, based on the most granular bucket", func() {
 			histogramOptions.MaxDuration = time.Millisecond * 5
-			histogramOptions.Buckets = []float64{25, 50} // should rotate every data point
+			histogramOptions.Buckets = []float64{50} // should rotate every data point
 			subject := NewHistogram(histogramOptions)
 
 			count := 4
