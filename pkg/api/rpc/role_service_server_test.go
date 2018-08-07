@@ -270,7 +270,7 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.AssignRole(ctx, req)
 			expectedExtensions := []logx.SecurityData{
 				{Key: "roleName", Value: "role"},
-				{Key: "userID", Value: "actor-id"},
+				{Key: "actorID", Value: "actor-id"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
@@ -376,7 +376,7 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.UnassignRole(ctx, req)
 			expectedExtensions := []logx.SecurityData{
 				{Key: "roleName", Value: "role"},
-				{Key: "userID", Value: "actor-id"},
+				{Key: "actorID", Value: "actor-id"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
@@ -477,7 +477,7 @@ var _ = Describe("RoleRepoServer", func() {
 			subject.UnassignRoleFromGroup(ctx, req)
 			expectedExtensions := []logx.SecurityData{
 				{Key: "roleName", Value: "role"},
-				{Key: "userID", Value: "group-id"},
+				{Key: "groupID", Value: "group-id"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))

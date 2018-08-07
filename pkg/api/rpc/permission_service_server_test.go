@@ -175,7 +175,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			expectedExtensions := []logx.SecurityData{
-				{Key: "userID", Value: "actor"},
+				{Key: "actorID", Value: "actor"},
 				{Key: "action", Value: "some-action"},
 				{Key: "resource", Value: "some-resource"},
 			}

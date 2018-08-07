@@ -51,7 +51,7 @@ func (s *PermissionServiceServer) HasPermission(
 	}
 	resourcePattern := req.GetResource()
 	extensions := []logx.SecurityData{
-		{Key: "userID", Value: pActor.GetID()},
+		{Key: "actorID", Value: pActor.GetID()},
 		{Key: "action", Value: action},
 		{Key: "resource", Value: resourcePattern},
 	}
