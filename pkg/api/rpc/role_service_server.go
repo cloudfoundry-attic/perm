@@ -100,6 +100,7 @@ func (s *RoleServiceServer) AssignRole(
 	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "actorID", Value: pActor.ID},
+		{Key: "actorNS", Value: pActor.Namespace},
 	}
 
 	s.securityLogger.Log(ctx, "AssignRole", "Role assignment", logExtensions...)
@@ -168,6 +169,7 @@ func (s *RoleServiceServer) UnassignRole(
 	logExtensions := []logx.SecurityData{
 		{Key: "roleName", Value: roleName},
 		{Key: "actorID", Value: pActor.ID},
+		{Key: "actorNS", Value: pActor.Namespace},
 	}
 	s.securityLogger.Log(ctx, "UnassignRole", "Role unassignment", logExtensions...)
 	logger := s.logger.WithName("unassign-role").WithData(

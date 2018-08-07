@@ -271,6 +271,7 @@ var _ = Describe("RoleRepoServer", func() {
 			expectedExtensions := []logx.SecurityData{
 				{Key: "roleName", Value: "role"},
 				{Key: "actorID", Value: "actor-id"},
+				{Key: "actorNS", Value: "fake-namespace"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))
@@ -377,6 +378,7 @@ var _ = Describe("RoleRepoServer", func() {
 			expectedExtensions := []logx.SecurityData{
 				{Key: "roleName", Value: "role"},
 				{Key: "actorID", Value: "actor-id"},
+				{Key: "actorNS", Value: "fake-namespace"},
 			}
 
 			Expect(securityLogger.LogCallCount()).To(Equal(1))

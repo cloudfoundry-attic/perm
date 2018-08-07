@@ -176,6 +176,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			expectedExtensions := []logx.SecurityData{
 				{Key: "actorID", Value: "actor"},
+				{Key: "actorNS", Value: "namespace"},
 				{Key: "action", Value: "some-action"},
 				{Key: "resource", Value: "some-resource"},
 			}
@@ -353,6 +354,7 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			expectedExtensions := []logx.SecurityData{
 				{Key: "actorID", Value: "actor"},
+				{Key: "actorNS", Value: "actor-namespace"},
 				{Key: "action", Value: "some-action"},
 			}
 
