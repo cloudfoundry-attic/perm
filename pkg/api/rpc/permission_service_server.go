@@ -112,6 +112,14 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	for _, g := range groups {
 		groupsStr = groupsStr + ", " + g.ID
 	}
+
+	extensions := []logx.SecurityData{
+		{Key: "actorID", Value: pActor.GetID()},
+		{Key: "action", Value: action},
+	}
+
+	s.securityLogger.Log(ctx, "ListResourcePatterns", "Resource pattern list", extensions...)
+
 	logger := s.logger.WithName("list-resource-patterns").WithData(
 		logx.Data{"actor.id", actor.ID},
 		logx.Data{"actor.namespace", actor.Namespace},

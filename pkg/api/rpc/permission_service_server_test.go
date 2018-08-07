@@ -341,6 +341,28 @@ var _ = Describe("PermissionServiceServer", func() {
 			Expect(err).To(MatchError(expectedErr))
 		})
 
+		It("logs a security event", func() {
+			actor := &protos.Actor{
+				ID:        "actor",
+				Namespace: "actor-namespace",
+			}
+			_, err := subject.ListResourcePatterns(ctx, &protos.ListResourcePatternsRequest{
+				Actor:  actor,
+				Action: "some-action",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			expectedExtensions := []logx.SecurityData{
+				{Key: "actorID", Value: "actor"},
+				{Key: "action", Value: "some-action"},
+			}
+
+			Expect(securityLogger.LogCallCount()).To(Equal(1))
+			_, signature, name, extensions := securityLogger.LogArgsForCall(0)
+			Expect(signature).To(Equal("ListResourcePatterns"))
+			Expect(name).To(Equal("Resource pattern list"))
+			Expect(extensions).To(Equal(expectedExtensions))
+		})
+
 		Context("when there are groups provided to the request", func() {
 			var (
 				actor                                 *protos.Actor
