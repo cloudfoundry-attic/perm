@@ -5,7 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	. "code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
@@ -25,7 +27,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 	var (
 		fakeClient *monitorfakes.FakeClient
 		fakeSender *monitorfakes.FakeSender
-		fakeLogger *logxfakes.FakeLogger
+		fakeLogger logx.Logger
 
 		subject *Probe
 
@@ -40,8 +42,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 	BeforeEach(func() {
 		fakeClient = new(monitorfakes.FakeClient)
 		fakeSender = new(monitorfakes.FakeSender)
-		fakeLogger = new(logxfakes.FakeLogger)
-		fakeLogger.WithNameReturns(fakeLogger)
+		fakeLogger = lagerx.NewLogger(lagertest.NewTestLogger("probe-test"))
 
 		subject = NewProbe(fakeClient, fakeSender, fakeLogger, opts...)
 

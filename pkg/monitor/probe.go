@@ -79,9 +79,6 @@ func (p *Probe) Run() {
 		slowEndpoints []string
 	)
 
-	p.logger.Debug("starting")
-	defer p.logger.Debug("finished")
-
 	suffix := uuid.NewV4().String()
 	roleName := fmt.Sprintf("probe-role-%s", suffix)
 	permission := perm.Permission{
@@ -89,21 +86,26 @@ func (p *Probe) Run() {
 		ResourcePattern: suffix,
 	}
 
+	logger := p.logger.WithData(logx.Data{Key: "uuid", Value: suffix})
+
+	logger.Debug("starting")
+	defer logger.Debug("finished")
+
 	defer func() {
 		switch err := runErr.(type) {
 		case nil:
 			p.sendGauge(probeRunsCorrect, 1)
 			p.sendGauge(probeRunsSuccess, 1)
 		case errIncorrectPermission:
-			p.logger.Error("incorrect-permission", err, logx.Data{Key: "expected", Value: err.expected}, logx.Data{Key: "actual", Value: err.actual})
+			logger.Error("incorrect-permission", err, logx.Data{Key: "expected", Value: err.expected}, logx.Data{Key: "actual", Value: err.actual})
 			p.sendGauge(probeRunsCorrect, 0)
 			p.sendGauge(probeRunsSuccess, 0)
 		case errExceededMaxLatency:
-			p.logger.Error("exceeded-max-latency", err, logx.Data{Key: "endpoints", Value: slowEndpoints})
+			logger.Error("exceeded-max-latency", err, logx.Data{Key: "endpoints", Value: slowEndpoints})
 			p.sendGauge(probeRunsCorrect, 1)
 			p.sendGauge(probeRunsSuccess, 0)
 		default: // error from API call
-			p.logger.Error("api-call-failed", err)
+			logger.Error("api-call-failed", err)
 			p.sendGauge(probeRunsSuccess, 0)
 		}
 	}()
@@ -233,6 +235,6 @@ func (p *Probe) call(handler func(context.Context) (time.Duration, error)) (bool
 
 func (p *Probe) sendGauge(metric string, value int64) {
 	if err := p.sender.Gauge(metric, value, alwaysSend); err != nil {
-		p.logger.Error(fmt.Sprintf("failed-to-send-%s=%d", metric, value), err)
+		p.logger.Error("failed-to-send-metric", err, logx.Data{Key: "metric", Value: metric}, logx.Data{Key: "value", Value: value})
 	}
 }
