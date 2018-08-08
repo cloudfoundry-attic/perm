@@ -152,9 +152,12 @@ func main() {
 		monitor.WithCleanupTimeout(parserOpts.Probe.CleanupTimeout),
 		monitor.WithMaxLatency(parserOpts.Probe.MaxLatency),
 	}
-	probe := monitor.NewProbe(recordingClient, histogram, statsDClient, logger, probeOptions...)
+	probe := monitor.NewProbe(recordingClient, statsDClient, logger, probeOptions...)
 
 	for range time.NewTicker(parserOpts.Probe.Frequency).C {
 		probe.Run()
+		for metric, duration := range histogram.Collect() {
+			statsDClient.Gauge(metric, duration, 1)
+		}
 	}
 }

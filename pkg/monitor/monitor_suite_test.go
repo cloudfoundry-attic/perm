@@ -24,7 +24,6 @@ func TestMonitor(t *testing.T) {
 func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Duration, allowedLatency time.Duration, opts ...Option) {
 	var (
 		fakeClient *monitorfakes.FakeClient
-		fakeStore  *monitorfakes.FakeStore
 		fakeSender *monitorfakes.FakeSender
 		fakeLogger *logxfakes.FakeLogger
 
@@ -40,12 +39,11 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 	BeforeEach(func() {
 		fakeClient = new(monitorfakes.FakeClient)
-		fakeStore = new(monitorfakes.FakeStore)
 		fakeSender = new(monitorfakes.FakeSender)
 		fakeLogger = new(logxfakes.FakeLogger)
 		fakeLogger.WithNameReturns(fakeLogger)
 
-		subject = NewProbe(fakeClient, fakeStore, fakeSender, fakeLogger, opts...)
+		subject = NewProbe(fakeClient, fakeSender, fakeLogger, opts...)
 
 		zeroDuration = time.Duration(0)
 		delta = time.Duration(10)
@@ -74,21 +72,6 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 				Expect(metric2).To(Equal(testProbeRunsSuccess))
 				Expect(value2).To(Equal(int64(1)))
 				Expect(alwaysSend2).To(Equal(float32(1)))
-			})
-
-			It("sends stored metrics", func() {
-				fakeStore.CollectReturns(map[string]int64{
-					"some-metric": 33,
-				})
-
-				subject.Run()
-
-				Expect(fakeSender.GaugeCallCount()).To(Equal(9))
-
-				metric, value, alwaysSend := fakeSender.GaugeArgsForCall(8)
-				Expect(metric).To(Equal("some-metric"))
-				Expect(value).To(Equal(int64(33)))
-				Expect(alwaysSend).To(Equal(float32(1)))
 			})
 		})
 

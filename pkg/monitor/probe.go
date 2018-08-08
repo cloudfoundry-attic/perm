@@ -41,12 +41,6 @@ type Client interface {
 	UnassignRole(ctx context.Context, roleName string, actor perm.Actor) (time.Duration, error)
 }
 
-//go:generate counterfeiter . Store
-
-type Store interface {
-	Collect() map[string]int64
-}
-
 //go:generate counterfeiter . Sender
 
 type Sender interface {
@@ -55,7 +49,6 @@ type Sender interface {
 
 type Probe struct {
 	client         Client
-	store          Store
 	sender         Sender
 	logger         logx.Logger
 	timeout        time.Duration
@@ -63,7 +56,7 @@ type Probe struct {
 	maxLatency     time.Duration
 }
 
-func NewProbe(client Client, store Store, sender Sender, logger logx.Logger, opts ...Option) *Probe {
+func NewProbe(client Client, sender Sender, logger logx.Logger, opts ...Option) *Probe {
 	o := defaultOptions()
 	for _, opt := range opts {
 		opt(o)
@@ -71,7 +64,6 @@ func NewProbe(client Client, store Store, sender Sender, logger logx.Logger, opt
 
 	return &Probe{
 		client:         client,
-		store:          store,
 		sender:         sender,
 		logger:         logger.WithName("probe"),
 		timeout:        o.timeout,
@@ -88,9 +80,6 @@ func (p *Probe) Run() {
 	if err == nil {
 		p.sendGauge(probeRunsCorrect, 1)
 		p.sendGauge(probeRunsSuccess, 1)
-		for metric, value := range p.store.Collect() {
-			p.sendGauge(metric, value)
-		}
 		return
 	}
 
