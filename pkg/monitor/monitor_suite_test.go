@@ -213,7 +213,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
@@ -251,7 +251,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
@@ -297,7 +297,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
@@ -343,7 +343,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
@@ -381,7 +381,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
@@ -419,7 +419,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeClient.AssignRoleCallCount()).To(Equal(1))
 			Expect(fakeClient.HasPermissionCallCount()).To(Equal(2))
 			Expect(fakeClient.UnassignRoleCallCount()).To(Equal(1))
-			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(2))
+			Expect(fakeClient.DeleteRoleCallCount()).To(Equal(1))
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 

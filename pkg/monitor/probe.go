@@ -89,15 +89,6 @@ func (p *Probe) Run() {
 		ResourcePattern: suffix,
 	}
 
-	// cleanup
-	defer func() {
-		if runErr != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
-			defer cancel()
-			_, _ = p.client.DeleteRole(ctx, roleName)
-		}
-	}()
-
 	defer func() {
 		switch err := runErr.(type) {
 		case nil:
@@ -118,6 +109,12 @@ func (p *Probe) Run() {
 	}()
 
 	defer func() {
+		if runErr != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
+			defer cancel()
+			_, _ = p.client.DeleteRole(ctx, roleName)
+		}
+
 		if len(slowEndpoints) > 0 {
 			runErr = errExceededMaxLatency{}
 		}
