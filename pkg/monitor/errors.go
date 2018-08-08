@@ -1,19 +1,16 @@
 package monitor
 
-type ExceededMaxLatencyError struct{}
+type errExceededMaxLatency struct{}
 
-func (e ExceededMaxLatencyError) Error() string {
-	return "probe: an API call timed out"
+func (e errExceededMaxLatency) Error() string {
+	return "probe: exceeded max latency"
 }
 
-type HasAssignedPermissionError struct{}
-
-func (e HasAssignedPermissionError) Error() string {
-	return "probe: incorrect result, HasPermission should have returned true"
+type errIncorrectPermission struct {
+	expected bool
+	actual   bool
 }
 
-type HasUnassignedPermissionError struct{}
-
-func (e HasUnassignedPermissionError) Error() string {
-	return "probe: incorrect result, HasPermission should have returned false"
+func (e errIncorrectPermission) Error() string {
+	return "probe: incorrect permission"
 }

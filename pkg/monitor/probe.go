@@ -74,9 +74,9 @@ func NewProbe(client Client, sender Sender, logger logx.Logger, opts ...Option) 
 
 func (p *Probe) Run() {
 	var (
-		ok                 bool
-		runErr             error
-		exceededMaxLatency bool
+		ok            bool
+		runErr        error
+		slowEndpoints []string
 	)
 
 	p.logger.Debug("starting")
@@ -99,31 +99,27 @@ func (p *Probe) Run() {
 	}()
 
 	defer func() {
-		if exceededMaxLatency {
-			runErr = ExceededMaxLatencyError{}
+		switch err := runErr.(type) {
+		case nil:
+			p.sendGauge(probeRunsCorrect, 1)
+			p.sendGauge(probeRunsSuccess, 1)
+		case errIncorrectPermission:
+			p.logger.Error("incorrect-permission", err, logx.Data{Key: "expected", Value: err.expected}, logx.Data{Key: "actual", Value: err.actual})
+			p.sendGauge(probeRunsCorrect, 0)
+			p.sendGauge(probeRunsSuccess, 0)
+		case errExceededMaxLatency:
+			p.logger.Error("exceeded-max-latency", err, logx.Data{Key: "endpoints", Value: slowEndpoints})
+			p.sendGauge(probeRunsCorrect, 1)
+			p.sendGauge(probeRunsSuccess, 0)
+		default: // error from API call
+			p.logger.Error("api-call-failed", err)
+			p.sendGauge(probeRunsSuccess, 0)
 		}
 	}()
 
 	defer func() {
-		switch runErr.(type) {
-		case nil:
-			p.sendGauge(probeRunsCorrect, 1)
-			p.sendGauge(probeRunsSuccess, 1)
-		case HasAssignedPermissionError:
-			p.logger.Error("incorrect-permission", runErr)
-			p.sendGauge(probeRunsCorrect, 0)
-			p.sendGauge(probeRunsSuccess, 0)
-		case HasUnassignedPermissionError:
-			p.logger.Error("incorrect-permission", runErr)
-			p.sendGauge(probeRunsCorrect, 0)
-			p.sendGauge(probeRunsSuccess, 0)
-		case ExceededMaxLatencyError:
-			p.logger.Error("exceeded-max-latency", runErr)
-			p.sendGauge(probeRunsCorrect, 1)
-			p.sendGauge(probeRunsSuccess, 0)
-		default: // error from API call
-			p.logger.Error("api-call-failed", runErr)
-			p.sendGauge(probeRunsSuccess, 0)
+		if len(slowEndpoints) > 0 {
+			runErr = errExceededMaxLatency{}
 		}
 	}()
 
@@ -136,7 +132,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "CreateRole")
 	}
 
 	handler = func(ctx context.Context) (time.Duration, error) {
@@ -147,7 +143,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "AssignRole")
 	}
 
 	handler = func(ctx context.Context) (time.Duration, error) {
@@ -156,7 +152,10 @@ func (p *Probe) Run() {
 			return duration, err
 		}
 		if !hasPermission {
-			return duration, HasAssignedPermissionError{}
+			return duration, errIncorrectPermission{
+				expected: true,
+				actual:   false,
+			}
 		}
 		return duration, nil
 	}
@@ -165,7 +164,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "HasPermission")
 	}
 
 	handler = func(ctx context.Context) (time.Duration, error) {
@@ -174,7 +173,10 @@ func (p *Probe) Run() {
 			return duration, err
 		}
 		if hasPermission {
-			return duration, HasUnassignedPermissionError{}
+			return duration, errIncorrectPermission{
+				expected: false,
+				actual:   true,
+			}
 		}
 		return duration, nil
 	}
@@ -183,7 +185,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "HasPermission")
 	}
 
 	handler = func(ctx context.Context) (time.Duration, error) {
@@ -194,7 +196,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "UnassignRole")
 	}
 
 	handler = func(ctx context.Context) (time.Duration, error) {
@@ -205,7 +207,7 @@ func (p *Probe) Run() {
 		return
 	}
 	if !ok {
-		exceededMaxLatency = true
+		slowEndpoints = append(slowEndpoints, "DeleteRole")
 	}
 }
 
