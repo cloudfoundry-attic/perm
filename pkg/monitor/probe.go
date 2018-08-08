@@ -13,9 +13,9 @@ import (
 
 const (
 	// metric names
-	probeRunsCorrect    = "perm.probe.runs.correct"
-	probeRunsSuccess    = "perm.probe.runs.success"
-	probeAPIRunsSuccess = "perm.probe.api.runs.success"
+	probeRunsCorrect     = "perm.probe.runs.correct"
+	probeRunsSuccess     = "perm.probe.runs.success"
+	probeAPICallsSuccess = "perm.probe.api.runs.success"
 
 	alwaysSend = 1
 )
@@ -146,7 +146,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -164,7 +164,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -182,7 +182,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -205,7 +205,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -228,7 +228,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -246,7 +246,7 @@ func (p *Probe) Probe() error {
 		case recording.FailedToObserveDurationError:
 			// do nothing
 		default:
-			p.sendGauge(probeAPIRunsSuccess, 0)
+			p.sendGauge(probeAPICallsSuccess, 0)
 			return runErr
 		}
 	}
@@ -266,11 +266,11 @@ func (p *Probe) Probe() error {
 
 func (p *Probe) exceededMaxLatency(duration time.Duration) bool {
 	if duration > p.maxLatency {
-		p.sendGauge(probeAPIRunsSuccess, 0)
+		p.sendGauge(probeAPICallsSuccess, 0)
 		return true
 	}
 
-	p.sendGauge(probeAPIRunsSuccess, 1)
+	p.sendGauge(probeAPICallsSuccess, 1)
 	return false
 }
 

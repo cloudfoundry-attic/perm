@@ -33,9 +33,9 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 		zeroDuration time.Duration
 		delta        time.Duration
 
-		testProbeRunsCorrect    string
-		testProbeRunsSuccess    string
-		testProbeAPIRunsSuccess string
+		testProbeRunsCorrect     string
+		testProbeRunsSuccess     string
+		testProbeAPICallsSuccess string
 	)
 
 	BeforeEach(func() {
@@ -55,7 +55,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 		testProbeRunsCorrect = "perm.probe.runs.correct"
 		testProbeRunsSuccess = "perm.probe.runs.success"
-		testProbeAPIRunsSuccess = "perm.probe.api.runs.success"
+		testProbeAPICallsSuccess = "perm.probe.api.runs.success"
 	})
 
 	Describe("#Run", func() {
@@ -211,32 +211,32 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, alwaysSend1 := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 			Expect(alwaysSend1).To(Equal(float32(1)))
 
 			metric2, value2, alwaysSend2 := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 			Expect(alwaysSend2).To(Equal(float32(1)))
 
 			metric3, value3, alwaysSend3 := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 			Expect(alwaysSend3).To(Equal(float32(1)))
 
 			metric4, value4, alwaysSend4 := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 			Expect(alwaysSend4).To(Equal(float32(1)))
 
 			metric5, value5, alwaysSend5 := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 			Expect(alwaysSend5).To(Equal(float32(1)))
 
 			metric6, value6, alwaysSend6 := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 			Expect(alwaysSend6).To(Equal(float32(1)))
 		})
@@ -337,27 +337,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(0)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 		})
 
@@ -376,27 +376,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(0)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 		})
 
@@ -423,27 +423,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(0)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 		})
 
@@ -470,27 +470,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(0)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 		})
 
@@ -509,27 +509,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(0)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(1)))
 		})
 
@@ -548,27 +548,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(0)))
 		})
 
@@ -603,7 +603,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(1))
 
 			metric, value, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
 			Expect(value).To(Equal(int64(0)))
 		})
 
@@ -638,11 +638,11 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(2))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(0)))
 		})
 
@@ -677,15 +677,15 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(3))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(0)))
 		})
 
@@ -720,19 +720,19 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(4))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(0)))
 		})
 
@@ -766,23 +766,23 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(5))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(0)))
 		})
 
@@ -817,27 +817,27 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
 			Expect(value5).To(Equal(int64(1)))
 
 			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
 			Expect(value6).To(Equal(int64(0)))
 		})
 
@@ -871,15 +871,15 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(3))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 		})
 
@@ -913,19 +913,19 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 			Expect(fakeSender.GaugeCallCount()).To(Equal(4))
 
 			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
 			Expect(value1).To(Equal(int64(1)))
 
 			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
 			Expect(value2).To(Equal(int64(1)))
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
 			Expect(value3).To(Equal(int64(1)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPIRunsSuccess))
+			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
 			Expect(value4).To(Equal(int64(1)))
 		})
 
