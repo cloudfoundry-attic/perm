@@ -73,36 +73,6 @@ func NewProbe(client Client, sender Sender, logger logx.Logger, opts ...Option) 
 }
 
 func (p *Probe) Run() {
-	p.logger.Debug("starting")
-	defer p.logger.Debug("finished")
-
-	err := p.Probe()
-	if err == nil {
-		p.sendGauge(probeRunsCorrect, 1)
-		p.sendGauge(probeRunsSuccess, 1)
-		return
-	}
-
-	switch err.(type) {
-	case HasAssignedPermissionError:
-		p.logger.Error("incorrect-permission", err)
-		p.sendGauge(probeRunsCorrect, 0)
-		p.sendGauge(probeRunsSuccess, 0)
-	case HasUnassignedPermissionError:
-		p.logger.Error("incorrect-permission", err)
-		p.sendGauge(probeRunsCorrect, 0)
-		p.sendGauge(probeRunsSuccess, 0)
-	case ExceededMaxLatencyError:
-		p.logger.Error("exceeded-max-latency", err)
-		p.sendGauge(probeRunsCorrect, 1)
-		p.sendGauge(probeRunsSuccess, 0)
-	default: // error from API call
-		p.logger.Error("api-call-failed", err)
-		p.sendGauge(probeRunsSuccess, 0)
-	}
-}
-
-func (p *Probe) Probe() error {
 	var (
 		hasPermission      bool
 		duration           time.Duration
@@ -110,12 +80,38 @@ func (p *Probe) Probe() error {
 		exceededMaxLatency bool
 	)
 
+	p.logger.Debug("starting")
+	defer p.logger.Debug("finished")
+
 	suffix := uuid.NewV4().String()
 	roleName := fmt.Sprintf("probe-role-%s", suffix)
 	permission := perm.Permission{
 		Action:          "probe.run",
 		ResourcePattern: suffix,
 	}
+
+	defer func() {
+		switch runErr.(type) {
+		case nil:
+			p.sendGauge(probeRunsCorrect, 1)
+			p.sendGauge(probeRunsSuccess, 1)
+		case HasAssignedPermissionError:
+			p.logger.Error("incorrect-permission", runErr)
+			p.sendGauge(probeRunsCorrect, 0)
+			p.sendGauge(probeRunsSuccess, 0)
+		case HasUnassignedPermissionError:
+			p.logger.Error("incorrect-permission", runErr)
+			p.sendGauge(probeRunsCorrect, 0)
+			p.sendGauge(probeRunsSuccess, 0)
+		case ExceededMaxLatencyError:
+			p.logger.Error("exceeded-max-latency", runErr)
+			p.sendGauge(probeRunsCorrect, 1)
+			p.sendGauge(probeRunsSuccess, 0)
+		default: // error from API call
+			p.logger.Error("api-call-failed", runErr)
+			p.sendGauge(probeRunsSuccess, 0)
+		}
+	}()
 
 	// cleanup
 	defer func() {
@@ -136,7 +132,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -154,7 +150,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -172,7 +168,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -182,7 +178,7 @@ func (p *Probe) Probe() error {
 
 	if !hasPermission {
 		runErr = HasAssignedPermissionError{}
-		return runErr
+		return
 	}
 
 	// check has no permission
@@ -195,7 +191,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -205,7 +201,7 @@ func (p *Probe) Probe() error {
 
 	if hasPermission {
 		runErr = HasUnassignedPermissionError{}
-		return runErr
+		return
 	}
 
 	// unassign role
@@ -218,7 +214,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -236,7 +232,7 @@ func (p *Probe) Probe() error {
 			// do nothing
 		default:
 			p.sendGauge(probeAPICallsSuccess, 0)
-			return runErr
+			return
 		}
 	}
 
@@ -246,11 +242,10 @@ func (p *Probe) Probe() error {
 
 	if exceededMaxLatency {
 		runErr = ExceededMaxLatencyError{}
-		return runErr
+		return
 	}
 
 	runErr = nil
-	return runErr
 }
 
 func (p *Probe) exceededMaxLatency(duration time.Duration) bool {
