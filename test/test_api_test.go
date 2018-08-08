@@ -78,21 +78,6 @@ var (
 	validExpiryDate = time.Now().AddDate(50, 0, 0) // 50 years from now
 )
 
-type clientConfig struct {
-	addr      string
-	tlsConfig *tls.Config
-}
-
-type testTokenSource struct {
-	token     *oauth2.Token
-	callCount int
-}
-
-func (t *testTokenSource) Token() (*oauth2.Token, error) {
-	t.callCount += 1
-	return t.token, nil
-}
-
 func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
 		serverOpts  []api.ServerOption
@@ -896,6 +881,21 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 		})
 	})
+}
+
+type clientConfig struct {
+	addr      string
+	tlsConfig *tls.Config
+}
+
+type testTokenSource struct {
+	token     *oauth2.Token
+	callCount int
+}
+
+func (t *testTokenSource) Token() (*oauth2.Token, error) {
+	t.callCount += 1
+	return t.token, nil
 }
 
 func getSignedToken(privateKey, issuer string, expiry time.Time) (*oauth2.Token, error) {
