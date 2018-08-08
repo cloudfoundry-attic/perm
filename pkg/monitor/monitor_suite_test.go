@@ -773,7 +773,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
 			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			Expect(value3).To(Equal(int64(0)))
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
 			Expect(metric4).To(Equal(testProbeRunsCorrect))
@@ -826,7 +826,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
 			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			Expect(value4).To(Equal(int64(0)))
 
 			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
 			Expect(metric5).To(Equal(testProbeRunsCorrect))

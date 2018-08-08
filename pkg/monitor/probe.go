@@ -74,8 +74,7 @@ func NewProbe(client Client, sender Sender, logger logx.Logger, opts ...Option) 
 
 func (p *Probe) Run() {
 	var (
-		hasPermission      bool
-		duration           time.Duration
+		ok                 bool
 		runErr             error
 		exceededMaxLatency bool
 	)
@@ -89,6 +88,21 @@ func (p *Probe) Run() {
 		Action:          "probe.run",
 		ResourcePattern: suffix,
 	}
+
+	// cleanup
+	defer func() {
+		if runErr != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
+			defer cancel()
+			_, _ = p.client.DeleteRole(ctx, roleName)
+		}
+	}()
+
+	defer func() {
+		if exceededMaxLatency {
+			runErr = ExceededMaxLatencyError{}
+		}
+	}()
 
 	defer func() {
 		switch runErr.(type) {
@@ -113,149 +127,109 @@ func (p *Probe) Run() {
 		}
 	}()
 
-	// cleanup
-	defer func() {
-		if runErr != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), p.cleanupTimeout)
-			defer cancel()
-			_, _ = p.client.DeleteRole(ctx, roleName)
-		}
-	}()
+	handler := func(ctx context.Context) (time.Duration, error) {
+		_, duration, err := p.client.CreateRole(ctx, roleName, permission)
+		return duration, err
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
 
-	// create role
+	handler = func(ctx context.Context) (time.Duration, error) {
+		return p.client.AssignRole(ctx, roleName, assignedActor)
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
+
+	handler = func(ctx context.Context) (time.Duration, error) {
+		hasPermission, duration, err := p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern)
+		if err != nil {
+			return duration, err
+		}
+		if !hasPermission {
+			return duration, HasAssignedPermissionError{}
+		}
+		return duration, nil
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
+
+	handler = func(ctx context.Context) (time.Duration, error) {
+		hasPermission, duration, err := p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern)
+		if err != nil {
+			return duration, err
+		}
+		if hasPermission {
+			return duration, HasUnassignedPermissionError{}
+		}
+		return duration, nil
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
+
+	handler = func(ctx context.Context) (time.Duration, error) {
+		return p.client.UnassignRole(ctx, roleName, assignedActor)
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
+
+	handler = func(ctx context.Context) (time.Duration, error) {
+		return p.client.DeleteRole(ctx, roleName)
+	}
+	ok, runErr = p.call(handler)
+	if runErr != nil {
+		return
+	}
+	if !ok {
+		exceededMaxLatency = true
+	}
+}
+
+func (p *Probe) call(handler func(context.Context) (time.Duration, error)) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
-	if _, duration, runErr = p.client.CreateRole(ctx, roleName, permission); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
+	duration, err := handler(ctx)
+
+	switch err.(type) {
+	case nil:
+	case recording.FailedToObserveDurationError:
+	default:
+		p.sendGauge(probeAPICallsSuccess, 0)
+		return false, err
 	}
 
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	// assign role
-	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
-	defer cancel()
-
-	if duration, runErr = p.client.AssignRole(ctx, roleName, assignedActor); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
-	}
-
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	// check has permission
-	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
-	defer cancel()
-
-	if hasPermission, duration, runErr = p.client.HasPermission(ctx, assignedActor, permission.Action, permission.ResourcePattern); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
-	}
-
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	if !hasPermission {
-		runErr = HasAssignedPermissionError{}
-		return
-	}
-
-	// check has no permission
-	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
-	defer cancel()
-
-	if hasPermission, duration, runErr = p.client.HasPermission(ctx, unassignedActor, permission.Action, permission.ResourcePattern); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
-	}
-
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	if hasPermission {
-		runErr = HasUnassignedPermissionError{}
-		return
-	}
-
-	// unassign role
-	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
-	defer cancel()
-
-	if duration, runErr = p.client.UnassignRole(ctx, roleName, assignedActor); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
-	}
-
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	// delete role
-	ctx, cancel = context.WithTimeout(context.Background(), p.timeout)
-	defer cancel()
-
-	if duration, runErr = p.client.DeleteRole(ctx, roleName); runErr != nil {
-		switch runErr.(type) {
-		case recording.FailedToObserveDurationError:
-			// do nothing
-		default:
-			p.sendGauge(probeAPICallsSuccess, 0)
-			return
-		}
-	}
-
-	if p.exceededMaxLatency(duration) {
-		exceededMaxLatency = true
-	}
-
-	if exceededMaxLatency {
-		runErr = ExceededMaxLatencyError{}
-		return
-	}
-
-	runErr = nil
-}
-
-func (p *Probe) exceededMaxLatency(duration time.Duration) bool {
 	if duration > p.maxLatency {
 		p.sendGauge(probeAPICallsSuccess, 0)
-		return true
+		return false, nil
 	}
 
 	p.sendGauge(probeAPICallsSuccess, 1)
-	return false
+	return true, nil
 }
 
 func (p *Probe) sendGauge(metric string, value int64) {
