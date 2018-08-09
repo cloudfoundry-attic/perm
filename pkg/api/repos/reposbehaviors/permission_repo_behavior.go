@@ -11,8 +11,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"time"
-
 	"github.com/satori/go.uuid"
 )
 
@@ -25,10 +23,7 @@ func BehavesLikeAPermissionRepo(
 
 		roleRepo repos.RoleRepo
 
-		ctx    context.Context
 		logger logx.Logger
-
-		cancelFunc context.CancelFunc
 
 		roleName                                             string
 		groups                                               []perm.Group
@@ -44,7 +39,6 @@ func BehavesLikeAPermissionRepo(
 
 		roleRepo = roleRepoCreator()
 
-		ctx, cancelFunc = context.WithTimeout(context.Background(), 1*time.Second)
 		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 
 		roleName = uuid.NewV4().String()
@@ -65,16 +59,12 @@ func BehavesLikeAPermissionRepo(
 		}
 	})
 
-	AfterEach(func() {
-		cancelFunc()
-	})
-
 	Describe("#HasPermission", func() {
 		It("returns true if they have been assigned to a role that has the permission", func() {
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+			_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(context.Background(), logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{
@@ -83,14 +73,14 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: permission1.ResourcePattern,
 			}
 
-			yes, err := subject.HasPermission(ctx, logger, query)
+			yes, err := subject.HasPermission(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(yes).To(BeTrue())
 		})
 
 		It("returns false if they have not been assigned the role", func() {
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+			_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{
@@ -98,14 +88,14 @@ func BehavesLikeAPermissionRepo(
 				Action:          permission1.Action,
 				ResourcePattern: permission1.ResourcePattern,
 			}
-			yes, err := subject.HasPermission(ctx, logger, query)
+			yes, err := subject.HasPermission(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(yes).To(BeFalse())
 		})
 
 		It("return false if the actor does not exist", func() {
-			_, err := roleRepo.CreateRole(ctx, logger, roleName)
+			_, err := roleRepo.CreateRole(context.Background(), logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.HasPermissionQuery{
@@ -113,7 +103,7 @@ func BehavesLikeAPermissionRepo(
 				Action:          permission1.Action,
 				ResourcePattern: permission1.ResourcePattern,
 			}
-			yes, err := subject.HasPermission(ctx, logger, query)
+			yes, err := subject.HasPermission(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(yes).To(BeFalse())
@@ -121,10 +111,10 @@ func BehavesLikeAPermissionRepo(
 
 		Context("when the actor doesn't have permission but groups are supplied", func() {
 			It("returns true if a group is assigned to a role with permission", func() {
-				_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+				_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
+				err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
 				Expect(err).NotTo(HaveOccurred())
 
 				query := repos.HasPermissionQuery{
@@ -134,14 +124,14 @@ func BehavesLikeAPermissionRepo(
 					Groups:          groups,
 				}
 
-				yes, err := subject.HasPermission(ctx, logger, query)
+				yes, err := subject.HasPermission(context.Background(), logger, query)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(yes).To(BeTrue())
 			})
 
 			It("returns false if the group is not assigned to a role with permission", func() {
-				_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+				_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 				Expect(err).NotTo(HaveOccurred())
 
 				query := repos.HasPermissionQuery{
@@ -150,7 +140,7 @@ func BehavesLikeAPermissionRepo(
 					ResourcePattern: permission1.ResourcePattern,
 					Groups:          groups,
 				}
-				yes, err := subject.HasPermission(ctx, logger, query)
+				yes, err := subject.HasPermission(context.Background(), logger, query)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(yes).To(BeFalse())
@@ -165,10 +155,10 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern3,
 			}
 
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2, permission3)
+			_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1, permission2, permission3)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(context.Background(), logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			permissionForUnassignedRole := perm.Permission{
@@ -176,7 +166,7 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: "should-not-have-this-resource-pattern",
 			}
 
-			_, err = roleRepo.CreateRole(ctx, logger, "not-assigned-to-this-role", permissionForUnassignedRole)
+			_, err = roleRepo.CreateRole(context.Background(), logger, "not-assigned-to-this-role", permissionForUnassignedRole)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.ListResourcePatternsQuery{
@@ -184,7 +174,7 @@ func BehavesLikeAPermissionRepo(
 				Action: sameAction,
 			}
 
-			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+			resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resourcePatterns).NotTo(BeNil())
@@ -193,10 +183,10 @@ func BehavesLikeAPermissionRepo(
 		})
 
 		It("de-dupes the results if the user has access to the same resource pattern through multiple roles/permissions", func() {
-			_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+			_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(context.Background(), logger, roleName, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			roleName2 := uuid.NewV4().String()
@@ -205,10 +195,10 @@ func BehavesLikeAPermissionRepo(
 				ResourcePattern: resourcePattern1,
 			}
 
-			_, err = roleRepo.CreateRole(ctx, logger, roleName2, permission2)
+			_, err = roleRepo.CreateRole(context.Background(), logger, roleName2, permission2)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = roleRepo.AssignRole(ctx, logger, roleName2, actor.ID, actor.Namespace)
+			err = roleRepo.AssignRole(context.Background(), logger, roleName2, actor.ID, actor.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			query := repos.ListResourcePatternsQuery{
@@ -216,7 +206,7 @@ func BehavesLikeAPermissionRepo(
 				Action: sameAction,
 			}
 
-			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+			resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resourcePatterns).NotTo(BeNil())
@@ -230,7 +220,7 @@ func BehavesLikeAPermissionRepo(
 				Action: sameAction,
 			}
 
-			resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+			resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resourcePatterns).To(BeEmpty())
@@ -255,19 +245,19 @@ func BehavesLikeAPermissionRepo(
 						Action:          sameAction,
 						ResourcePattern: resourcePattern3,
 					}
-					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+					_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRole(ctx, logger, roleName, actor.ID, actor.Namespace)
-					Expect(err).NotTo(HaveOccurred())
-
-					_, err = roleRepo.CreateRole(ctx, logger, otherRoleName, permission2)
-					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, otherRoleName, groups[0].ID)
+					err = roleRepo.AssignRole(context.Background(), logger, roleName, actor.ID, actor.Namespace)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = roleRepo.CreateRole(ctx, logger, "some-other-role-name", permission3)
+					_, err = roleRepo.CreateRole(context.Background(), logger, otherRoleName, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, "some-other-role-name", groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, groups[0].ID)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = roleRepo.CreateRole(context.Background(), logger, "some-other-role-name", permission3)
+					Expect(err).NotTo(HaveOccurred())
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, "some-other-role-name", groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
@@ -276,7 +266,7 @@ func BehavesLikeAPermissionRepo(
 						Groups: groups,
 					}
 
-					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(resourcePatterns).NotTo(BeNil())
@@ -287,14 +277,14 @@ func BehavesLikeAPermissionRepo(
 
 			Context("when the groups provided specify permissions for different actions", func() {
 				It("does not list out the permissions for those different actions", func() {
-					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1)
+					_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
-					_, err = roleRepo.CreateRole(ctx, logger, otherRoleName, otherPermission)
+					_, err = roleRepo.CreateRole(context.Background(), logger, otherRoleName, otherPermission)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, otherRoleName, groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
@@ -303,7 +293,7 @@ func BehavesLikeAPermissionRepo(
 						Groups: groups,
 					}
 
-					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(resourcePatterns).NotTo(BeNil())
@@ -314,9 +304,9 @@ func BehavesLikeAPermissionRepo(
 
 			Context("when there are no actor roles", func() {
 				It("still returns the group's roles", func() {
-					_, err := roleRepo.CreateRole(ctx, logger, roleName, permission1, permission2)
+					_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(ctx, logger, roleName, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := repos.ListResourcePatternsQuery{
@@ -325,7 +315,7 @@ func BehavesLikeAPermissionRepo(
 						Groups: groups,
 					}
 
-					resourcePatterns, err := subject.ListResourcePatterns(ctx, logger, query)
+					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(resourcePatterns).NotTo(BeNil())

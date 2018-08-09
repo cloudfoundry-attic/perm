@@ -24,10 +24,9 @@ func (s *DataService) AssignRole(
 	}
 
 	defer func() {
-		if err != nil {
-			return
+		if commitErr := sqlx.Commit(logger, tx, err); commitErr != nil {
+			err = commitErr
 		}
-		err = sqlx.Commit(logger, tx, err)
 	}()
 
 	err = assignRole(ctx, logger, tx, roleName, domainID, namespace)
@@ -50,10 +49,9 @@ func (s *DataService) AssignRoleToGroup(
 	}
 
 	defer func() {
-		if err != nil {
-			return
+		if commitErr := sqlx.Commit(logger, tx, err); commitErr != nil {
+			err = commitErr
 		}
-		err = sqlx.Commit(logger, tx, err)
 	}()
 
 	err = assignRoleToGroup(ctx, logger, tx, roleName, groupID)
@@ -77,10 +75,9 @@ func (s *DataService) UnassignRole(
 	}
 
 	defer func() {
-		if err != nil {
-			return
+		if commitErr := sqlx.Commit(logger, tx, err); commitErr != nil {
+			err = commitErr
 		}
-		err = sqlx.Commit(logger, tx, err)
 	}()
 
 	err = unassignRole(ctx, logger, tx, roleName, domainID, namespace)
