@@ -15,6 +15,7 @@ const (
 	// metric names
 	probeRunsCorrect     = "perm.probe.runs.correct"
 	probeRunsSuccess     = "perm.probe.runs.success"
+	probeRunsFailures    = "perm.probe.runs.failures"
 	probeAPICallsSuccess = "perm.probe.api.calls.success"
 
 	alwaysSend = 1
@@ -96,17 +97,21 @@ func (p *Probe) Run() {
 		case nil:
 			p.sendGauge(probeRunsCorrect, 1)
 			p.sendGauge(probeRunsSuccess, 1)
+			p.sendGauge(probeRunsFailures, 0)
 		case errIncorrectPermission:
 			logger.Error("incorrect-permission", err, logx.Data{Key: "expected", Value: err.expected}, logx.Data{Key: "actual", Value: err.actual})
 			p.sendGauge(probeRunsCorrect, 0)
 			p.sendGauge(probeRunsSuccess, 0)
+			p.sendGauge(probeRunsFailures, 1)
 		case errExceededMaxLatency:
 			logger.Error("exceeded-max-latency", err, logx.Data{Key: "endpoints", Value: slowEndpoints})
 			p.sendGauge(probeRunsCorrect, 1)
 			p.sendGauge(probeRunsSuccess, 0)
+			p.sendGauge(probeRunsFailures, 0)
 		default: // error from API call
 			logger.Error("api-call-failed", err)
 			p.sendGauge(probeRunsSuccess, 0)
+			p.sendGauge(probeRunsFailures, 1)
 		}
 	}()
 
