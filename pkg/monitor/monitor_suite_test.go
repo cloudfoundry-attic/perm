@@ -98,35 +98,35 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, alwaysSend1 := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
-			Expect(alwaysSend1).To(Equal(float32(1)))
+			metric, value, alwaysSend := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 
-			metric2, value2, alwaysSend2 := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
-			Expect(alwaysSend2).To(Equal(float32(1)))
+			metric, value, alwaysSend = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 
-			metric3, value3, alwaysSend3 := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
-			Expect(alwaysSend3).To(Equal(float32(1)))
+			metric, value, alwaysSend = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 
-			metric4, value4, alwaysSend4 := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
-			Expect(alwaysSend4).To(Equal(float32(1)))
+			metric, value, alwaysSend = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 
-			metric5, value5, alwaysSend5 := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
-			Expect(alwaysSend5).To(Equal(float32(1)))
+			metric, value, alwaysSend = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 
-			metric6, value6, alwaysSend6 := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
-			Expect(alwaysSend6).To(Equal(float32(1)))
+			metric, value, alwaysSend = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
+			Expect(alwaysSend).To(Equal(float32(1)))
 		})
 
 		It("uses the correct timeout for all calls", func() {
@@ -218,29 +218,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(0)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 		})
 
 		It("runs all other calls but returns an error if AssignRole takes an unacceptable amount of time", func() {
@@ -256,29 +256,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 		})
 
 		It("runs all other calls but returns an error if the first HasPermission call takes an unacceptable amount of time", func() {
@@ -302,29 +302,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 		})
 
 		It("runs all other calls but returns an error if the second HasPermission call takes an unacceptable amount of time", func() {
@@ -348,29 +348,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 		})
 
 		It("runs all other calls but returns an error if UnassignRole takes an unacceptable amount of time", func() {
@@ -386,29 +386,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 		})
 
 		It("runs all other calls but returns an error if DeleteRole takes an unacceptable amount of time", func() {
@@ -424,29 +424,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(8))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if CreateRole fails", func() {
@@ -516,17 +516,17 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(3))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeRunsSuccess))
-			Expect(value3).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if the first HasPermission call fails", func() {
@@ -558,21 +558,21 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(4))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeRunsSuccess))
-			Expect(value4).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if the second HasPermission call fails", func() {
@@ -604,25 +604,25 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(5))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeRunsSuccess))
-			Expect(value5).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if UnassignRole fails", func() {
@@ -653,29 +653,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeRunsSuccess))
-			Expect(value6).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops and attempts to cleanup if DeleteRole fails", func() {
@@ -707,33 +707,33 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(7))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeAPICallsSuccess))
-			Expect(value5).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeAPICallsSuccess))
-			Expect(value6).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric7, value7, _ := fakeSender.GaugeArgsForCall(6)
-			Expect(metric7).To(Equal(testProbeRunsSuccess))
-			Expect(value7).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(6)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if the first HasPermission call succeeds but has an incorrect result", func() {
@@ -764,25 +764,25 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(5))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeRunsCorrect))
-			Expect(value4).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeRunsCorrect))
+			Expect(value).To(Equal(int64(0)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeRunsSuccess))
-			Expect(value5).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("stops early and attempts to cleanup if the second HasPermission succeeds but has an incorrect result", func() {
@@ -813,29 +813,29 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 			Expect(fakeSender.GaugeCallCount()).To(Equal(6))
 
-			metric1, value1, _ := fakeSender.GaugeArgsForCall(0)
-			Expect(metric1).To(Equal(testProbeAPICallsSuccess))
-			Expect(value1).To(Equal(int64(1)))
+			metric, value, _ := fakeSender.GaugeArgsForCall(0)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric2, value2, _ := fakeSender.GaugeArgsForCall(1)
-			Expect(metric2).To(Equal(testProbeAPICallsSuccess))
-			Expect(value2).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(1)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric3, value3, _ := fakeSender.GaugeArgsForCall(2)
-			Expect(metric3).To(Equal(testProbeAPICallsSuccess))
-			Expect(value3).To(Equal(int64(1)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(2)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(1)))
 
-			metric4, value4, _ := fakeSender.GaugeArgsForCall(3)
-			Expect(metric4).To(Equal(testProbeAPICallsSuccess))
-			Expect(value4).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(3)
+			Expect(metric).To(Equal(testProbeAPICallsSuccess))
+			Expect(value).To(Equal(int64(0)))
 
-			metric5, value5, _ := fakeSender.GaugeArgsForCall(4)
-			Expect(metric5).To(Equal(testProbeRunsCorrect))
-			Expect(value5).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(4)
+			Expect(metric).To(Equal(testProbeRunsCorrect))
+			Expect(value).To(Equal(int64(0)))
 
-			metric6, value6, _ := fakeSender.GaugeArgsForCall(5)
-			Expect(metric6).To(Equal(testProbeRunsSuccess))
-			Expect(value6).To(Equal(int64(0)))
+			metric, value, _ = fakeSender.GaugeArgsForCall(5)
+			Expect(metric).To(Equal(testProbeRunsSuccess))
+			Expect(value).To(Equal(int64(0)))
 		})
 
 		It("continues if CreateRole fails to record duration", func() {
