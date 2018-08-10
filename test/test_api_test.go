@@ -522,6 +522,44 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 		})
 
+		Describe("AssignRoleToGroup", func() {
+			It("succeeds when the role exists and the group has not yet been assigned to it", func() {
+				role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+				Expect(err).NotTo(HaveOccurred())
+
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				err = client.AssignRoleToGroup(context.Background(), role.Name, group)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("fails when the role does not exist", func() {
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				err := client.AssignRoleToGroup(context.Background(), uuid.NewV4().String(), group)
+				Expect(err).To(MatchError("role not found"))
+			})
+
+			It("fails when the group has already been assigned to the role", func() {
+				role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+				Expect(err).NotTo(HaveOccurred())
+
+				actor := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				err = client.AssignRoleToGroup(context.Background(), role.Name, actor)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.AssignRoleToGroup(context.Background(), role.Name, actor)
+				Expect(err).To(MatchError("assignment already exists"))
+			})
+		})
+
 		Describe("#UnassignRole", func() {
 			It("succeeds when the role exists and the actor has been assigned to it", func() {
 				actor := perm.Actor{
@@ -578,6 +616,62 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Expect(err).NotTo(HaveOccurred())
 
 				err = client.UnassignRole(context.Background(), role.Name, actor)
+				Expect(err).To(MatchError("assignment not found"))
+			})
+		})
+
+		Describe("#UnassignRoleFromGroup", func() {
+			It("succeeds when the role exists and the group has been assigned to it", func() {
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.AssignRoleToGroup(context.Background(), role.Name, group)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.UnassignRoleFromGroup(context.Background(), role.Name, group)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("can only be called once per assignment", func() {
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.AssignRoleToGroup(context.Background(), role.Name, group)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.UnassignRoleFromGroup(context.Background(), role.Name, group)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.UnassignRoleFromGroup(context.Background(), role.Name, group)
+				Expect(err).To(MatchError("assignment not found"))
+			})
+
+			It("fails when the role does not exist", func() {
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				err := client.UnassignRoleFromGroup(context.Background(), uuid.NewV4().String(), group)
+				Expect(err).To(MatchError("assignment not found"))
+			})
+
+			It("fails when the group has not been assigned to the role", func() {
+				group := perm.Group{
+					ID: uuid.NewV4().String(),
+				}
+
+				role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+				Expect(err).NotTo(HaveOccurred())
+
+				err = client.UnassignRoleFromGroup(context.Background(), role.Name, group)
 				Expect(err).To(MatchError("assignment not found"))
 			})
 		})

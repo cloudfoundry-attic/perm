@@ -147,6 +147,23 @@ func (c *Client) AssignRole(ctx context.Context, roleName string, actor Actor) e
 	}
 }
 
+func (c *Client) AssignRoleToGroup(ctx context.Context, roleName string, group Group) error {
+	req := &protos.AssignRoleToGroupRequest{
+		RoleName: roleName,
+		Group: &protos.Group{
+			ID: group.ID,
+		},
+	}
+	_, err := c.roleServiceClient.AssignRoleToGroup(ctx, req)
+	s := status.Convert(err)
+	switch s.Code() {
+	case codes.OK:
+		return nil
+	default:
+		return NewErrorFromStatus(s)
+	}
+}
+
 func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor) error {
 	req := &protos.UnassignRoleRequest{
 		RoleName: roleName,
@@ -156,6 +173,26 @@ func (c *Client) UnassignRole(ctx context.Context, roleName string, actor Actor)
 		},
 	}
 	_, err := c.roleServiceClient.UnassignRole(ctx, req)
+	s := status.Convert(err)
+
+	switch s.Code() {
+	case codes.OK:
+		return nil
+	case codes.NotFound:
+		return ErrAssignmentNotFound
+	default:
+		return NewErrorFromStatus(s)
+	}
+}
+
+func (c *Client) UnassignRoleFromGroup(ctx context.Context, roleName string, group Group) error {
+	req := &protos.UnassignRoleFromGroupRequest{
+		RoleName: roleName,
+		Group: &protos.Group{
+			ID: group.ID,
+		},
+	}
+	_, err := c.roleServiceClient.UnassignRoleFromGroup(ctx, req)
 	s := status.Convert(err)
 
 	switch s.Code() {
