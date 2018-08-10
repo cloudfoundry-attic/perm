@@ -54,7 +54,7 @@ func testProbe(expectedTimeout time.Duration, expectedCleanuptTimeout time.Durat
 
 		testProbeRunsCorrect = "perm.probe.runs.correct"
 		testProbeRunsSuccess = "perm.probe.runs.success"
-		testProbeAPICallsSuccess = "perm.probe.api.runs.success"
+		testProbeAPICallsSuccess = "perm.probe.api.calls.success"
 	})
 
 	Describe("#Run", func() {

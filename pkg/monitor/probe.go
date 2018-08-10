@@ -15,7 +15,7 @@ const (
 	// metric names
 	probeRunsCorrect     = "perm.probe.runs.correct"
 	probeRunsSuccess     = "perm.probe.runs.success"
-	probeAPICallsSuccess = "perm.probe.api.runs.success"
+	probeAPICallsSuccess = "perm.probe.api.calls.success"
 
 	alwaysSend = 1
 )
