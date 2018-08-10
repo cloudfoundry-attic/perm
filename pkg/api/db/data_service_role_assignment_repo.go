@@ -100,10 +100,9 @@ func (s *DataService) UnassignRoleFromGroup(
 	}
 
 	defer func() {
-		if err != nil {
-			return
+		if commitErr := sqlx.Commit(logger, tx, err); commitErr != nil {
+			err = commitErr
 		}
-		err = sqlx.Commit(logger, tx, err)
 	}()
 
 	err = unassignRoleFromGroup(ctx, logger, tx, roleName, groupID)

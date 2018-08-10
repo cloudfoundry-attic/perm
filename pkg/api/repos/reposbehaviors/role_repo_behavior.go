@@ -21,12 +21,11 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 		name      string
 		roleName  string
-		actorID   string
 		namespace string
-		group     perm.Group
 
 		actor                    perm.Actor
 		permission1, permission2 perm.Permission
+		group                    perm.Group
 	)
 
 	BeforeEach(func() {
@@ -36,7 +35,6 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 
 		name = uuid.NewV4().String()
 		roleName = uuid.NewV4().String()
-		actorID = uuid.NewV4().String()
 		namespace = uuid.NewV4().String()
 
 		permission1 = perm.Permission{Action: "permission-1", ResourcePattern: "resource-pattern-1"}
@@ -151,7 +149,7 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			err := subject.AssignRole(context.Background(), logger, roleName, actorID, namespace)
+			err := subject.AssignRole(context.Background(), logger, roleName, actor.ID, namespace)
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
 		})
 	})
@@ -215,23 +213,50 @@ func BehavesLikeARoleRepo(subjectCreator func() repos.RoleRepo) {
 		})
 
 		It("fails if the role does not exist", func() {
-			err := subject.UnassignRole(context.Background(), logger, roleName, actorID, namespace)
+			err := subject.UnassignRole(context.Background(), logger, roleName, actor.ID, namespace)
 			Expect(err).To(Equal(perm.ErrRoleNotFound))
-		})
-
-		It("fails if the actor does not exist", func() {
-			_, err := subject.CreateRole(context.Background(), logger, roleName)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = subject.UnassignRole(context.Background(), logger, roleName, actorID, namespace)
-			Expect(err).To(MatchError(perm.ErrAssignmentNotFound))
 		})
 
 		It("fails if the role assignment does not exist", func() {
 			_, err := subject.CreateRole(context.Background(), logger, roleName)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = subject.UnassignRole(context.Background(), logger, roleName, actorID, namespace)
+			err = subject.UnassignRole(context.Background(), logger, roleName, actor.ID, namespace)
+			Expect(err).To(MatchError(perm.ErrAssignmentNotFound))
+		})
+	})
+
+	Describe("#UnassignRoleFromGroup", func() {
+		It("removes the role assignment", func() {
+			_, err := subject.CreateRole(context.Background(), logger, roleName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.AssignRoleToGroup(context.Background(), logger, roleName, group.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.UnassignRoleFromGroup(context.Background(), logger, roleName, group.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			query := repos.HasRoleQuery{
+				Actor:    actor,
+				RoleName: roleName,
+			}
+			yes, err := subject.HasRole(context.Background(), logger, query)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(yes).To(BeFalse())
+		})
+
+		It("fails if the role does not exist", func() {
+			err := subject.UnassignRoleFromGroup(context.Background(), logger, roleName, group.ID)
+			Expect(err).To(Equal(perm.ErrRoleNotFound))
+		})
+
+		It("fails if the role assignment does not exist", func() {
+			_, err := subject.CreateRole(context.Background(), logger, roleName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = subject.UnassignRoleFromGroup(context.Background(), logger, roleName, group.ID)
 			Expect(err).To(Equal(perm.ErrAssignmentNotFound))
 		})
 	})
