@@ -30,7 +30,7 @@ var _ = Describe("ForwardingReporter", func() {
 			InterceptedOutput: "The intercepted output!",
 		}
 
-		reporter = NewForwardingReporter(config.DefaultReporterConfigType{}, serverHost, poster, interceptor, nil, "")
+		reporter = NewForwardingReporter(serverHost, poster, interceptor)
 
 		suiteSummary = &types.SuiteSummary{
 			SuiteDescription: "My Test Suite",

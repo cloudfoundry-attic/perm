@@ -25,7 +25,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // Response message containing the gauge name and value
 type GaugeResponse struct {
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Types that are valid to be assigned to Value:
 	//	*GaugeResponse_LongValue
 	//	*GaugeResponse_DoubleValue
@@ -60,33 +60,22 @@ func (m *GaugeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GaugeResponse proto.InternalMessageInfo
 
-func (m *GaugeResponse) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
 type isGaugeResponse_Value interface {
 	isGaugeResponse_Value()
 }
 
 type GaugeResponse_LongValue struct {
-	LongValue int64 `protobuf:"varint,2,opt,name=long_value,json=longValue,proto3,oneof"`
+	LongValue int64 `protobuf:"varint,2,opt,name=long_value,json=longValue,oneof"`
 }
-
 type GaugeResponse_DoubleValue struct {
-	DoubleValue float64 `protobuf:"fixed64,3,opt,name=double_value,json=doubleValue,proto3,oneof"`
+	DoubleValue float64 `protobuf:"fixed64,3,opt,name=double_value,json=doubleValue,oneof"`
 }
-
 type GaugeResponse_StringValue struct {
-	StringValue string `protobuf:"bytes,4,opt,name=string_value,json=stringValue,proto3,oneof"`
+	StringValue string `protobuf:"bytes,4,opt,name=string_value,json=stringValue,oneof"`
 }
 
-func (*GaugeResponse_LongValue) isGaugeResponse_Value() {}
-
+func (*GaugeResponse_LongValue) isGaugeResponse_Value()   {}
 func (*GaugeResponse_DoubleValue) isGaugeResponse_Value() {}
-
 func (*GaugeResponse_StringValue) isGaugeResponse_Value() {}
 
 func (m *GaugeResponse) GetValue() isGaugeResponse_Value {
@@ -94,6 +83,13 @@ func (m *GaugeResponse) GetValue() isGaugeResponse_Value {
 		return m.Value
 	}
 	return nil
+}
+
+func (m *GaugeResponse) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
 }
 
 func (m *GaugeResponse) GetLongValue() int64 {
@@ -198,7 +194,7 @@ func _GaugeResponse_OneofSizer(msg proto.Message) (n int) {
 
 // Request message containing the gauge name
 type GaugeRequest struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -279,9 +275,8 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// MetricsServiceClient is the client API for MetricsService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for MetricsService service
+
 type MetricsServiceClient interface {
 	// Returns the values of all the gauges that are currently being maintained by
 	// the service
@@ -299,7 +294,7 @@ func NewMetricsServiceClient(cc *grpc.ClientConn) MetricsServiceClient {
 }
 
 func (c *metricsServiceClient) GetAllGauges(ctx context.Context, in *EmptyMessage, opts ...grpc.CallOption) (MetricsService_GetAllGaugesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_MetricsService_serviceDesc.Streams[0], "/grpc.testing.MetricsService/GetAllGauges", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_MetricsService_serviceDesc.Streams[0], c.cc, "/grpc.testing.MetricsService/GetAllGauges", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -332,14 +327,15 @@ func (x *metricsServiceGetAllGaugesClient) Recv() (*GaugeResponse, error) {
 
 func (c *metricsServiceClient) GetGauge(ctx context.Context, in *GaugeRequest, opts ...grpc.CallOption) (*GaugeResponse, error) {
 	out := new(GaugeResponse)
-	err := c.cc.Invoke(ctx, "/grpc.testing.MetricsService/GetGauge", in, out, opts...)
+	err := grpc.Invoke(ctx, "/grpc.testing.MetricsService/GetGauge", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// MetricsServiceServer is the server API for MetricsService service.
+// Server API for MetricsService service
+
 type MetricsServiceServer interface {
 	// Returns the values of all the gauges that are currently being maintained by
 	// the service

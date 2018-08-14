@@ -47,7 +47,7 @@ var _ = Describe("Server", func() {
 
 			server.RegisterReporters(reporterA, reporterB)
 
-			forwardingReporter = NewForwardingReporter(config.DefaultReporterConfigType{}, server.Address(), &http.Client{}, &fakeOutputInterceptor{}, nil, "")
+			forwardingReporter = NewForwardingReporter(server.Address(), &http.Client{}, &fakeOutputInterceptor{})
 
 			suiteSummary = &types.SuiteSummary{
 				SuiteDescription: "My Test Suite",

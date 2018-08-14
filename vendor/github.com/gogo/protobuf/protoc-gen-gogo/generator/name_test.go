@@ -59,10 +59,9 @@ func TestCamelCase(t *testing.T) {
 
 func TestGoPackageOption(t *testing.T) {
 	tests := []struct {
-		in      string
-		impPath GoImportPath
-		pkg     GoPackageName
-		ok      bool
+		in           string
+		impPath, pkg string
+		ok           bool
 	}{
 		{"", "", "", false},
 		{"foo", "", "foo", true},

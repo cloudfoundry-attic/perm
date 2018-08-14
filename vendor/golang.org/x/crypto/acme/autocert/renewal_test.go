@@ -23,10 +23,10 @@ import (
 
 func TestRenewalNext(t *testing.T) {
 	now := time.Now()
-	man := &Manager{
-		RenewBefore: 7 * 24 * time.Hour,
-		nowFunc:     func() time.Time { return now },
-	}
+	timeNow = func() time.Time { return now }
+	defer func() { timeNow = time.Now }()
+
+	man := &Manager{RenewBefore: 7 * 24 * time.Hour}
 	defer man.stopRenew()
 	tt := []struct {
 		expiry   time.Time
@@ -207,7 +207,7 @@ func TestRenewFromCacheAlreadyRenewed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newLeaf, err := validCert(exampleCertKey, [][]byte{newCert}, newKey, now)
+	newLeaf, err := validCert(exampleCertKey, [][]byte{newCert}, newKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func TestRenewFromCacheAlreadyRenewed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	oldLeaf, err := validCert(exampleCertKey, [][]byte{oldCert}, key, now)
+	oldLeaf, err := validCert(exampleCertKey, [][]byte{oldCert}, key)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -31,9 +31,9 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/internal/leakcheck"
-	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/leakcheck"
+	"google.golang.org/grpc/transport"
 )
 
 var (
@@ -105,13 +105,12 @@ func (h *testStreamHandler) handleStream(t *testing.T, s *transport.Stream) {
 		}
 	}
 	// send a response back to end the stream.
-	data, err := encode(testCodec{}, &expectedResponse)
+	hdr, data, err := encode(testCodec{}, &expectedResponse, nil, nil, nil)
 	if err != nil {
 		t.Errorf("Failed to encode the response: %v", err)
 		return
 	}
-	hdr, payload := msgHeader(data, nil)
-	h.t.Write(s, hdr, payload, &transport.Options{})
+	h.t.Write(s, hdr, data, &transport.Options{})
 	h.t.WriteStatus(s, status.New(codes.OK, ""))
 }
 
