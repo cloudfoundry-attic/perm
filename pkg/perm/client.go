@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
@@ -48,7 +49,9 @@ func Dial(addr string, dialOpts ...DialOption) (*Client, error) {
 		dialOpt(opts)
 	}
 
-	var grpcOpts []grpc.DialOption
+	grpcOpts := []grpc.DialOption{
+		grpc.WithBalancerName(roundrobin.Name),
+	}
 
 	if opts.transportCredentials != nil {
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(opts.transportCredentials))
