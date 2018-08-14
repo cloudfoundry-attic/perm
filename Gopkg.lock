@@ -454,6 +454,7 @@
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/clientcredentials",
     "google.golang.org/grpc",
+    "google.golang.org/grpc/balancer/roundrobin",
     "google.golang.org/grpc/codes",
     "google.golang.org/grpc/credentials",
     "google.golang.org/grpc/keepalive",
