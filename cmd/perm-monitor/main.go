@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -105,7 +106,7 @@ func main() {
 		}
 	}
 
-	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
+	addr := fmt.Sprintf("dns:///%s", net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port)))
 	opts := []perm.DialOption{perm.WithTLSConfig(&tls.Config{RootCAs: pool})}
 
 	if parserOpts.Perm.RequireAuth {
