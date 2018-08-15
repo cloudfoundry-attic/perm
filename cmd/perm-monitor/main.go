@@ -35,8 +35,8 @@ type options struct {
 }
 
 type permOptions struct {
-	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" required:"true"`
-	Port          int                    `long:"port" description:"Port used to connect to Perm" required:"true"`
+	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" default:"localhost"`
+	Port          int                    `long:"port" description:"Port used to connect to Perm" default:"6283"`
 	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path(s) of Perm's CA certificate (and UAA's CA if --require-auth)"`
 	RequireAuth   bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
 	TokenURL      string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
@@ -45,8 +45,8 @@ type permOptions struct {
 }
 
 type statsDOptions struct {
-	Hostname string `long:"hostname" description:"Hostname used to connect to StatsD server" required:"true"`
-	Port     int    `long:"port" description:"Port used to connect to StatsD server" required:"true"`
+	Hostname string `long:"hostname" description:"Hostname used to connect to StatsD server" default:"localhost"`
+	Port     int    `long:"port" description:"Port used to connect to StatsD server" default:"8125"`
 }
 
 type probeOptions struct {
