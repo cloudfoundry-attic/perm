@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
@@ -37,7 +37,7 @@ func (o *DBFlag) IsInMemory() bool {
 	return o.Driver == "in-memory"
 }
 
-func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, error) {
+func (o *DBFlag) Connect(ctx context.Context, logger logx.Logger) (*sqlx.DB, error) {
 	if o.IsInMemory() {
 		return nil, errors.New("Connect() unsupported for in-memory driver")
 	}
@@ -46,13 +46,14 @@ func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, er
 		return nil, err
 	}
 
-	logger = logger.WithData(lager.Data{
-		"db_driver":   o.Driver,
-		"db_host":     o.Host,
-		"db_port":     o.Port,
-		"db_schema":   o.Schema,
-		"db_username": o.Username,
-	})
+	data := []logx.Data{
+		logx.Data{Key: "driver", Value: o.Driver},
+		logx.Data{Key: "host", Value: o.Host},
+		logx.Data{Key: "port", Value: o.Port},
+		logx.Data{Key: "schema", Value: o.Schema},
+		logx.Data{Key: "username", Value: o.Username},
+	}
+	logger = logger.WithData(data...)
 
 	dbOpts := []sqlx.DBOption{
 		sqlx.DBUsername(o.Username),
@@ -64,7 +65,7 @@ func (o *DBFlag) Connect(ctx context.Context, logger lager.Logger) (*sqlx.DB, er
 	}
 
 	if len(o.TLS.RootCAs) != 0 {
-		tlsLogger := logger.Session("create-sql-root-ca-pool")
+		tlsLogger := logger.WithName("create-sql-root-ca-pool")
 
 		var certs [][]byte
 		for _, cert := range o.TLS.RootCAs {

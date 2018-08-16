@@ -13,7 +13,6 @@ import (
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
@@ -68,8 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	l, _ := parserOpts.Logger.Logger("perm-monitor")
-	logger := lagerx.NewLogger(l)
+	logger := parserOpts.Logger.Logger("perm-monitor")
 
 	logger.Debug(starting)
 	defer logger.Debug(finished)

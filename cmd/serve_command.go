@@ -15,13 +15,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/cef"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/metrics/statsdx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
@@ -54,8 +53,7 @@ type statsDOptions struct {
 func (cmd ServeCommand) Execute([]string) error {
 	//TODO Figure out version dynamically
 	version := cef.Version("0.0.0")
-	logger, _ := cmd.Logger.Logger("perm")
-	logger = logger.Session("serve")
+	logger := cmd.Logger.Logger("perm")
 
 	var auditSink = ioutil.Discard
 	if cmd.AuditFilePath != "" {
@@ -73,9 +71,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		return hostErr
 	}
 
-	// TODO: use lagerx.Logger for the entire package instead of lager.Logger
-	errLogger := lagerx.NewLogger(logger)
-	securityLogger := cef.NewLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port, errLogger)
+	securityLogger := cef.NewLogger(auditSink, "cloud_foundry", "perm", version, cef.Hostname(hostname), cmd.Port, logger.WithName("cef"))
 
 	cert, certErr := tls.LoadX509KeyPair(cmd.TLSCertificate, cmd.TLSKey)
 	if certErr != nil {
@@ -87,7 +83,7 @@ func (cmd ServeCommand) Execute([]string) error {
 	}
 
 	serverOpts := []api.ServerOption{
-		api.WithLogger(lagerx.NewLogger(logger.Session("grpc-serve"))),
+		api.WithLogger(logger),
 		api.WithSecurityLogger(securityLogger),
 		api.WithTLSConfig(tlsConfig),
 		api.WithMaxConnectionIdle(cmd.MaxConnectionIdle),
@@ -97,8 +93,9 @@ func (cmd ServeCommand) Execute([]string) error {
 		statsDAddr := net.JoinHostPort(cmd.StatsD.Hostname, strconv.Itoa(cmd.StatsD.Port))
 		statsDClient, err := statsd.NewClient(statsDAddr, "")
 		if err != nil {
-			logger.Error("failed-to-connect-to-statsd", err, lager.Data{
-				"addr": statsDAddr,
+			logger.Error("failed-to-connect-to-statsd", err, logx.Data{
+				Key:   "address",
+				Value: statsDAddr,
 			})
 		} else {
 			defer statsDClient.Close()
@@ -115,10 +112,10 @@ func (cmd ServeCommand) Execute([]string) error {
 		}
 		defer conn.Close()
 
-		migrationLogger := logger.Session("verify-migrations")
+		migrationLogger := logger.WithName("verify-migrations")
 		if err := sqlx.VerifyAppliedMigrations(
 			context.Background(),
-			lagerx.NewLogger(migrationLogger),
+			migrationLogger,
 			conn,
 			migrations.TableName,
 			migrations.Migrations,
@@ -163,20 +160,20 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	listenInterface := cmd.Hostname
 	port := cmd.Port
-	listeningLogData := lager.Data{
-		"protocol":          "tcp",
-		"hostname":          listenInterface,
-		"port":              port,
-		"maxConnectionIdle": cmd.MaxConnectionIdle.String(),
+	listeningLogData := []logx.Data{
+		logx.Data{Key: "protocol", Value: "tcp"},
+		logx.Data{Key: "hostname", Value: listenInterface},
+		logx.Data{Key: "port", Value: port},
+		logx.Data{Key: "MaxConnectionIdle", Value: cmd.MaxConnectionIdle},
 	}
 
 	lis, err := net.Listen("tcp", net.JoinHostPort(listenInterface, strconv.Itoa(port)))
 	if err != nil {
-		logger.Error(failedToListen, err, listeningLogData)
+		logger.Error(failedToListen, err, listeningLogData...)
 		return err
 	}
 
-	logger.Debug(starting, listeningLogData)
+	logger.Debug(starting, listeningLogData...)
 
 	return server.Serve(lis)
 }

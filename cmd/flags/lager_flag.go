@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 )
 
 type LogLevel string
@@ -20,7 +22,7 @@ type LagerFlag struct {
 	LogLevel LogLevel `long:"log-level" default:"info" choice:"debug" choice:"info" choice:"error" choice:"fatal" description:"Minimum level of logs to see."`
 }
 
-func (f LagerFlag) Logger(component string) (lager.Logger, *lager.ReconfigurableSink) {
+func (f LagerFlag) Logger(component string) logx.Logger {
 	var minLagerLogLevel lager.LogLevel
 	switch f.LogLevel {
 	case LogLevelDebug:
@@ -40,5 +42,5 @@ func (f LagerFlag) Logger(component string) (lager.Logger, *lager.Reconfigurable
 	sink := lager.NewReconfigurableSink(lager.NewWriterSink(os.Stdout, lager.DEBUG), minLagerLogLevel)
 	logger.RegisterSink(sink)
 
-	return logger, sink
+	return lagerx.NewLogger(logger)
 }

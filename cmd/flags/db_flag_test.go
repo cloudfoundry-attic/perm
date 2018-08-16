@@ -3,25 +3,26 @@ package flags_test
 import (
 	"context"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"code.cloudfoundry.org/perm/cmd/flags"
+	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 )
 
 var _ = Describe("DBFlag", func() {
 	var (
 		ctx    context.Context
-		logger lager.Logger
+		logger logx.Logger
 
 		flag *flags.DBFlag
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		logger = lagertest.NewTestLogger("flags")
+		logger = lagerx.NewLogger(lagertest.NewTestLogger("flags"))
 
 		flag = &flags.DBFlag{
 			Driver:   "mysql",
