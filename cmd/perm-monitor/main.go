@@ -14,9 +14,9 @@ import (
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
+	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/monitor"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
-	"code.cloudfoundry.org/perm/pkg/monitor/stats"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
@@ -141,7 +141,7 @@ func main() {
 	//////////////////////
 	// Setup Probe
 	//////////////////////
-	histogram := stats.NewHistogram(stats.HistogramOptions{
+	histogram := metrics.NewHistogram(metrics.HistogramOptions{
 		Name:        "perm.probe.responses.timing",
 		Buckets:     []float64{50, 90, 95, 99, 99.9},
 		MaxDuration: parserOpts.Probe.Timeout,

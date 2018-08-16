@@ -1,9 +1,9 @@
-package stats_test
+package metrics_test
 
 import (
 	"time"
 
-	. "code.cloudfoundry.org/perm/pkg/monitor/stats"
+	. "code.cloudfoundry.org/perm/pkg/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

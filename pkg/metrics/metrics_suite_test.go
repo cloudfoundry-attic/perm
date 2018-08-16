@@ -1,4 +1,4 @@
-package stats_test
+package metrics_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestStats(t *testing.T) {
+func TestMetrics(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Stats Suite")
+	RunSpecs(t, "Metrics Suite")
 }
