@@ -16,12 +16,13 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
 	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/permstats"
-	"code.cloudfoundry.org/perm/pkg/permstats/permstatsfakes"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gstruct"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 	jose "gopkg.in/square/go-jose.v2"
@@ -80,14 +81,14 @@ var (
 
 func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
-		serverOpts  []api.ServerOption
-		clientConf  clientConfig
-		fakeStatter *permstatsfakes.FakeStatter
+		serverOpts []api.ServerOption
+		clientConf clientConfig
+		statter    *testmetrics.Statter
 	)
 
 	BeforeEach(func() {
 		serverOpts = serverOptsFactory()
-		fakeStatter = new(permstatsfakes.FakeStatter)
+		statter = testmetrics.NewStatter()
 
 		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
 		Expect(err).NotTo(HaveOccurred())
@@ -99,7 +100,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		serverOpts = append(
 			serverOpts,
 			api.WithTLSConfig(permServerTLSConfig),
-			api.WithStats(permstats.NewHandler(fakeStatter)),
+			api.WithStats(permstats.NewHandler(statter)),
 		)
 
 		rootCAPool := x509.NewCertPool()
@@ -421,43 +422,43 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			})
 
 			It("records request count", func() {
-				Eventually(fakeStatter.IncCallCount(), eventuallyTimeout).Should(Equal(1))
-				methodName, increment, rate := fakeStatter.IncArgsForCall(0)
-				Expect(methodName).To(Equal("perm.count.CreateRole"))
-				Expect(increment).To(Equal(int64(1)))
-				Expect(rate).To(Equal(float32(1)))
+				Eventually(statter.IncCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.IncCall{
+					Metric: "perm.count.CreateRole",
+					Value:  1,
+					Rate:   1,
+				}))
 			})
 
 			It("records the time taken to serve the rpc call", func() {
-				Eventually(fakeStatter.TimingDurationCallCount(), eventuallyTimeout).Should(Equal(1))
-				methodName, duration, rate := fakeStatter.TimingDurationArgsForCall(0)
-				Expect(methodName).To(Equal("perm.requestduration.CreateRole"))
-				Expect(duration).To(BeNumerically(">", 0))
-				Expect(rate).To(Equal(float32(1)))
+				Eventually(statter.TimingDurationCalls(), eventuallyTimeout).Should(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
+					"Metric": Equal("perm.requestduration.CreateRole"),
+					"Value":  BeNumerically(">", 0),
+					"Rate":   BeEquivalentTo(1),
+				})))
 			})
 
 			It("records request size", func() {
-				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
-				methodName, size, rate := fakeStatter.GaugeArgsForCall(0)
-				Expect(methodName).To(Equal("perm.requestsize.CreateRole"))
-				Expect(size).To(Equal(int64(116))) //This is the length of Create Role request
-				Expect(rate).To(Equal(float32(1)))
+				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
+					Metric: "perm.requestsize.CreateRole",
+					Value:  116, // This is the length of CreateRole request
+					Rate:   1,
+				}))
 			})
 
 			It("records response size", func() {
-				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
-				methodName, size, rate := fakeStatter.GaugeArgsForCall(1)
-				Expect(methodName).To(Equal("perm.responsesize.CreateRole"))
-				Expect(size).To(Equal(int64(40))) //This is the length of Create Role response
-				Expect(rate).To(Equal(float32(1)))
+				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
+					Metric: "perm.responsesize.CreateRole",
+					Value:  40, // This is the length of CreateRole response
+					Rate:   1,
+				}))
 			})
 
 			It("records success", func() {
-				Eventually(fakeStatter.GaugeCallCount(), eventuallyTimeout).Should(Equal(3))
-				methodName, increment, rate := fakeStatter.GaugeArgsForCall(2)
-				Expect(methodName).To(Equal("perm.success.CreateRole"))
-				Expect(increment).To(Equal(int64(1)))
-				Expect(rate).To(Equal(float32(1)))
+				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
+					Metric: "perm.success.CreateRole",
+					Value:  1,
+					Rate:   1,
+				}))
 			})
 		})
 	})
