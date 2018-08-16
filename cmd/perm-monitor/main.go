@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -23,6 +22,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"google.golang.org/grpc/resolver"
 )
 
 type options struct {
@@ -58,6 +58,7 @@ type probeOptions struct {
 }
 
 func main() {
+	resolver.SetDefaultScheme("dns")
 	parserOpts := &options{}
 	parser := flags.NewParser(parserOpts, flags.Default)
 	parser.NamespaceDelimiter = "-"
@@ -106,7 +107,7 @@ func main() {
 		}
 	}
 
-	addr := fmt.Sprintf("dns:///%s", net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port)))
+	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
 	opts := []perm.DialOption{perm.WithTLSConfig(&tls.Config{RootCAs: pool})}
 
 	if parserOpts.Perm.RequireAuth {
