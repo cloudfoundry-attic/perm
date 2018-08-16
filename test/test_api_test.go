@@ -425,7 +425,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Eventually(statter.IncCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.IncCall{
 					Metric: "perm.count.CreateRole",
 					Value:  1,
-					Rate:   1,
 				}))
 			})
 
@@ -433,7 +432,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Eventually(statter.TimingDurationCalls(), eventuallyTimeout).Should(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
 					"Metric": Equal("perm.requestduration.CreateRole"),
 					"Value":  BeNumerically(">", 0),
-					"Rate":   BeEquivalentTo(1),
 				})))
 			})
 
@@ -441,7 +439,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
 					Metric: "perm.requestsize.CreateRole",
 					Value:  116, // This is the length of CreateRole request
-					Rate:   1,
 				}))
 			})
 
@@ -449,7 +446,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
 					Metric: "perm.responsesize.CreateRole",
 					Value:  40, // This is the length of CreateRole response
-					Rate:   1,
 				}))
 			})
 
@@ -457,7 +453,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
 					Metric: "perm.success.CreateRole",
 					Value:  1,
-					Rate:   1,
 				}))
 			})
 		})

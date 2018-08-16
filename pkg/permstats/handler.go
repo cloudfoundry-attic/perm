@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	methodNameKey   = "PermRPCMethodName"
-	statsSampleRate = 1
+	methodNameKey = "PermRPCMethodName"
 )
 
 type Handler struct {
@@ -28,18 +27,18 @@ func (h *Handler) HandleRPC(c context.Context, rpcStats stats.RPCStats) {
 
 	switch s := rpcStats.(type) {
 	case *stats.InHeader:
-		h.statter.Inc("perm.count."+methodName, 1, statsSampleRate)
+		h.statter.Inc("perm.count."+methodName, 1)
 	case *stats.End:
-		h.statter.TimingDuration("perm.requestduration."+methodName, s.EndTime.Sub(s.BeginTime), statsSampleRate)
+		h.statter.TimingDuration("perm.requestduration."+methodName, s.EndTime.Sub(s.BeginTime))
 		success := int64(0)
 		if s.Error == nil {
 			success = 1
 		}
-		h.statter.Gauge("perm.success."+methodName, success, statsSampleRate)
+		h.statter.Gauge("perm.success."+methodName, success)
 	case *stats.InPayload:
-		h.statter.Gauge("perm.requestsize."+methodName, int64(s.Length), statsSampleRate)
+		h.statter.Gauge("perm.requestsize."+methodName, int64(s.Length))
 	case *stats.OutPayload:
-		h.statter.Gauge("perm.responsesize."+methodName, int64(s.Length), statsSampleRate)
+		h.statter.Gauge("perm.responsesize."+methodName, int64(s.Length))
 	}
 }
 

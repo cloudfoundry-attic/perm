@@ -22,6 +22,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
+	"code.cloudfoundry.org/perm/pkg/metrics/statsdx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/permstats"
@@ -94,13 +95,15 @@ func (cmd ServeCommand) Execute([]string) error {
 
 	if cmd.StatsD.Hostname != "" {
 		statsDAddr := net.JoinHostPort(cmd.StatsD.Hostname, strconv.Itoa(cmd.StatsD.Port))
-		statter, err := statsd.NewClient(statsDAddr, "")
+		statsDClient, err := statsd.NewClient(statsDAddr, "")
 		if err != nil {
 			logger.Error("failed-to-connect-to-statsd", err, lager.Data{
 				"addr": statsDAddr,
 			})
 		} else {
-			defer statter.Close()
+			defer statsDClient.Close()
+
+			statter := statsdx.NewStatter(logger.WithName("statsd"), statsDClient)
 			serverOpts = append(serverOpts, api.WithStats(permstats.NewHandler(statter)))
 		}
 	}
