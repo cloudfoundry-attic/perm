@@ -75,6 +75,7 @@ func (db *TestMySQLDB) Create(migrations ...sqlx.Migration) error {
 		_ = db.Drop()
 		return err
 	}
+	defer conn.Close()
 
 	logger := lagerx.NewLogger(lagertest.NewTestLogger("test-db"))
 	err = sqlx.ApplyMigrations(context.Background(), logger, conn, "migrations", migrations)
@@ -114,6 +115,7 @@ func (db *TestMySQLDB) Truncate(truncateStmts ...string) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	for _, stmt := range truncateStmts {
 		if _, err = conn.Exec(stmt); err != nil {
