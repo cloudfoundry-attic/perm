@@ -203,10 +203,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 
 			clientConf.addr = listener.Addr().String()
 
-			go func() {
-				err := subject.Serve(listener)
-				Expect(err).NotTo(HaveOccurred())
-			}()
+			go subject.Serve(listener)
 		})
 
 		AfterEach(func() {
@@ -389,10 +386,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 			client, err = perm.Dial(clientConf.addr, perm.WithTLSConfig(clientConf.tlsConfig))
 			Expect(err).NotTo(HaveOccurred())
 
-			go func() {
-				err := subject.Serve(listener)
-				Expect(err).NotTo(HaveOccurred())
-			}()
+			go subject.Serve(listener)
 		})
 
 		AfterEach(func() {
@@ -438,10 +432,7 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 		client, err = perm.Dial(addr, clientOpts...)
 		Expect(err).NotTo(HaveOccurred())
 
-		go func() {
-			err := server.Serve(listener)
-			Expect(err).NotTo(HaveOccurred())
-		}()
+		go server.Serve(listener)
 	})
 
 	AfterEach(func() {
@@ -1102,10 +1093,7 @@ func testEndpointFunctionality(serverOptsFactory func() []api.ServerOption, clie
 		client, err = perm.Dial(addr, clientOpts...)
 		Expect(err).NotTo(HaveOccurred())
 
-		go func() {
-			err := server.Serve(listener)
-			Expect(err).NotTo(HaveOccurred())
-		}()
+		go server.Serve(listener)
 	})
 
 	AfterEach(func() {
