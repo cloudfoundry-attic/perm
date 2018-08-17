@@ -28,8 +28,7 @@ import (
 )
 
 const (
-	eventuallyTimeout = 2
-	validPrivateKey   = `-----BEGIN RSA PRIVATE KEY-----
+	validPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA918Nv+kmlGF1uz2MMJaJ8TFXzV9E5bFVVotKHxHl1HEQhjxF
 FVLkBiagjh61pu/eC5tjDdyA0gkYWpLfEvAnAatV/t+HxggjGb8fpA0babKztGfz
 RG59GmquRqzQQFwmpr/NClLdCcg0npmStJeGCFh0PRH/TVVClDs6dcUsoIDFSjvL
@@ -82,12 +81,10 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 	var (
 		serverOpts []api.ServerOption
 		clientConf clientConfig
-		statter    *testmetrics.Statter
 	)
 
 	BeforeEach(func() {
 		serverOpts = serverOptsFactory()
-		statter = testmetrics.NewStatter()
 
 		permServerCert, err := tls.X509KeyPair([]byte(testCert), []byte(testCertKey))
 		Expect(err).NotTo(HaveOccurred())
@@ -99,7 +96,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		serverOpts = append(
 			serverOpts,
 			api.WithTLSConfig(permServerTLSConfig),
-			api.WithStatter(statter),
 		)
 
 		rootCAPool := x509.NewCertPool()
@@ -407,40 +403,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		})
 
 		testCoreFunctionality(func() []api.ServerOption { return serverOpts }, func() []perm.DialOption { return nil })
-
-		Describe("Statter", func() {
-			BeforeEach(func() {
-				role := uuid.NewV4().String()
-				permission := perm.Permission{
-					Action:          uuid.NewV4().String(),
-					ResourcePattern: uuid.NewV4().String(),
-				}
-				returnedRole, err := client.CreateRole(context.Background(), role, permission)
-				Expect(returnedRole.Name).To(Equal(role))
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("records request count", func() {
-				Eventually(statter.IncCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.IncCall{
-					Metric: "perm.count.CreateRole",
-					Value:  1,
-				}))
-			})
-
-			It("records the time taken to serve the rpc call", func() {
-				Eventually(statter.TimingDurationCalls(), eventuallyTimeout).Should(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
-					"Metric": Equal("perm.requestduration.CreateRole"),
-					"Value":  BeNumerically(">", 0),
-				})))
-			})
-
-			It("records success", func() {
-				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
-					Metric: "perm.success.CreateRole",
-					Value:  1,
-				}))
-			})
-		})
 	})
 }
 
@@ -490,6 +452,11 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#CreateRole", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "CreateRole", func(client *perm.Client) {
+			_, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("returns the new role", func() {
 			name := uuid.NewV4().String()
 
@@ -511,6 +478,14 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#DeleteRole", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "DeleteRole", func(client *perm.Client) {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.DeleteRole(context.Background(), role.Name)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("succeeds when the role exists", func() {
 			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).NotTo(HaveOccurred())
@@ -527,6 +502,17 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#AssignRole", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "AssignRole", func(client *perm.Client) {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRole(context.Background(), role.Name, perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("succeeds when the role exists and the actor has not yet been assigned to it", func() {
 			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).NotTo(HaveOccurred())
@@ -623,6 +609,16 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("AssignRoleToGroup", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "AssignRoleToGroup", func(client *perm.Client) {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.AssignRoleToGroup(context.Background(), role.Name, perm.Group{
+				ID: uuid.NewV4().String(),
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("succeeds when the role exists and the group has not yet been assigned to it", func() {
 			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
 			Expect(err).NotTo(HaveOccurred())
@@ -661,6 +657,22 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#UnassignRole", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "UnassignRole", func(client *perm.Client) {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			actor := perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRole(context.Background(), role.Name, actor)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("succeeds when the role exists and the actor has been assigned to it", func() {
 			actor := perm.Actor{
 				ID:        uuid.NewV4().String(),
@@ -721,6 +733,21 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#UnassignRoleFromGroup", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "UnassignRoleFromGroup", func(client *perm.Client) {
+			role, err := client.CreateRole(context.Background(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+
+			group := perm.Group{
+				ID: uuid.NewV4().String(),
+			}
+
+			err = client.AssignRoleToGroup(context.Background(), role.Name, group)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = client.UnassignRoleFromGroup(context.Background(), role.Name, group)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("succeeds when the role exists and the group has been assigned to it", func() {
 			group := perm.Group{
 				ID: uuid.NewV4().String(),
@@ -777,6 +804,14 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#HasPermission", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "HasPermission", func(client *perm.Client) {
+			_, err := client.HasPermission(context.Background(), perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}, uuid.NewV4().String(), uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("returns true when the actor has a single role that matches the permission", func() {
 			permission := perm.Permission{
 				Action:          "test.read",
@@ -905,6 +940,14 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 	})
 
 	Describe("#ListResourcePatterns", func() {
+		testEndpointFunctionality(serverOptsFactory, clientOptsFactory, "ListResourcePatterns", func(client *perm.Client) {
+			_, err := client.ListResourcePatterns(context.Background(), perm.Actor{
+				ID:        uuid.NewV4().String(),
+				Namespace: uuid.NewV4().String(),
+			}, uuid.NewV4().String())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("returns the list of resource patterns on which the actor can perform the action", func() {
 			action := uuid.NewV4().String()
 			permission1 := perm.Permission{
@@ -1019,6 +1062,91 @@ func testCoreFunctionality(serverOptsFactory func() []api.ServerOption, clientOp
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resourcePatterns).To(BeEmpty())
+		})
+	})
+}
+
+func testEndpointFunctionality(serverOptsFactory func() []api.ServerOption, clientOptsFactory func() []perm.DialOption, endpoint string, handler func(*perm.Client)) {
+	var (
+		statter *testmetrics.Statter
+
+		serverOpts []api.ServerOption
+		clientOpts []perm.DialOption
+
+		server *api.Server
+		client *perm.Client
+	)
+
+	BeforeEach(func() {
+		statter = testmetrics.NewStatter()
+
+		serverOpts = append(serverOptsFactory(), api.WithStatter(statter))
+		clientOpts = clientOptsFactory()
+
+		server = api.NewServer(serverOpts...)
+
+		listener, err := net.Listen("tcp", "localhost:")
+		Expect(err).NotTo(HaveOccurred())
+
+		rootCAPool := x509.NewCertPool()
+		ok := rootCAPool.AppendCertsFromPEM([]byte(testCA))
+		Expect(ok).To(BeTrue())
+
+		addr := listener.Addr().String()
+		tlsConfig := &tls.Config{
+			RootCAs: rootCAPool,
+		}
+
+		clientOpts = append(clientOpts, perm.WithTLSConfig(tlsConfig))
+
+		client, err = perm.Dial(addr, clientOpts...)
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			err := server.Serve(listener)
+			Expect(err).NotTo(HaveOccurred())
+		}()
+	})
+
+	AfterEach(func() {
+		server.Stop()
+
+		err := client.Close()
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	Describe("recording server metrics", func() {
+		It("increases the request count", func() {
+			handler(client)
+
+			Expect(statter.IncCalls()).To(ContainElement(testmetrics.IncCall{
+				Metric: fmt.Sprintf("perm.count.%s", endpoint),
+				Value:  1,
+			}))
+		})
+
+		It("records the time taken to serve the request", func() {
+			start := time.Now()
+			handler(client)
+			end := time.Since(start)
+
+			Expect(statter.TimingDurationCalls()).To(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
+				"Metric": Equal(fmt.Sprintf("perm.requestduration.%s", endpoint)),
+				"Value":  BeNumerically(">", 0),
+			})))
+			Expect(statter.TimingDurationCalls()).To(ContainElement(gstruct.MatchAllFields(gstruct.Fields{
+				"Metric": Equal(fmt.Sprintf("perm.requestduration.%s", endpoint)),
+				"Value":  BeNumerically("<=", end),
+			})))
+		})
+
+		It("records success", func() {
+			handler(client)
+
+			Expect(statter.GaugeCalls()).To(ContainElement(testmetrics.GaugeCall{
+				Metric: fmt.Sprintf("perm.success.%s", endpoint),
+				Value:  1,
+			}))
 		})
 	})
 }
