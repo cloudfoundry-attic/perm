@@ -24,7 +24,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/metrics/statsdx"
 	"code.cloudfoundry.org/perm/pkg/migrations"
 	"code.cloudfoundry.org/perm/pkg/permauth"
-	"code.cloudfoundry.org/perm/pkg/permstats"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/cactus/go-statsd-client/statsd"
 	oidc "github.com/coreos/go-oidc"
@@ -101,7 +100,7 @@ func (cmd ServeCommand) Execute([]string) error {
 			defer statsDClient.Close()
 
 			statter := statsdx.NewStatter(logger.WithName("statsd"), statsDClient)
-			serverOpts = append(serverOpts, api.WithStats(permstats.NewHandler(statter)))
+			serverOpts = append(serverOpts, api.WithStatter(statter))
 		}
 	}
 

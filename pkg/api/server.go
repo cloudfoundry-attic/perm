@@ -10,14 +10,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
-	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
+	"code.cloudfoundry.org/perm/pkg/api/rpc/interceptors"
 	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -62,6 +63,10 @@ func NewServer(opts ...ServerOption) *Server {
 		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider, config.securityLogger))
 	}
 
+	if config.statter != nil {
+		unaryServerInterceptors = append(unaryServerInterceptors, interceptors.MetricsInterceptor(config.statter))
+	}
+
 	unaryMiddleware := grpc_middleware.ChainUnaryServer(unaryServerInterceptors...)
 
 	unaryInterceptor := grpc.UnaryInterceptor(unaryMiddleware)
@@ -73,10 +78,6 @@ func NewServer(opts ...ServerOption) *Server {
 
 	if config.credentials != nil {
 		serverOpts = append(serverOpts, grpc.Creds(config.credentials))
-	}
-
-	if config.statsHandler != nil {
-		serverOpts = append(serverOpts, grpc.StatsHandler(config.statsHandler))
 	}
 
 	server := grpc.NewServer(serverOpts...)
@@ -160,9 +161,9 @@ func WithDBConn(conn *sqlx.DB) ServerOption {
 	}
 }
 
-func WithStats(handler stats.Handler) ServerOption {
+func WithStatter(statter metrics.Statter) ServerOption {
 	return func(o *serverConfig) {
-		o.statsHandler = handler
+		o.statter = statter
 	}
 }
 
@@ -170,9 +171,9 @@ type serverConfig struct {
 	logger         logx.Logger
 	securityLogger logx.SecurityLogger
 
-	credentials  credentials.TransportCredentials
-	keepalive    keepalive.ServerParameters
-	statsHandler stats.Handler
+	credentials credentials.TransportCredentials
+	keepalive   keepalive.ServerParameters
+	statter     metrics.Statter
 
 	oidcProvider permauth.OIDCProvider
 

@@ -18,7 +18,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
 	"code.cloudfoundry.org/perm/pkg/perm"
-	"code.cloudfoundry.org/perm/pkg/permstats"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -100,7 +99,7 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 		serverOpts = append(
 			serverOpts,
 			api.WithTLSConfig(permServerTLSConfig),
-			api.WithStats(permstats.NewHandler(statter)),
+			api.WithStatter(statter),
 		)
 
 		rootCAPool := x509.NewCertPool()
@@ -433,20 +432,6 @@ func testAPI(serverOptsFactory func() []api.ServerOption) {
 					"Metric": Equal("perm.requestduration.CreateRole"),
 					"Value":  BeNumerically(">", 0),
 				})))
-			})
-
-			It("records request size", func() {
-				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
-					Metric: "perm.requestsize.CreateRole",
-					Value:  116, // This is the length of CreateRole request
-				}))
-			})
-
-			It("records response size", func() {
-				Eventually(statter.GaugeCalls(), eventuallyTimeout).Should(ContainElement(testmetrics.GaugeCall{
-					Metric: "perm.responsesize.CreateRole",
-					Value:  40, // This is the length of CreateRole response
-				}))
 			})
 
 			It("records success", func() {
