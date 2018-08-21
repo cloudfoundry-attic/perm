@@ -8,12 +8,7 @@ import (
 type Tx struct {
 	tx *sql.Tx
 
-	driver  DBDriver
-	version string
-}
-
-func (tx *Tx) Version() string {
-	return tx.version
+	driver DBDriver
 }
 
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {

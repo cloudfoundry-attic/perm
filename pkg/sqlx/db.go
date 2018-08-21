@@ -60,8 +60,7 @@ func DBRootCAPool(rootCAPool *x509.CertPool) DBOption {
 type DB struct {
 	Conn *sql.DB
 
-	driver  DBDriver
-	version string
+	driver DBDriver
 }
 
 func Connect(driver DBDriver, options ...DBOption) (*DB, error) {
@@ -125,9 +124,8 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	}
 
 	return &Tx{
-		tx:      tx,
-		driver:  db.driver,
-		version: db.version,
+		tx:     tx,
+		driver: db.driver,
 	}, nil
 }
 
@@ -140,10 +138,6 @@ func (tx *Tx) QueryRow(query string, args ...interface{}) squirrel.RowScanner {
 }
 
 func open(driver DBDriver, cfg *dbConfig) (*DB, error) {
-	var (
-		version string
-	)
-
 	switch driver {
 	case DBDriverMySQL:
 		dataSourceName, err := cfg.dataSourceNameMySQL()
@@ -156,20 +150,9 @@ func open(driver DBDriver, cfg *dbConfig) (*DB, error) {
 			return nil, err
 		}
 
-		var (
-			unused    string
-			dbVersion string
-		)
-
-		if err = db.QueryRow(`SHOW VARIABLES LIKE 'version'`).Scan(&unused, &dbVersion); err != nil {
-			return nil, err
-		}
-		version = dbVersion
-
 		return &DB{
-			Conn:    db,
-			driver:  driver,
-			version: version,
+			Conn:   db,
+			driver: driver,
 		}, nil
 	default:
 		return nil, ErrUnsupportedSQLDriver
