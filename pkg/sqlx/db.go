@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"net"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -16,13 +15,9 @@ import (
 )
 
 type DBDriver string
-type DBFlavor string
 
 const (
 	DBDriverMySQL DBDriver = "mysql"
-
-	DBFlavorMySQL   = "mysql"
-	DBFlavorMariaDB = "mariadb"
 )
 
 type DBOption interface {
@@ -66,7 +61,6 @@ type DB struct {
 	Conn *sql.DB
 
 	driver  DBDriver
-	flavor  DBFlavor
 	version string
 }
 
@@ -133,7 +127,6 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return &Tx{
 		tx:      tx,
 		driver:  db.driver,
-		flavor:  db.flavor,
 		version: db.version,
 	}, nil
 }
@@ -149,7 +142,6 @@ func (tx *Tx) QueryRow(query string, args ...interface{}) squirrel.RowScanner {
 func open(driver DBDriver, cfg *dbConfig) (*DB, error) {
 	var (
 		version string
-		flavor  DBFlavor
 	)
 
 	switch driver {
@@ -169,29 +161,14 @@ func open(driver DBDriver, cfg *dbConfig) (*DB, error) {
 			dbVersion string
 		)
 
-		err = db.QueryRow(`SHOW VARIABLES LIKE 'version'`).Scan(&unused, &dbVersion)
-		// MySQL will error if the system table 'performance_schema.session_variables' doesn't exist
-		if err == nil {
-			mariadbVersionRegex := regexp.MustCompile("(.*)-MariaDB")
-
-			matches := mariadbVersionRegex.FindStringSubmatch(dbVersion)
-			if matches == nil {
-				// Not MariaDB
-				version = dbVersion
-			} else {
-				v := matches[1]
-
-				flavor = DBFlavorMariaDB
-				version = v
-			}
-		} else {
-			flavor = DBFlavorMySQL
+		if err = db.QueryRow(`SHOW VARIABLES LIKE 'version'`).Scan(&unused, &dbVersion); err != nil {
+			return nil, err
 		}
+		version = dbVersion
 
 		return &DB{
 			Conn:    db,
 			driver:  driver,
-			flavor:  flavor,
 			version: version,
 		}, nil
 	default:

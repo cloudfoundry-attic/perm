@@ -3,8 +3,6 @@ package migrations
 import (
 	"context"
 
-	"strings"
-
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
@@ -17,17 +15,6 @@ CREATE TABLE IF NOT EXISTS actor
   domain_id VARCHAR(511) NOT NULL,
   issuer VARCHAR(2047) NOT NULL,
   domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) STORED
-)
-`
-
-var createActorsTableMariaDB = `
-CREATE TABLE IF NOT EXISTS actor
-(
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  uuid BINARY(16) NOT NULL UNIQUE,
-  domain_id VARCHAR(511) NOT NULL,
-  issuer VARCHAR(2047) NOT NULL,
-  domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) PERSISTENT
 )
 `
 
@@ -48,11 +35,7 @@ func createActorsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) e
 
 	var err error
 
-	if tx.Flavor() == sqlx.DBFlavorMariaDB && strings.HasPrefix(tx.Version(), "10.1") {
-		_, err = tx.ExecContext(ctx, createActorsTableMariaDB)
-	} else {
-		_, err = tx.ExecContext(ctx, createActorsTable)
-	}
+	_, err = tx.ExecContext(ctx, createActorsTable)
 	if err != nil {
 		return err
 	}

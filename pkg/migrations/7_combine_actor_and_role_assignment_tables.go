@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"context"
-	"strings"
 
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
@@ -19,18 +18,6 @@ CREATE TABLE IF NOT EXISTS assignment
 	actor_id VARCHAR(511) NOT NULL,
 	actor_namespace VARCHAR(2047) NOT NULL,
   role_id_actor_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, actor_id, actor_namespace), 256)) VIRTUAL UNIQUE
-)
-`
-
-var createAssignmentTableMariaDB = `
-CREATE TABLE IF NOT EXISTS assignment
-(
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  uuid BINARY(16) NOT NULL UNIQUE,
-	role_id BIGINT NOT NULL,
-	actor_id VARCHAR(511) NOT NULL,
-	actor_namespace VARCHAR(2047) NOT NULL,
-  role_id_actor_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, actor_id, actor_namespace), 256)) PERSISTENT UNIQUE
 )
 `
 
@@ -54,11 +41,7 @@ func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger logx.Logg
 	defer logger.Debug(finished)
 	var err error
 
-	if tx.Flavor() == sqlx.DBFlavorMariaDB && strings.HasPrefix(tx.Version(), "10.1") {
-		_, err = tx.ExecContext(ctx, createAssignmentTableMariaDB)
-	} else {
-		_, err = tx.ExecContext(ctx, createAssignmentTable)
-	}
+	_, err = tx.ExecContext(ctx, createAssignmentTable)
 	if err != nil {
 		return err
 	}

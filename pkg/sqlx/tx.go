@@ -9,12 +9,7 @@ type Tx struct {
 	tx *sql.Tx
 
 	driver  DBDriver
-	flavor  DBFlavor
 	version string
-}
-
-func (tx *Tx) Flavor() DBFlavor {
-	return tx.flavor
 }
 
 func (tx *Tx) Version() string {
