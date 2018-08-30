@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/internal/protos"
 )
 
 func validateActor(actor *protos.Actor) error {

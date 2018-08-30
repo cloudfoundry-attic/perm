@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/internal/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"
 	"code.cloudfoundry.org/perm/pkg/api/repos/reposfakes"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"

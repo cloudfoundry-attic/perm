@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 
-	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/internal/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/repos/db"
 	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"

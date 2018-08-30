@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 
-	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/internal/protos"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
