@@ -5,10 +5,67 @@ import (
 
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/pkg/perm"
 	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
-func (s *DataService) AssignRole(
+func (s *Store) CreateRole(
+	ctx context.Context,
+	logger logx.Logger,
+	name string,
+	permissions ...perm.Permission,
+) (r perm.Role, err error) {
+	logger = logger.WithName("data-service")
+
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error(failedToStartTransaction, err)
+		return
+	}
+
+	defer func() {
+		if commitErr := sqlx.Commit(logger, tx, err); commitErr != nil {
+			err = commitErr
+		}
+	}()
+
+	var r2 role
+	r2, err = createRoleAndAssignPermissions(ctx, logger, tx, name, permissions...)
+	if err != nil {
+		return
+	}
+	r = r2.Role
+
+	return
+}
+
+func (s *Store) DeleteRole(
+	ctx context.Context,
+	logger logx.Logger,
+	roleName string,
+) error {
+	return deleteRole(ctx, logger.WithName("data-service"), s.conn, roleName)
+}
+
+func (s *Store) ListRolePermissions(
+	ctx context.Context,
+	logger logx.Logger,
+	query repos.ListRolePermissionsQuery,
+) ([]perm.Permission, error) {
+	p, err := listRolePermissions(ctx, logger.WithName("data-service"), s.conn, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var permissions []perm.Permission
+	for _, permission := range p {
+		permissions = append(permissions, permission.Permission)
+	}
+
+	return permissions, nil
+}
+
+func (s *Store) AssignRole(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -34,7 +91,7 @@ func (s *DataService) AssignRole(
 	return
 }
 
-func (s *DataService) AssignRoleToGroup(
+func (s *Store) AssignRoleToGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -59,7 +116,7 @@ func (s *DataService) AssignRoleToGroup(
 	return err
 }
 
-func (s *DataService) UnassignRole(
+func (s *Store) UnassignRole(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -85,7 +142,7 @@ func (s *DataService) UnassignRole(
 	return
 }
 
-func (s *DataService) UnassignRoleFromGroup(
+func (s *Store) UnassignRoleFromGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -109,7 +166,7 @@ func (s *DataService) UnassignRoleFromGroup(
 	return
 }
 
-func (s *DataService) HasRole(
+func (s *Store) HasRole(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasRoleQuery,
@@ -117,7 +174,7 @@ func (s *DataService) HasRole(
 	return hasRole(ctx, logger.WithName("data-service"), s.conn, query)
 }
 
-func (s *DataService) HasRoleForGroup(
+func (s *Store) HasRoleForGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasRoleForGroupQuery,

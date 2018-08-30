@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/logx"
 )
 
-func (s *DataService) HasPermission(
+func (s *Store) HasPermission(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasPermissionQuery,
@@ -15,7 +15,7 @@ func (s *DataService) HasPermission(
 	return hasPermission(ctx, logger.WithName("data-service"), s.conn, query)
 }
 
-func (s *DataService) ListResourcePatterns(
+func (s *Store) ListResourcePatterns(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.ListResourcePatternsQuery,

@@ -11,9 +11,9 @@ import (
 	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
 )
 
-var _ = Describe("DataService", func() {
+var _ = Describe("Store", func() {
 	var (
-		store *db.DataService
+		store *db.Store
 		conn  *sqlx.DB
 	)
 
@@ -23,7 +23,7 @@ var _ = Describe("DataService", func() {
 		conn, err = testDB.Connect()
 		Expect(err).NotTo(HaveOccurred())
 
-		store = db.NewDataService(conn)
+		store = db.NewStore(conn)
 	})
 
 	AfterEach(func() {

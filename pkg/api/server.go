@@ -87,7 +87,7 @@ func NewServer(opts ...ServerOption) *Server {
 	if config.conn == nil {
 		s = inmemory.NewInMemoryStore()
 	} else {
-		s = db.NewDataService(config.conn)
+		s = db.NewStore(config.conn)
 	}
 
 	roleServiceServer := rpc.NewRoleServiceServer(logger, config.securityLogger, s)

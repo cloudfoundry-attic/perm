@@ -13,12 +13,12 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-type DataService struct {
+type Store struct {
 	conn *sqlx.DB
 }
 
-func NewDataService(conn *sqlx.DB) *DataService {
-	return &DataService{
+func NewStore(conn *sqlx.DB) *Store {
+	return &Store{
 		conn: conn,
 	}
 }
