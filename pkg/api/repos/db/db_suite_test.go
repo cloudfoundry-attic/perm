@@ -2,7 +2,7 @@ package db_test
 
 import (
 	"code.cloudfoundry.org/perm/internal/migrations"
-	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
+	"code.cloudfoundry.org/perm/pkg/sqlx/testsqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -14,12 +14,12 @@ func TestDB(t *testing.T) {
 	RunSpecs(t, "DB Suite")
 }
 
-var testDB *sqlxtest.TestMySQLDB
+var testDB *testsqlx.TestMySQLDB
 
 var _ = BeforeSuite(func() {
 	var err error
 
-	testDB = sqlxtest.NewTestMySQLDB()
+	testDB = testsqlx.NewTestMySQLDB()
 	err = testDB.Create(migrations.Migrations...)
 	Expect(err).NotTo(HaveOccurred())
 })

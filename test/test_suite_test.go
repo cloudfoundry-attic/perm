@@ -2,7 +2,7 @@ package perm_test
 
 import (
 	"code.cloudfoundry.org/perm/internal/migrations"
-	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
+	"code.cloudfoundry.org/perm/pkg/sqlx/testsqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	testMySQLDB *sqlxtest.TestMySQLDB
+	testMySQLDB *testsqlx.TestMySQLDB
 )
 
 func TestPerm(t *testing.T) {
@@ -21,7 +21,7 @@ func TestPerm(t *testing.T) {
 var _ = BeforeSuite(func() {
 	var err error
 
-	testMySQLDB = sqlxtest.NewTestMySQLDB()
+	testMySQLDB = testsqlx.NewTestMySQLDB()
 
 	err = testMySQLDB.Create(migrations.Migrations...)
 	Expect(err).NotTo(HaveOccurred())

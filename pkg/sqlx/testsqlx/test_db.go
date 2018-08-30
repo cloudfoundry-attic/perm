@@ -1,4 +1,4 @@
-package sqlxtest
+package testsqlx
 
 import (
 	"strconv"
