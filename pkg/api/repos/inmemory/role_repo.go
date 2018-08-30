@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
-func (s *InMemoryStore) CreateRole(
+func (s *Store) CreateRole(
 	ctx context.Context,
 	logger logx.Logger,
 	name string,
@@ -27,7 +27,7 @@ func (s *InMemoryStore) CreateRole(
 	return role, nil
 }
 
-func (s *InMemoryStore) DeleteRole(
+func (s *Store) DeleteRole(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName string,
@@ -63,7 +63,7 @@ func (s *InMemoryStore) DeleteRole(
 	return nil
 }
 
-func (s *InMemoryStore) AssignRole(
+func (s *Store) AssignRole(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -97,7 +97,7 @@ func (s *InMemoryStore) AssignRole(
 	return nil
 }
 
-func (s *InMemoryStore) AssignRoleToGroup(
+func (s *Store) AssignRoleToGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -129,7 +129,7 @@ func (s *InMemoryStore) AssignRoleToGroup(
 	return nil
 }
 
-func (s *InMemoryStore) UnassignRole(
+func (s *Store) UnassignRole(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -166,7 +166,7 @@ func (s *InMemoryStore) UnassignRole(
 	return err
 }
 
-func (s *InMemoryStore) UnassignRoleFromGroup(
+func (s *Store) UnassignRoleFromGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	roleName,
@@ -201,7 +201,7 @@ func (s *InMemoryStore) UnassignRoleFromGroup(
 	return err
 }
 
-func (s *InMemoryStore) HasRole(
+func (s *Store) HasRole(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasRoleQuery,
@@ -230,7 +230,7 @@ func (s *InMemoryStore) HasRole(
 	return found, nil
 }
 
-func (s *InMemoryStore) HasRoleForGroup(
+func (s *Store) HasRoleForGroup(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasRoleForGroupQuery,
@@ -259,7 +259,7 @@ func (s *InMemoryStore) HasRoleForGroup(
 	return found, nil
 }
 
-func (s *InMemoryStore) ListRolePermissions(
+func (s *Store) ListRolePermissions(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.ListRolePermissionsQuery,

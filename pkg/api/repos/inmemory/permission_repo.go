@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
-func (s *InMemoryStore) HasPermission(
+func (s *Store) HasPermission(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.HasPermissionQuery,
@@ -63,7 +63,7 @@ func (s *InMemoryStore) HasPermission(
 	return false, nil
 }
 
-func (s *InMemoryStore) ListResourcePatterns(
+func (s *Store) ListResourcePatterns(
 	ctx context.Context,
 	logger logx.Logger,
 	query repos.ListResourcePatternsQuery,

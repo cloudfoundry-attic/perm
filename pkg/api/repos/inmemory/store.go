@@ -2,7 +2,7 @@ package inmemory
 
 import "code.cloudfoundry.org/perm/pkg/perm"
 
-type InMemoryStore struct {
+type Store struct {
 	roles       map[string]perm.Role
 	permissions map[string][]perm.Permission
 
@@ -10,8 +10,8 @@ type InMemoryStore struct {
 	groupAssignments map[perm.Group][]string
 }
 
-func NewInMemoryStore() *InMemoryStore {
-	return &InMemoryStore{
+func NewStore() *Store {
+	return &Store{
 		roles:            make(map[string]perm.Role),
 		assignments:      make(map[perm.Actor][]string),
 		groupAssignments: make(map[perm.Group][]string),

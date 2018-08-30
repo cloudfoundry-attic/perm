@@ -27,7 +27,7 @@ var _ = Describe("PermissionServiceServer", func() {
 		logger            logx.Logger
 		securityLogger    *logxfakes.FakeSecurityLogger
 
-		inMemoryStore *inmemory.InMemoryStore
+		inMemoryStore *inmemory.Store
 
 		ctx context.Context
 	)
@@ -35,7 +35,7 @@ var _ = Describe("PermissionServiceServer", func() {
 	BeforeEach(func() {
 		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 		securityLogger = new(logxfakes.FakeSecurityLogger)
-		inMemoryStore = inmemory.NewInMemoryStore()
+		inMemoryStore = inmemory.NewStore()
 
 		ctx = context.Background()
 		roleServiceServer = rpc.NewRoleServiceServer(logger, securityLogger, inMemoryStore)

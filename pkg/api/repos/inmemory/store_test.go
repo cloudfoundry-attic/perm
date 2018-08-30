@@ -8,12 +8,13 @@ import (
 	. "github.com/onsi/ginkgo"
 )
 
-var _ = Describe("InMemoryStore", func() {
+var _ = Describe("Store", func() {
 	var (
-		store *InMemoryStore
+		store *Store
 	)
+
 	BeforeEach(func() {
-		store = NewInMemoryStore()
+		store = NewStore()
 	})
 
 	BehavesLikeARoleRepo(func() repos.RoleRepo { return store })

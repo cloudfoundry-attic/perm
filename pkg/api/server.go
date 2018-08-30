@@ -85,7 +85,7 @@ func NewServer(opts ...ServerOption) *Server {
 
 	var s store
 	if config.conn == nil {
-		s = inmemory.NewInMemoryStore()
+		s = inmemory.NewStore()
 	} else {
 		s = db.NewStore(config.conn)
 	}
