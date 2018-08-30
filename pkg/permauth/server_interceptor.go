@@ -3,8 +3,8 @@ package permauth
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

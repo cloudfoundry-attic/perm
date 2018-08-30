@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	uuid "github.com/satori/go.uuid"
 )
 

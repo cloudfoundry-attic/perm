@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/perm/pkg/perm"
+	"code.cloudfoundry.org/perm"
 )
 
 //go:generate counterfeiter . Client

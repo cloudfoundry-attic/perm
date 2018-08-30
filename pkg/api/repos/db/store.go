@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
 	"github.com/satori/go.uuid"

@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"code.cloudfoundry.org/perm/pkg/perm"
+	"code.cloudfoundry.org/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

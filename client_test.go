@@ -1,7 +1,7 @@
 package perm_test
 
 import (
-	. "code.cloudfoundry.org/perm/pkg/perm"
+	. "code.cloudfoundry.org/perm"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -1,6 +1,6 @@
 package db
 
-import "code.cloudfoundry.org/perm/pkg/perm"
+import "code.cloudfoundry.org/perm"
 
 type actor struct {
 	ID int64

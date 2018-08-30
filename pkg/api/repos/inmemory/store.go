@@ -1,6 +1,6 @@
 package inmemory
 
-import "code.cloudfoundry.org/perm/pkg/perm"
+import "code.cloudfoundry.org/perm"
 
 type Store struct {
 	roles       map[string]perm.Role

@@ -5,8 +5,8 @@ import (
 	"context"
 	"sync"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording"
-	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type FakeClient struct {

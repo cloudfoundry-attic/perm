@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	oidc "github.com/coreos/go-oidc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

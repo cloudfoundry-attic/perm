@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock/fakeclock"
+	"code.cloudfoundry.org/perm"
 	. "code.cloudfoundry.org/perm/pkg/monitor/recording"
 	"code.cloudfoundry.org/perm/pkg/monitor/recording/recordingfakes"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"

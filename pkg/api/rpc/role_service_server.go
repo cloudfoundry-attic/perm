@@ -3,10 +3,10 @@ package rpc
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/internal/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/perm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

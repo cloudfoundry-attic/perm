@@ -3,8 +3,8 @@ package repos
 import (
 	"context"
 
+	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/perm"
 )
 
 type HasPermissionQuery struct {
