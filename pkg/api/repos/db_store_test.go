@@ -1,17 +1,14 @@
-package db_test
+package repos_test
 
 import (
+	"code.cloudfoundry.org/perm/internal/sqlx"
+	"code.cloudfoundry.org/perm/pkg/api/repos/db"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/api/repos"
-
-	"code.cloudfoundry.org/perm/pkg/api/repos/db"
-	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"
 )
 
-var _ = Describe("Store", func() {
+var _ = Describe("DBStore", func() {
 	var (
 		store *db.Store
 		conn  *sqlx.DB
@@ -36,6 +33,5 @@ var _ = Describe("Store", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	BehavesLikeARoleRepo(func() repos.RoleRepo { return store })
-	BehavesLikeAPermissionRepo(func() repos.PermissionRepo { return store }, func() repos.RoleRepo { return store })
+	testRepo(func() repo { return store })
 })
