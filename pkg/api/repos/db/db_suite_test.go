@@ -1,7 +1,7 @@
 package db_test
 
 import (
-	"code.cloudfoundry.org/perm/pkg/migrations"
+	"code.cloudfoundry.org/perm/internal/migrations"
 	"code.cloudfoundry.org/perm/pkg/sqlx/sqlxtest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
