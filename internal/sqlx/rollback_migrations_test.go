@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	. "code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
-	. "code.cloudfoundry.org/perm/pkg/sqlx"
 
 	"context"
 	"database/sql"

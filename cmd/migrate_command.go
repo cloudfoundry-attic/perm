@@ -10,8 +10,8 @@ import (
 
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/internal/migrations"
+	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/olekukonko/tablewriter"
 )
 

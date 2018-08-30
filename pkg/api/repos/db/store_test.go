@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 
 	"code.cloudfoundry.org/perm/pkg/api/repos/db"
 	. "code.cloudfoundry.org/perm/pkg/api/repos/reposbehaviors"

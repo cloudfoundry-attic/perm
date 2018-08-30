@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 )
 
 type DBFlag struct {

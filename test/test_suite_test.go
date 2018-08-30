@@ -2,7 +2,7 @@ package perm_test
 
 import (
 	"code.cloudfoundry.org/perm/internal/migrations"
-	"code.cloudfoundry.org/perm/pkg/sqlx/testsqlx"
+	"code.cloudfoundry.org/perm/internal/sqlx/testsqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

@@ -1,8 +1,6 @@
 package migrations
 
-import (
-	"code.cloudfoundry.org/perm/pkg/sqlx"
-)
+import "code.cloudfoundry.org/perm/internal/sqlx"
 
 var TableName = "perm_migrations"
 

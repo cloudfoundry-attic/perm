@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"code.cloudfoundry.org/perm/internal/protos"
+	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
 	"code.cloudfoundry.org/perm/pkg/api/repos/db"
 	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"
@@ -21,7 +22,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/permauth"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )

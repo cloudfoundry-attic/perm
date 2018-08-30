@@ -3,7 +3,7 @@ package testsqlx
 import (
 	"strconv"
 
-	"code.cloudfoundry.org/perm/pkg/sqlx"
+	"code.cloudfoundry.org/perm/internal/sqlx"
 )
 
 type TestDB interface {

@@ -17,6 +17,7 @@ import (
 
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/internal/migrations"
+	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
@@ -24,7 +25,6 @@ import (
 	"code.cloudfoundry.org/perm/pkg/logx/cef"
 	"code.cloudfoundry.org/perm/pkg/metrics/statsdx"
 	"code.cloudfoundry.org/perm/pkg/permauth"
-	"code.cloudfoundry.org/perm/pkg/sqlx"
 	"github.com/cactus/go-statsd-client/statsd"
 	oidc "github.com/coreos/go-oidc"
 )
