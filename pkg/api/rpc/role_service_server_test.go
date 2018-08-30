@@ -5,6 +5,7 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
+	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
@@ -22,7 +23,7 @@ var _ = Describe("RoleRepoServer", func() {
 		logger         logx.Logger
 		securityLogger *logxfakes.FakeSecurityLogger
 
-		inMemoryStore *rpc.InMemoryStore
+		inMemoryStore *inmemory.InMemoryStore
 
 		ctx context.Context
 	)
@@ -30,7 +31,7 @@ var _ = Describe("RoleRepoServer", func() {
 	BeforeEach(func() {
 		logger = lagerx.NewLogger(lagertest.NewTestLogger("perm-test"))
 		securityLogger = new(logxfakes.FakeSecurityLogger)
-		inMemoryStore = rpc.NewInMemoryStore()
+		inMemoryStore = inmemory.NewInMemoryStore()
 
 		ctx = context.Background()
 

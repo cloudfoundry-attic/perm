@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/perm/pkg/api/db"
 	"code.cloudfoundry.org/perm/pkg/api/protos"
 	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"
 	"code.cloudfoundry.org/perm/pkg/api/rpc"
 	"code.cloudfoundry.org/perm/pkg/api/rpc/interceptors"
 	"code.cloudfoundry.org/perm/pkg/logx"
@@ -84,7 +85,7 @@ func NewServer(opts ...ServerOption) *Server {
 
 	var s store
 	if config.conn == nil {
-		s = rpc.NewInMemoryStore()
+		s = inmemory.NewInMemoryStore()
 	} else {
 		s = db.NewDataService(config.conn)
 	}
