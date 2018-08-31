@@ -5,7 +5,7 @@ import (
 	"context"
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/api/repos"
+	"code.cloudfoundry.org/perm/pkg/api/internal/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
 )
 

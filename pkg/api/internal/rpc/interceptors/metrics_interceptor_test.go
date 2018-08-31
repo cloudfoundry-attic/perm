@@ -12,7 +12,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 
-	. "code.cloudfoundry.org/perm/pkg/api/rpc/interceptors"
+	. "code.cloudfoundry.org/perm/pkg/api/internal/rpc/interceptors"
 	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
 )
 

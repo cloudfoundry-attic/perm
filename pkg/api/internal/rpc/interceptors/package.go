@@ -1,4 +1,4 @@
-package interceptors // import "code.cloudfoundry.org/perm/pkg/api/rpc/interceptors"
+package interceptors // import "code.cloudfoundry.org/perm/pkg/api/internal/rpc/interceptors"
 import "path"
 
 func parseFullMethod(fullMethod string) (string, string) {

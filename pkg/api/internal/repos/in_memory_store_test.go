@@ -1,7 +1,7 @@
 package repos_test
 
 import (
-	"code.cloudfoundry.org/perm/pkg/api/repos/inmemory"
+	"code.cloudfoundry.org/perm/pkg/api/internal/repos/inmemory"
 	. "github.com/onsi/ginkgo"
 )
 
