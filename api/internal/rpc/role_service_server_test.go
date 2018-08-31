@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/perm/api/internal/repos/inmemory"
+	"code.cloudfoundry.org/perm/api/internal/rpc"
 	"code.cloudfoundry.org/perm/internal/protos"
-	"code.cloudfoundry.org/perm/pkg/api/internal/repos/inmemory"
-	"code.cloudfoundry.org/perm/pkg/api/internal/rpc"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"

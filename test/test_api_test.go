@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm"
-	"code.cloudfoundry.org/perm/pkg/api"
+	"code.cloudfoundry.org/perm/api"
 	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
 	oidc "github.com/coreos/go-oidc"

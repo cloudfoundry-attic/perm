@@ -1,8 +1,7 @@
 package perm_test
 
 import (
-	"code.cloudfoundry.org/perm/pkg/api"
-
+	"code.cloudfoundry.org/perm/api"
 	. "github.com/onsi/ginkgo"
 )
 

@@ -15,10 +15,10 @@ import (
 	"io/ioutil"
 	"os"
 
+	"code.cloudfoundry.org/perm/api"
 	"code.cloudfoundry.org/perm/cmd/flags"
 	"code.cloudfoundry.org/perm/internal/migrations"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/api"
 	"code.cloudfoundry.org/perm/pkg/cryptox"
 	"code.cloudfoundry.org/perm/pkg/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx"

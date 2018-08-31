@@ -3,7 +3,7 @@ package api_test
 import (
 	"net"
 
-	. "code.cloudfoundry.org/perm/pkg/api"
+	. "code.cloudfoundry.org/perm/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

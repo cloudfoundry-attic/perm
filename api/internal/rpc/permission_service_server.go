@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/perm"
+	"code.cloudfoundry.org/perm/api/internal/repos"
 	"code.cloudfoundry.org/perm/internal/protos"
-	"code.cloudfoundry.org/perm/pkg/api/internal/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

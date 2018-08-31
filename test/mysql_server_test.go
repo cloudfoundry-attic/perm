@@ -1,8 +1,8 @@
 package perm_test
 
 import (
+	"code.cloudfoundry.org/perm/api"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

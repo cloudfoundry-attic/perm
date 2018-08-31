@@ -1,8 +1,8 @@
 package repos_test
 
 import (
+	"code.cloudfoundry.org/perm/api/internal/repos/db"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/api/internal/repos/db"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

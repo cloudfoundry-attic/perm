@@ -9,9 +9,9 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm"
+	. "code.cloudfoundry.org/perm/api/internal/repos"
 	"code.cloudfoundry.org/perm/internal/migrations"
 	"code.cloudfoundry.org/perm/internal/sqlx/testsqlx"
-	. "code.cloudfoundry.org/perm/pkg/api/internal/repos"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 
