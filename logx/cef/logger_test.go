@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
+	"code.cloudfoundry.org/perm/internal/models"
 	"code.cloudfoundry.org/perm/logx"
 	. "code.cloudfoundry.org/perm/logx/cef"
 	"code.cloudfoundry.org/perm/logx/logxfakes"
-	"code.cloudfoundry.org/perm/pkg/permauth"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
@@ -105,7 +105,7 @@ var _ = Describe("Logger", func() {
 
 			Context("when the user can be extracted from the context", func() {
 				BeforeEach(func() {
-					ctx = permauth.NewUserContext(ctx, permauth.User{ID: "user-id"})
+					ctx = models.NewUserContext(ctx, models.User{ID: "user-id"})
 				})
 
 				It("should log the user id as an additional extension", func() {

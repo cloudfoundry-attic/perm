@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
+	"code.cloudfoundry.org/perm/internal/models"
 	"code.cloudfoundry.org/perm/logx"
-	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/xoebus/ceflog"
 	"google.golang.org/grpc/peer"
 )
@@ -63,7 +63,7 @@ func (l *Logger) Log(ctx context.Context, signature string, name string, extensi
 		ceflog.Pair{Key: "spt", Value: strconv.FormatInt(int64(srcPort), 10)},
 	}
 
-	user, ok := permauth.UserFromContext(ctx)
+	user, ok := models.UserFromContext(ctx)
 	if ok {
 		extension = append(extension, ceflog.Pair{Key: "suid", Value: user.ID})
 	}
