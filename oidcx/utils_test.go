@@ -5,7 +5,7 @@ import (
 
 	"net/http"
 
-	"code.cloudfoundry.org/perm/pkg/oidcx"
+	"code.cloudfoundry.org/perm/oidcx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"

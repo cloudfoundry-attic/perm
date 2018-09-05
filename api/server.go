@@ -21,7 +21,7 @@ import (
 	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/metrics"
-	"code.cloudfoundry.org/perm/pkg/oidcx"
+	"code.cloudfoundry.org/perm/oidcx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )

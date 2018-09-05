@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/perm/logx/logxfakes"
-	"code.cloudfoundry.org/perm/pkg/oidcx"
-	"code.cloudfoundry.org/perm/pkg/oidcx/oidcxfakes"
+	"code.cloudfoundry.org/perm/oidcx"
+	"code.cloudfoundry.org/perm/oidcx/oidcxfakes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 

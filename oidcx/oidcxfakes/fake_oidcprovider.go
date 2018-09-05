@@ -4,7 +4,7 @@ package oidcxfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/oidcx"
+	"code.cloudfoundry.org/perm/oidcx"
 	"github.com/coreos/go-oidc"
 )
 
