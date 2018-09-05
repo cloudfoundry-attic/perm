@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/xoebus/ceflog"
 	"google.golang.org/grpc/peer"

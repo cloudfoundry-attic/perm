@@ -3,7 +3,7 @@ package statsdx
 import (
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"github.com/cactus/go-statsd-client/statsd"
 )
 

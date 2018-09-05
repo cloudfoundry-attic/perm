@@ -1,6 +1,6 @@
 package sqlx
 
-import "code.cloudfoundry.org/perm/pkg/logx"
+import "code.cloudfoundry.org/perm/logx"
 
 func Commit(logger logx.Logger, tx *Tx, err error) error {
 	if err != nil {

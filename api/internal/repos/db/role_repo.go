@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/api/internal/repos"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 )
 
 func (s *Store) CreateRole(

@@ -5,7 +5,7 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 )
 
 type Migration struct {

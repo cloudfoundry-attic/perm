@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/perm/api/internal/repos/reposfakes"
 	"code.cloudfoundry.org/perm/api/internal/rpc"
 	"code.cloudfoundry.org/perm/internal/protos"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
-	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/logx/lagerx"
+	"code.cloudfoundry.org/perm/logx/logxfakes"
 
 	"errors"
 

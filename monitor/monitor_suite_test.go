@@ -7,11 +7,11 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/perm"
+	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/logx/lagerx"
 	. "code.cloudfoundry.org/perm/monitor"
 	"code.cloudfoundry.org/perm/monitor/monitorfakes"
 	"code.cloudfoundry.org/perm/monitor/recording"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

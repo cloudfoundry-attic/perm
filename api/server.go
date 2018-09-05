@@ -19,7 +19,7 @@ import (
 	"code.cloudfoundry.org/perm/api/internal/rpc/interceptors"
 	"code.cloudfoundry.org/perm/internal/protos"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/grpc-ecosystem/go-grpc-middleware"

@@ -9,7 +9,7 @@ import (
 	"code.cloudfoundry.org/perm/cmd/internal/cryptox"
 	"code.cloudfoundry.org/perm/cmd/internal/ioutilx"
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 )
 
 type DBFlag struct {

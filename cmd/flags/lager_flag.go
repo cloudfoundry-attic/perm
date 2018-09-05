@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
+	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/logx/lagerx"
 )
 
 type LogLevel string

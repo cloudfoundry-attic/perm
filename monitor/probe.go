@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm"
+	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/monitor/recording"
-	"code.cloudfoundry.org/perm/pkg/logx"
 	uuid "github.com/satori/go.uuid"
 )
 

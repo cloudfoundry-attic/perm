@@ -4,7 +4,7 @@ package logxfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 )
 
 type FakeLogger struct {

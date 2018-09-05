@@ -2,7 +2,7 @@ package lagerx
 
 import (
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 )
 
 type Logger struct {

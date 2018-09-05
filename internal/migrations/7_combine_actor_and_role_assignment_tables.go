@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/perm/internal/sqlx"
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"github.com/Masterminds/squirrel"
 	uuid "github.com/satori/go.uuid"
 )

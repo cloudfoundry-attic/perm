@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"github.com/Masterminds/squirrel"
 )
 

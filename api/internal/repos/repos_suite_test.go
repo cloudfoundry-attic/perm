@@ -12,8 +12,8 @@ import (
 	. "code.cloudfoundry.org/perm/api/internal/repos"
 	"code.cloudfoundry.org/perm/internal/migrations"
 	"code.cloudfoundry.org/perm/internal/sqlx/testsqlx"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
+	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/logx/lagerx"
 
 	"testing"
 )

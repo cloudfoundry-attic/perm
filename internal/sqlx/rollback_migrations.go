@@ -3,7 +3,7 @@ package sqlx
 import (
 	"context"
 
-	"code.cloudfoundry.org/perm/pkg/logx"
+	"code.cloudfoundry.org/perm/logx"
 	"github.com/Masterminds/squirrel"
 )
 

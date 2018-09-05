@@ -3,7 +3,7 @@ package permauth_test
 import (
 	"context"
 
-	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/perm/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"code.cloudfoundry.org/perm/pkg/permauth/permauthfakes"
 	"google.golang.org/grpc"

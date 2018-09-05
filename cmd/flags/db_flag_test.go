@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"code.cloudfoundry.org/perm/cmd/flags"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	"code.cloudfoundry.org/perm/pkg/logx/lagerx"
+	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/logx/lagerx"
 )
 
 var _ = Describe("DBFlag", func() {

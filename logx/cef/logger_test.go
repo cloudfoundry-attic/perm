@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm/cmd/contextx"
-	"code.cloudfoundry.org/perm/pkg/logx"
-	. "code.cloudfoundry.org/perm/pkg/logx/cef"
-	"code.cloudfoundry.org/perm/pkg/logx/logxfakes"
+	"code.cloudfoundry.org/perm/logx"
+	. "code.cloudfoundry.org/perm/logx/cef"
+	"code.cloudfoundry.org/perm/logx/logxfakes"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
