@@ -21,7 +21,7 @@ import (
 	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/metrics"
-	"code.cloudfoundry.org/perm/pkg/permauth"
+	"code.cloudfoundry.org/perm/pkg/oidcx"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 )
@@ -61,7 +61,7 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	if config.oidcProvider != nil {
-		unaryServerInterceptors = append(unaryServerInterceptors, permauth.ServerInterceptor(config.oidcProvider, config.securityLogger))
+		unaryServerInterceptors = append(unaryServerInterceptors, oidcx.ServerInterceptor(config.oidcProvider, config.securityLogger))
 	}
 
 	if config.statter != nil {
@@ -150,7 +150,7 @@ func WithMaxConnectionIdle(duration time.Duration) ServerOption {
 	}
 }
 
-func WithOIDCProvider(provider permauth.OIDCProvider) ServerOption {
+func WithOIDCProvider(provider oidcx.OIDCProvider) ServerOption {
 	return func(o *serverConfig) {
 		o.oidcProvider = provider
 	}
@@ -176,7 +176,7 @@ type serverConfig struct {
 	keepalive   keepalive.ServerParameters
 	statter     metrics.Statter
 
-	oidcProvider permauth.OIDCProvider
+	oidcProvider oidcx.OIDCProvider
 
 	conn *sqlx.DB
 }

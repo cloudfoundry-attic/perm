@@ -1,4 +1,4 @@
-package permauth_test
+package oidcx_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestPermauth(t *testing.T) {
+func TestOidcx(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Permauth Suite")
+	RunSpecs(t, "Oidcx Suite")
 }

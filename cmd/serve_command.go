@@ -24,7 +24,7 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/logx/cef"
 	"code.cloudfoundry.org/perm/metrics/statsdx"
-	"code.cloudfoundry.org/perm/pkg/permauth"
+	"code.cloudfoundry.org/perm/pkg/oidcx"
 	"github.com/cactus/go-statsd-client/statsd"
 	oidc "github.com/coreos/go-oidc"
 )
@@ -144,7 +144,7 @@ func (cmd ServeCommand) Execute([]string) error {
 			},
 		}
 		oidcContext := oidc.ClientContext(context.Background(), tlsClient)
-		oidcIssuer, err := permauth.GetOIDCIssuer(tlsClient, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
+		oidcIssuer, err := oidcx.GetOIDCIssuer(tlsClient, fmt.Sprintf("%s/oauth/token", cmd.OAuth2URL))
 		if err != nil {
 			return err
 		}

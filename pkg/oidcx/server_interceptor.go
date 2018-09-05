@@ -1,4 +1,4 @@
-package permauth
+package oidcx
 
 import (
 	"context"

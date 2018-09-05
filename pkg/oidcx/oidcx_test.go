@@ -1,11 +1,11 @@
-package permauth_test
+package oidcx_test
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/perm/logx/logxfakes"
-	"code.cloudfoundry.org/perm/pkg/permauth"
-	"code.cloudfoundry.org/perm/pkg/permauth/permauthfakes"
+	"code.cloudfoundry.org/perm/pkg/oidcx"
+	"code.cloudfoundry.org/perm/pkg/oidcx/oidcxfakes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
@@ -16,15 +16,15 @@ import (
 var _ = Describe("Auth Server Interceptor", func() {
 	var (
 		interceptor        grpc.UnaryServerInterceptor
-		fakeProvider       *permauthfakes.FakeOIDCProvider
+		fakeProvider       *oidcxfakes.FakeOIDCProvider
 		sampleHandler      func(context.Context, interface{}) (interface{}, error)
 		fakeSecurityLogger *logxfakes.FakeSecurityLogger
 	)
 
 	BeforeEach(func() {
-		fakeProvider = new(permauthfakes.FakeOIDCProvider)
+		fakeProvider = new(oidcxfakes.FakeOIDCProvider)
 		fakeSecurityLogger = new(logxfakes.FakeSecurityLogger)
-		interceptor = permauth.ServerInterceptor(fakeProvider, fakeSecurityLogger)
+		interceptor = oidcx.ServerInterceptor(fakeProvider, fakeSecurityLogger)
 		sampleHandler = func(c context.Context, r interface{}) (interface{}, error) { return nil, nil }
 	})
 
