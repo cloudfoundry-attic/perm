@@ -4,7 +4,7 @@ package ioutilxfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/cmd/internal/ioutilx"
 )
 
 type FakeFileReader struct {

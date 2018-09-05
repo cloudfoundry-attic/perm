@@ -1,8 +1,8 @@
 package ioutilx_test
 
 import (
-	. "code.cloudfoundry.org/perm/pkg/ioutilx"
-	"code.cloudfoundry.org/perm/pkg/ioutilx/ioutilxfakes"
+	. "code.cloudfoundry.org/perm/cmd/internal/ioutilx"
+	"code.cloudfoundry.org/perm/cmd/internal/ioutilx/ioutilxfakes"
 
 	"errors"
 

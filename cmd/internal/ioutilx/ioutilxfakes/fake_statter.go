@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/cmd/internal/ioutilx"
 )
 
 type FakeStatter struct {

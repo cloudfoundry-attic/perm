@@ -12,7 +12,7 @@ import (
 
 	"code.cloudfoundry.org/perm"
 	cmdflags "code.cloudfoundry.org/perm/cmd/flags"
-	"code.cloudfoundry.org/perm/pkg/ioutilx"
+	"code.cloudfoundry.org/perm/cmd/internal/ioutilx"
 	"code.cloudfoundry.org/perm/pkg/logx"
 	"code.cloudfoundry.org/perm/pkg/metrics"
 	"code.cloudfoundry.org/perm/pkg/monitor"
