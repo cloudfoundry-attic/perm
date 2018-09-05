@@ -1,4 +1,4 @@
-package oidcx
+package interceptors
 
 import (
 	"context"
@@ -6,18 +6,13 @@ import (
 	"code.cloudfoundry.org/perm"
 	"code.cloudfoundry.org/perm/internal/models"
 	"code.cloudfoundry.org/perm/logx"
+	"code.cloudfoundry.org/perm/oidcx"
 	oidc "github.com/coreos/go-oidc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 const permAdminScope = "perm.admin"
-
-//go:generate counterfeiter . OIDCProvider
-
-type OIDCProvider interface {
-	Verifier(config *oidc.Config) *oidc.IDTokenVerifier
-}
 
 type Claims struct {
 	Scopes []string `json:"scope"`
@@ -28,7 +23,7 @@ const (
 	AuthPassSignature = "AuthPass"
 )
 
-func ServerInterceptor(provider OIDCProvider, securityLogger logx.SecurityLogger) grpc.UnaryServerInterceptor {
+func OIDCInterceptor(provider oidcx.Provider, securityLogger logx.SecurityLogger) grpc.UnaryServerInterceptor {
 	verifier := provider.Verifier(&oidc.Config{
 		ClientID: "perm",
 	})

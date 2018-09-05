@@ -12,10 +12,6 @@ const (
 	OpenIDConfigurationEndpoint = "/.well-known/openid-configuration"
 )
 
-type OIDCProviderConfiguration struct {
-	Issuer string `json:"issuer"`
-}
-
 func GetOIDCIssuer(client *http.Client, oidcProviderURL string) (string, error) {
 	fullURL := fmt.Sprintf("%s%s", oidcProviderURL, OpenIDConfigurationEndpoint)
 
@@ -30,11 +26,15 @@ func GetOIDCIssuer(client *http.Client, oidcProviderURL string) (string, error) 
 		return "", err
 	}
 
-	var configuration OIDCProviderConfiguration
+	var configuration providerConfig
 	err = json.NewDecoder(res.Body).Decode(&configuration)
 	if err != nil {
 		return "", err
 	}
 
 	return configuration.Issuer, nil
+}
+
+type providerConfig struct {
+	Issuer string `json:"issuer"`
 }

@@ -1,14 +1,14 @@
-package oidcx_test
+package interceptors_test
 
 import (
 	"context"
 
 	"code.cloudfoundry.org/perm/logx/logxfakes"
-	"code.cloudfoundry.org/perm/oidcx"
 	"code.cloudfoundry.org/perm/oidcx/oidcxfakes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	. "code.cloudfoundry.org/perm/api/internal/rpc/interceptors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -16,15 +16,15 @@ import (
 var _ = Describe("Auth Server Interceptor", func() {
 	var (
 		interceptor        grpc.UnaryServerInterceptor
-		fakeProvider       *oidcxfakes.FakeOIDCProvider
+		fakeProvider       *oidcxfakes.FakeProvider
 		sampleHandler      func(context.Context, interface{}) (interface{}, error)
 		fakeSecurityLogger *logxfakes.FakeSecurityLogger
 	)
 
 	BeforeEach(func() {
-		fakeProvider = new(oidcxfakes.FakeOIDCProvider)
+		fakeProvider = new(oidcxfakes.FakeProvider)
 		fakeSecurityLogger = new(logxfakes.FakeSecurityLogger)
-		interceptor = oidcx.ServerInterceptor(fakeProvider, fakeSecurityLogger)
+		interceptor = OIDCInterceptor(fakeProvider, fakeSecurityLogger)
 		sampleHandler = func(c context.Context, r interface{}) (interface{}, error) { return nil, nil }
 	})
 

@@ -8,7 +8,7 @@ import (
 	"github.com/coreos/go-oidc"
 )
 
-type FakeOIDCProvider struct {
+type FakeProvider struct {
 	VerifierStub        func(config *oidc.Config) *oidc.IDTokenVerifier
 	verifierMutex       sync.RWMutex
 	verifierArgsForCall []struct {
@@ -24,7 +24,7 @@ type FakeOIDCProvider struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeOIDCProvider) Verifier(config *oidc.Config) *oidc.IDTokenVerifier {
+func (fake *FakeProvider) Verifier(config *oidc.Config) *oidc.IDTokenVerifier {
 	fake.verifierMutex.Lock()
 	ret, specificReturn := fake.verifierReturnsOnCall[len(fake.verifierArgsForCall)]
 	fake.verifierArgsForCall = append(fake.verifierArgsForCall, struct {
@@ -41,26 +41,26 @@ func (fake *FakeOIDCProvider) Verifier(config *oidc.Config) *oidc.IDTokenVerifie
 	return fake.verifierReturns.result1
 }
 
-func (fake *FakeOIDCProvider) VerifierCallCount() int {
+func (fake *FakeProvider) VerifierCallCount() int {
 	fake.verifierMutex.RLock()
 	defer fake.verifierMutex.RUnlock()
 	return len(fake.verifierArgsForCall)
 }
 
-func (fake *FakeOIDCProvider) VerifierArgsForCall(i int) *oidc.Config {
+func (fake *FakeProvider) VerifierArgsForCall(i int) *oidc.Config {
 	fake.verifierMutex.RLock()
 	defer fake.verifierMutex.RUnlock()
 	return fake.verifierArgsForCall[i].config
 }
 
-func (fake *FakeOIDCProvider) VerifierReturns(result1 *oidc.IDTokenVerifier) {
+func (fake *FakeProvider) VerifierReturns(result1 *oidc.IDTokenVerifier) {
 	fake.VerifierStub = nil
 	fake.verifierReturns = struct {
 		result1 *oidc.IDTokenVerifier
 	}{result1}
 }
 
-func (fake *FakeOIDCProvider) VerifierReturnsOnCall(i int, result1 *oidc.IDTokenVerifier) {
+func (fake *FakeProvider) VerifierReturnsOnCall(i int, result1 *oidc.IDTokenVerifier) {
 	fake.VerifierStub = nil
 	if fake.verifierReturnsOnCall == nil {
 		fake.verifierReturnsOnCall = make(map[int]struct {
@@ -72,7 +72,7 @@ func (fake *FakeOIDCProvider) VerifierReturnsOnCall(i int, result1 *oidc.IDToken
 	}{result1}
 }
 
-func (fake *FakeOIDCProvider) Invocations() map[string][][]interface{} {
+func (fake *FakeProvider) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.verifierMutex.RLock()
@@ -84,7 +84,7 @@ func (fake *FakeOIDCProvider) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeOIDCProvider) recordInvocation(key string, args []interface{}) {
+func (fake *FakeProvider) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -96,4 +96,4 @@ func (fake *FakeOIDCProvider) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ oidcx.OIDCProvider = new(FakeOIDCProvider)
+var _ oidcx.Provider = new(FakeProvider)

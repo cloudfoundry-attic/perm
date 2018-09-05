@@ -61,7 +61,7 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	if config.oidcProvider != nil {
-		unaryServerInterceptors = append(unaryServerInterceptors, oidcx.ServerInterceptor(config.oidcProvider, config.securityLogger))
+		unaryServerInterceptors = append(unaryServerInterceptors, interceptors.OIDCInterceptor(config.oidcProvider, config.securityLogger))
 	}
 
 	if config.statter != nil {
@@ -150,7 +150,7 @@ func WithMaxConnectionIdle(duration time.Duration) ServerOption {
 	}
 }
 
-func WithOIDCProvider(provider oidcx.OIDCProvider) ServerOption {
+func WithOIDCProvider(provider oidcx.Provider) ServerOption {
 	return func(o *serverConfig) {
 		o.oidcProvider = provider
 	}
@@ -176,7 +176,7 @@ type serverConfig struct {
 	keepalive   keepalive.ServerParameters
 	statter     metrics.Statter
 
-	oidcProvider oidcx.OIDCProvider
+	oidcProvider oidcx.Provider
 
 	conn *sqlx.DB
 }
