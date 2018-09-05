@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/metrics"
+	"code.cloudfoundry.org/perm/metrics"
 	"google.golang.org/grpc"
 )
 

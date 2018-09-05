@@ -3,7 +3,7 @@ package metrics_test
 import (
 	"time"
 
-	. "code.cloudfoundry.org/perm/pkg/metrics"
+	. "code.cloudfoundry.org/perm/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

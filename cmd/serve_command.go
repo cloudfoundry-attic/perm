@@ -23,7 +23,7 @@ import (
 	"code.cloudfoundry.org/perm/internal/sqlx"
 	"code.cloudfoundry.org/perm/logx"
 	"code.cloudfoundry.org/perm/logx/cef"
-	"code.cloudfoundry.org/perm/pkg/metrics/statsdx"
+	"code.cloudfoundry.org/perm/metrics/statsdx"
 	"code.cloudfoundry.org/perm/pkg/permauth"
 	"github.com/cactus/go-statsd-client/statsd"
 	oidc "github.com/coreos/go-oidc"

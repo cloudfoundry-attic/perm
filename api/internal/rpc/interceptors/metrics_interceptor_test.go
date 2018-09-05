@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	. "code.cloudfoundry.org/perm/api/internal/rpc/interceptors"
-	"code.cloudfoundry.org/perm/pkg/metrics/testmetrics"
+	"code.cloudfoundry.org/perm/metrics/testmetrics"
 )
 
 var _ = Describe("MetricsInterceptor", func() {
