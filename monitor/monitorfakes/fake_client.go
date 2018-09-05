@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/perm"
-	"code.cloudfoundry.org/perm/pkg/monitor"
+	"code.cloudfoundry.org/perm/monitor"
 )
 
 type FakeClient struct {

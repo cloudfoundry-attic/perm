@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"code.cloudfoundry.org/perm/pkg/monitor/recording"
+	"code.cloudfoundry.org/perm/monitor/recording"
 )
 
 type FakeRecorder struct {

@@ -4,7 +4,7 @@ package monitorfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/perm/pkg/monitor"
+	"code.cloudfoundry.org/perm/monitor"
 )
 
 type FakeSender struct {

@@ -3,7 +3,7 @@ package monitor_test
 import (
 	"time"
 
-	. "code.cloudfoundry.org/perm/pkg/monitor"
+	. "code.cloudfoundry.org/perm/monitor"
 	. "github.com/onsi/ginkgo"
 )
 
