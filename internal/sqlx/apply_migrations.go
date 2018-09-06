@@ -16,14 +16,14 @@ func ApplyMigrations(
 	tableName string,
 	migrations []Migration,
 ) error {
-	createTableLogger := logger.WithName("create-migrations-table").WithData(logx.Data{"table_name", tableName})
+	createTableLogger := logger.WithName("create-migrations-table").WithData(logx.Data{Key: "table_name", Value: tableName})
 	if err := createMigrationsTable(ctx, createTableLogger, conn, tableName); err != nil {
 		return err
 	}
 
 	migrationsLogger := logger.WithName("apply-migrations").WithData(logx.Data{
-		"table_name",
-		tableName,
+		Key:   "table_name",
+		Value: tableName,
 	})
 
 	if len(migrations) == 0 {
@@ -34,11 +34,11 @@ func ApplyMigrations(
 	if err != nil {
 		return err
 	}
-	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{"versions", appliedMigrations})
+	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{Key: "versions", Value: appliedMigrations})
 
 	for i, migration := range migrations {
 		version := i
-		migrationLogger := logger.WithData(logx.Data{"version", version}, logx.Data{"name", migration.Name})
+		migrationLogger := logger.WithData(logx.Data{Key: "version", Value: version}, logx.Data{Key: "name", Value: migration.Name})
 
 		_, ok := appliedMigrations[version]
 		if ok {

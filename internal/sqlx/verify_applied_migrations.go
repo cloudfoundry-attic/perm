@@ -27,12 +27,12 @@ func VerifyAppliedMigrations(
 	for i, migration := range migrations {
 		appliedMigration, exists := appliedMigrations[i]
 		if !exists {
-			logger.Info(migrationNotFound, logx.Data{"name", migration.Name})
+			logger.Info(migrationNotFound, logx.Data{Key: "name", Value: migration.Name})
 			return ErrMigrationsOutOfSync
 		}
 
 		if migration.Name != appliedMigration.Name {
-			logger.Info(migrationMismatch, logx.Data{"expected_name", migration.Name}, logx.Data{"applied_name", appliedMigration.Name})
+			logger.Info(migrationMismatch, logx.Data{Key: "expected_name", Value: migration.Name}, logx.Data{Key: "applied_name", Value: appliedMigration.Name})
 			return ErrMigrationsOutOfSync
 		}
 	}

@@ -15,7 +15,7 @@ func RollbackMigrations(
 	migrations []Migration,
 	all bool,
 ) error {
-	migrationsLogger := logger.WithName("rollback-migrations").WithData(logx.Data{"table_name", tableName})
+	migrationsLogger := logger.WithName("rollback-migrations").WithData(logx.Data{Key: "table_name", Value: tableName})
 
 	migrationsLogger.Info("starting")
 	if len(migrations) == 0 {
@@ -26,13 +26,13 @@ func RollbackMigrations(
 	if err != nil {
 		return err
 	}
-	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{"versions", appliedMigrations})
+	migrationsLogger.Debug(retrievedAppliedMigrations, logx.Data{Key: "versions", Value: appliedMigrations})
 
 	for version := len(migrations) - 1; version >= 0; version-- {
 		migration := migrations[version]
 		_, ok := appliedMigrations[version]
 
-		migrationLogger := logger.WithData(logx.Data{"version", version}, logx.Data{"name", migration.Name})
+		migrationLogger := logger.WithData(logx.Data{Key: "version", Value: version}, logx.Data{Key: "name", Value: migration.Name})
 
 		if !ok {
 			migrationLogger.Debug("skipping")

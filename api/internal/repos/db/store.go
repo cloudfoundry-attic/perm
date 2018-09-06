@@ -41,12 +41,12 @@ func createRoleAndAssignPermissions(
 			return role{}, err
 		}
 
-		action, err := findAction(ctx, logger, conn, permission.Action)
+		a, err := findAction(ctx, logger, conn, permission.Action)
 		if err != nil {
 			return role{}, err
 		}
 
-		_, err = createPermission(ctx, logger, conn, action.ID, r.ID, permission.ResourcePattern, permission.Action)
+		_, err = createPermission(ctx, logger, conn, a.ID, r.ID, permission.ResourcePattern, permission.Action)
 		if err != nil {
 			return role{}, err
 		}
@@ -200,8 +200,8 @@ func createRoleAssignmentForGroup(
 	groupID string,
 ) error {
 	logger = logger.WithName("create-role-assignment-for-group").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"group_assignment.group_id", groupID},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "group_assignment.group_id", Value: groupID},
 	)
 
 	u := uuid.NewV4().Bytes()
@@ -253,9 +253,9 @@ func createRoleAssignment(
 	actorNamespace string,
 ) error {
 	logger = logger.WithName("create-role-assignment").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"assignment.actor_id", actorID},
-		logx.Data{"assignment.actor_namespace", actorNamespace},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "assignment.actor_id", Value: actorID},
+		logx.Data{Key: "assignment.actor_namespace", Value: actorNamespace},
 	)
 
 	u := uuid.NewV4().Bytes()
@@ -308,9 +308,9 @@ func deleteRoleAssignment(
 	actorNamespace string,
 ) error {
 	logger = logger.WithName("delete-role-assignment").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"assignment.actor_id", actorID},
-		logx.Data{"assignment.actor_namespace", actorNamespace},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "assignment.actor_id", Value: actorID},
+		logx.Data{Key: "assignment.actor_namespace", Value: actorNamespace},
 	)
 
 	result, err := squirrel.Delete("assignment").
@@ -369,8 +369,8 @@ func deleteGroupRoleAssignment(
 	groupID string,
 ) error {
 	logger = logger.WithName("delete-role-assignment").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"group_assignment.group_id", groupID},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "group_assignment.group_id", Value: groupID},
 	)
 
 	result, err := squirrel.Delete("group_assignment").
@@ -443,9 +443,9 @@ func findRoleAssignment(
 	actorNamespace string,
 ) (bool, error) {
 	logger = logger.WithName("find-role-assignment").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"assignment.actor_id", actorID},
-		logx.Data{"assignment.actor_namespace", actorNamespace},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "assignment.actor_id", Value: actorID},
+		logx.Data{Key: "assignment.actor_namespace", Value: actorNamespace},
 	)
 
 	var count int
@@ -475,8 +475,8 @@ func findRoleAssignmentForGroup(
 	groupID string,
 ) (bool, error) {
 	logger = logger.WithName("find-role-assignment-for-group").WithData(
-		logx.Data{"role.id", roleID},
-		logx.Data{"group_assignment.group_id", groupID},
+		logx.Data{Key: "role.id", Value: roleID},
+		logx.Data{Key: "group_assignment.group_id", Value: groupID},
 	)
 
 	var count int
@@ -600,7 +600,7 @@ func findRolePermissions(
 	conn squirrel.BaseRunner,
 	roleID int64,
 ) ([]permission, error) {
-	logger = logger.WithName("find-role-permissions").WithData(logx.Data{"role.id", roleID})
+	logger = logger.WithName("find-role-permissions").WithData(logx.Data{Key: "role.id", Value: roleID})
 
 	rows, err := squirrel.Select("permission.id", "action.name", "permission.resource_pattern").
 		From("permission").
@@ -654,11 +654,11 @@ func hasPermission(
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	logger = logger.WithName("has-permission").WithData(
-		logx.Data{"actor.issuer", query.Actor.Namespace},
-		logx.Data{"assignment.actor_id", query.Actor.ID},
-		logx.Data{"permission.action", query.Action},
-		logx.Data{"permission.resourcePattern", query.ResourcePattern},
-		logx.Data{"group_assignment.groups", query.Groups},
+		logx.Data{Key: "actor.issuer", Value: query.Actor.Namespace},
+		logx.Data{Key: "assignment.actor_id", Value: query.Actor.ID},
+		logx.Data{Key: "permission.action", Value: query.Action},
+		logx.Data{Key: "permission.resourcePattern", Value: query.ResourcePattern},
+		logx.Data{Key: "group_assignment.groups", Value: query.Groups},
 	)
 
 	var count int
@@ -769,9 +769,9 @@ func listResourcePatterns(
 	actorID := query.Actor.ID
 
 	logger = logger.WithName("list-resource-patterns").WithData(
-		logx.Data{"assignment.actor_namespace", actorNamespace},
-		logx.Data{"assignment.actor_id", actorID},
-		logx.Data{"permission.action", action},
+		logx.Data{Key: "assignment.actor_namespace", Value: actorNamespace},
+		logx.Data{Key: "assignment.actor_id", Value: actorID},
+		logx.Data{Key: "permission.action", Value: action},
 	)
 
 	rows, err := squirrel.Select("permission.resource_pattern").

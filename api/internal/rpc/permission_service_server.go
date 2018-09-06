@@ -60,10 +60,10 @@ func (s *PermissionServiceServer) HasPermission(
 	s.securityLogger.Log(ctx, "HasPermission", "Permission check", extensions...)
 
 	logger := s.logger.WithName("has-permission").WithData(
-		logx.Data{"actor.id", actor.ID},
-		logx.Data{"actor.namespace", actor.Namespace},
-		logx.Data{"permission.action", action},
-		logx.Data{"permission.resourcePattern", resourcePattern},
+		logx.Data{Key: "actor.id", Value: actor.ID},
+		logx.Data{Key: "actor.namespace", Value: actor.Namespace},
+		logx.Data{Key: "permission.action", Value: action},
+		logx.Data{Key: "permission.resourcePattern", Value: resourcePattern},
 	)
 	logger.Debug(starting)
 
@@ -123,10 +123,10 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	s.securityLogger.Log(ctx, "ListResourcePatterns", "Resource pattern list", extensions...)
 
 	logger := s.logger.WithName("list-resource-patterns").WithData(
-		logx.Data{"actor.id", actor.ID},
-		logx.Data{"actor.namespace", actor.Namespace},
-		logx.Data{"groups", groupsStr},
-		logx.Data{"permission.action", action},
+		logx.Data{Key: "actor.id", Value: actor.ID},
+		logx.Data{Key: "actor.namespace", Value: actor.Namespace},
+		logx.Data{Key: "groups", Value: groupsStr},
+		logx.Data{Key: "permission.action", Value: action},
 	)
 
 	logger.Debug(starting)
