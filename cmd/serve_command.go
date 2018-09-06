@@ -160,10 +160,10 @@ func (cmd ServeCommand) Execute([]string) error {
 	listenInterface := cmd.Hostname
 	port := cmd.Port
 	listeningLogData := []logx.Data{
-		logx.Data{Key: "protocol", Value: "tcp"},
-		logx.Data{Key: "hostname", Value: listenInterface},
-		logx.Data{Key: "port", Value: port},
-		logx.Data{Key: "MaxConnectionIdle", Value: cmd.MaxConnectionIdle},
+		{Key: "protocol", Value: "tcp"},
+		{Key: "hostname", Value: listenInterface},
+		{Key: "port", Value: port},
+		{Key: "MaxConnectionIdle", Value: cmd.MaxConnectionIdle},
 	}
 
 	lis, err := net.Listen("tcp", net.JoinHostPort(listenInterface, strconv.Itoa(port)))

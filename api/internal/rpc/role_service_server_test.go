@@ -84,7 +84,7 @@ var _ = Describe("RoleRepoServer", func() {
 			_, err := subject.CreateRole(ctx, &protos.CreateRoleRequest{
 				Name: name,
 				Permissions: []*protos.Permission{
-					&protos.Permission{Action: "a", ResourcePattern: "b"},
+					{Action: "a", ResourcePattern: "b"},
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())

@@ -48,8 +48,8 @@ func OIDCInterceptor(provider oidcx.Provider, securityLogger logx.SecurityLogger
 		}
 
 		extensions := []logx.SecurityData{
-			logx.SecurityData{Key: "msg", Value: "auth succeeded"},
-			logx.SecurityData{Key: "subject", Value: idToken.Subject},
+			{Key: "msg", Value: "auth succeeded"},
+			{Key: "subject", Value: idToken.Subject},
 		}
 		securityLogger.Log(ctx, AuthPassSignature, "auth succeeded", extensions...)
 

@@ -47,11 +47,11 @@ func (o *DBFlag) Connect(ctx context.Context, logger logx.Logger) (*sqlx.DB, err
 	}
 
 	data := []logx.Data{
-		logx.Data{Key: "driver", Value: o.Driver},
-		logx.Data{Key: "host", Value: o.Host},
-		logx.Data{Key: "port", Value: o.Port},
-		logx.Data{Key: "schema", Value: o.Schema},
-		logx.Data{Key: "username", Value: o.Username},
+		{Key: "driver", Value: o.Driver},
+		{Key: "host", Value: o.Host},
+		{Key: "port", Value: o.Port},
+		{Key: "schema", Value: o.Schema},
+		{Key: "username", Value: o.Username},
 	}
 	logger = logger.WithData(data...)
 

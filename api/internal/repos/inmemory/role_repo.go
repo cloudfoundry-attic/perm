@@ -45,9 +45,9 @@ func (s *Store) DeleteRole(
 			if roleName == roleName {
 				s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
 				assignmentData := []logx.Data{
-					logx.Data{Key: "actor.id", Value: actor.ID},
-					logx.Data{Key: "actor.namespace", Value: actor.Namespace},
-					logx.Data{Key: "role.name", Value: roleName},
+					{Key: "actor.id", Value: actor.ID},
+					{Key: "actor.namespace", Value: actor.Namespace},
+					{Key: "role.name", Value: roleName},
 				}
 				logger.Debug(success, assignmentData...)
 				break
