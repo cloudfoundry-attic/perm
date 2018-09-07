@@ -69,9 +69,6 @@ func main() {
 
 	logger := parserOpts.Logger.Logger("perm-monitor")
 
-	logger.Debug(starting)
-	defer logger.Debug(finished)
-
 	//////////////////////
 	// Setup StatsD Client
 	//////////////////////
@@ -153,6 +150,9 @@ func main() {
 		monitor.WithMaxLatency(parserOpts.Probe.MaxLatency),
 	}
 	probe := monitor.NewProbe(recordingClient, statsDClient, logger, probeOptions...)
+
+	logger.Info(starting)
+	defer logger.Debug(finished)
 
 	for range time.NewTicker(parserOpts.Probe.Frequency).C {
 		probe.Run()

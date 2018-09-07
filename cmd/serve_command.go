@@ -172,7 +172,7 @@ func (cmd ServeCommand) Execute([]string) error {
 		return err
 	}
 
-	logger.Debug(starting, listeningLogData...)
+	logger.Info(starting, listeningLogData...)
 
 	return server.Serve(lis)
 }
