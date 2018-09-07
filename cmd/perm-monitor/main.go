@@ -37,11 +37,11 @@ type options struct {
 type permOptions struct {
 	Host         string                 `long:"host" description:"Hostname used to resolve the address of Perm" default:"localhost"`
 	Port         int                    `long:"port" description:"Port used to connect to Perm" default:"6283"`
-	TLSCA        []ioutilx.FileOrString `long:"oauth2-ca" description:"File path(s) of Perm's CA certificate (and UAA's CA if --require-auth)"`
+	TLSCA        []ioutilx.FileOrString `long:"tls-ca" description:"File path of Perm's CA certificate (and the OAuth2 server's CA if --require-auth)"`
 	RequireAuth  bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
-	TokenURL     string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
-	ClientID     string                 `long:"client-id" description:"UAA Client ID used to fetch token (only required if '--require-auth' is provided)"`
-	ClientSecret string                 `long:"client-secret" description:"UAA Client Secret used to fetch token (only required if '--require-auth' is provided)"`
+	TokenURL     string                 `long:"token-url" description:"URL to the OAuth2 server's token endpoint (only required if '--require-auth' is provided)"`
+	ClientID     string                 `long:"client-id" description:"OAuth2 Client ID used to fetch token (only required if '--require-auth' is provided)"`
+	ClientSecret string                 `long:"client-secret" description:"OAuth2 Client Secret used to fetch token (only required if '--require-auth' is provided)"`
 }
 
 type statsDOptions struct {
@@ -115,14 +115,14 @@ func main() {
 			TokenURL:     parserOpts.Perm.TokenURL,
 		}
 
-		uaaClient := http.Client{
+		oauth2Client := http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					RootCAs: pool,
 				},
 			},
 		}
-		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &uaaClient)
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &oauth2Client)
 
 		tokenSource := tsConfig.TokenSource(ctx)
 
