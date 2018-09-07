@@ -35,18 +35,18 @@ type options struct {
 }
 
 type permOptions struct {
-	Hostname      string                 `long:"hostname" description:"Hostname used to resolve the address of Perm" default:"localhost"`
-	Port          int                    `long:"port" description:"Port used to connect to Perm" default:"6283"`
-	CACertificate []ioutilx.FileOrString `long:"ca-certificate" description:"File path(s) of Perm's CA certificate (and UAA's CA if --require-auth)"`
-	RequireAuth   bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
-	TokenURL      string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
-	ClientID      string                 `long:"client-id" description:"UAA Client ID used to fetch token (only required if '--require-auth' is provided)"`
-	ClientSecret  string                 `long:"client-secret" description:"UAA Client Secret used to fetch token (only required if '--require-auth' is provided)"`
+	Host         string                 `long:"host" description:"Hostname used to resolve the address of Perm" default:"localhost"`
+	Port         int                    `long:"port" description:"Port used to connect to Perm" default:"6283"`
+	TLSCA        []ioutilx.FileOrString `long:"oauth2-ca" description:"File path(s) of Perm's CA certificate (and UAA's CA if --require-auth)"`
+	RequireAuth  bool                   `long:"require-auth" description:"Enable the monitor to talk to perm using oauth"`
+	TokenURL     string                 `long:"token-url" description:"URL to uaa's token endpoint (only required if '--require-auth' is provided)"`
+	ClientID     string                 `long:"client-id" description:"UAA Client ID used to fetch token (only required if '--require-auth' is provided)"`
+	ClientSecret string                 `long:"client-secret" description:"UAA Client Secret used to fetch token (only required if '--require-auth' is provided)"`
 }
 
 type statsDOptions struct {
-	Hostname string `long:"hostname" description:"Hostname used to connect to StatsD server" default:"localhost"`
-	Port     int    `long:"port" description:"Port used to connect to StatsD server" default:"8125"`
+	Host string `long:"host" description:"Hostname used to connect to StatsD server" default:"localhost"`
+	Port int    `long:"port" description:"Port used to connect to StatsD server" default:"8125"`
 }
 
 type probeOptions struct {
@@ -75,7 +75,7 @@ func main() {
 	//////////////////////
 	// Setup StatsD Client
 	//////////////////////
-	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Hostname, strconv.Itoa(parserOpts.StatsD.Port))
+	statsDAddr := net.JoinHostPort(parserOpts.StatsD.Host, strconv.Itoa(parserOpts.StatsD.Port))
 	statsDClient, err := statsd.NewBufferedClient(statsDAddr, "", 0, 0)
 	if err != nil {
 		logger.Error(failedToConnectToStatsD, err, logx.Data{
@@ -91,7 +91,7 @@ func main() {
 	//////////////////////
 	pool := x509.NewCertPool()
 
-	for _, certPath := range parserOpts.Perm.CACertificate {
+	for _, certPath := range parserOpts.Perm.TLSCA {
 		caPem, e := certPath.Bytes(ioutilx.InjectableOS{}, ioutilx.InjectableIOReader{})
 		certLogger := logger.WithData(logx.Data{Key: "location", Value: certPath})
 		if e != nil {
@@ -105,7 +105,7 @@ func main() {
 		}
 	}
 
-	addr := net.JoinHostPort(parserOpts.Perm.Hostname, strconv.Itoa(parserOpts.Perm.Port))
+	addr := net.JoinHostPort(parserOpts.Perm.Host, strconv.Itoa(parserOpts.Perm.Port))
 	opts := []perm.DialOption{perm.WithTLSConfig(&tls.Config{RootCAs: pool})}
 
 	if parserOpts.Perm.RequireAuth {
