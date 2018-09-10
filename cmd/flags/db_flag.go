@@ -30,7 +30,7 @@ type SQLTLSFlag struct {
 }
 
 type SQLTuningFlag struct {
-	ConnMaxLifetime int `long:"connection-max-lifetime" description:"Limit the lifetime in milliseconds of a SQL connection"`
+	ConnMaxLifetime time.Duration `long:"connection-max-lifetime" description:"Limit the lifetime of a SQL connection" default:"0"`
 }
 
 func (o *DBFlag) IsInMemory() bool {
@@ -61,7 +61,7 @@ func (o *DBFlag) Connect(ctx context.Context, logger logx.Logger) (*sqlx.DB, err
 		sqlx.DBDatabaseName(o.Schema),
 		sqlx.DBHost(o.Host),
 		sqlx.DBPort(o.Port),
-		sqlx.DBConnectionMaxLifetime(time.Duration(o.Tuning.ConnMaxLifetime) * time.Millisecond),
+		sqlx.DBConnectionMaxLifetime(o.Tuning.ConnMaxLifetime),
 	}
 
 	if len(o.TLS.RootCAs) != 0 {
