@@ -1,5 +1,7 @@
 # perm
 
+[API Documentation](https://github.com/cloudfoundry-incubator/perm/wiki/API)
+
 This Permissions service ("perm") provides authorization features for the Cloud
 Foundry Platform. It answers various question forms of what particular
 identities are allowed to do. It works out the answers to these questions based
