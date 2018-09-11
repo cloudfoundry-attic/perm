@@ -25,21 +25,21 @@ type Recorder interface {
 }
 
 type RecordingClient struct {
-	client   Client
-	recorder Recorder
-	clock    clock.Clock
+	client    Client
+	recorders map[string]Recorder
+	clock     clock.Clock
 }
 
-func NewClient(client Client, recorder Recorder, opts ...Option) *RecordingClient {
+func NewClient(client Client, recorders map[string]Recorder, opts ...Option) *RecordingClient {
 	o := defaultOptions()
 	for _, opt := range opts {
 		opt(o)
 	}
 
 	return &RecordingClient{
-		client:   client,
-		recorder: recorder,
-		clock:    o.clock,
+		client:    client,
+		recorders: recorders,
+		clock:     o.clock,
 	}
 }
 
@@ -52,8 +52,12 @@ func (c *RecordingClient) AssignRole(ctx context.Context, roleName string, actor
 
 	duration := c.clock.Since(start)
 
-	if err := c.recorder.Observe(duration); err != nil {
-		return duration, FailedToObserveDurationError{Err: err}
+	for key, val := range c.recorders {
+		if key == "all" {
+			if err := val.Observe(duration); err != nil {
+				return duration, FailedToObserveDurationError{Err: err}
+			}
+		}
 	}
 
 	return duration, nil
@@ -69,8 +73,16 @@ func (c *RecordingClient) CreateRole(ctx context.Context, roleName string, permi
 
 	duration := c.clock.Since(start)
 
-	if err := c.recorder.Observe(duration); err != nil {
-		return role, duration, FailedToObserveDurationError{Err: err}
+	for key, val := range c.recorders {
+		if key == "all" {
+			if err := val.Observe(duration); err != nil {
+				return role, duration, FailedToObserveDurationError{Err: err}
+			}
+		} else if key == "CreateRole" {
+			if err := val.Observe(duration); err != nil {
+				return role, duration, FailedToObserveDurationError{Err: err}
+			}
+		}
 	}
 
 	return role, duration, nil
@@ -85,8 +97,12 @@ func (c *RecordingClient) DeleteRole(ctx context.Context, roleName string) (time
 
 	duration := c.clock.Since(start)
 
-	if err := c.recorder.Observe(duration); err != nil {
-		return duration, FailedToObserveDurationError{Err: err}
+	for key, val := range c.recorders {
+		if key == "all" {
+			if err := val.Observe(duration); err != nil {
+				return duration, FailedToObserveDurationError{Err: err}
+			}
+		}
 	}
 
 	return duration, nil
@@ -102,8 +118,12 @@ func (c *RecordingClient) HasPermission(ctx context.Context, actor perm.Actor, a
 
 	duration := c.clock.Since(start)
 
-	if err := c.recorder.Observe(duration); err != nil {
-		return false, duration, FailedToObserveDurationError{Err: err}
+	for key, val := range c.recorders {
+		if key == "all" {
+			if err := val.Observe(duration); err != nil {
+				return false, duration, FailedToObserveDurationError{Err: err}
+			}
+		}
 	}
 
 	return hasPermission, duration, nil
@@ -118,8 +138,12 @@ func (c *RecordingClient) UnassignRole(ctx context.Context, roleName string, act
 
 	duration := c.clock.Since(start)
 
-	if err := c.recorder.Observe(duration); err != nil {
-		return duration, FailedToObserveDurationError{Err: err}
+	for key, val := range c.recorders {
+		if key == "all" {
+			if err := val.Observe(duration); err != nil {
+				return duration, FailedToObserveDurationError{Err: err}
+			}
+		}
 	}
 
 	return duration, nil
