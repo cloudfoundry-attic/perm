@@ -35,21 +35,7 @@ func (err ErrAlreadyExists) Error() string {
 	return fmt.Sprintf("%s already exists", err.model)
 }
 
-type ErrCannotBeEmpty struct {
-	model string
-}
-
-func NewErrCannotBeEmpty(model string) ErrCannotBeEmpty {
-	return ErrCannotBeEmpty{
-		model: model,
-	}
-}
-
 func NewErrorFromStatus(s *status.Status) error {
 	message := fmt.Sprintf("%s", s.Message())
 	return errors.New(message)
-}
-
-func (err ErrCannotBeEmpty) Error() string {
-	return fmt.Sprintf("%s cannot be empty", err.model)
 }
