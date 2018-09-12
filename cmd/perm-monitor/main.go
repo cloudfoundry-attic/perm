@@ -142,18 +142,7 @@ func main() {
 		MaxDuration: parserOpts.Probe.Timeout,
 	})
 
-	crHistogram := metrics.NewHistogram(metrics.HistogramOptions{
-		Name:        "perm.probe.createrole.responses.timing",
-		Buckets:     []float64{50, 90, 95, 99, 99.9},
-		MaxDuration: parserOpts.Probe.Timeout,
-	})
-
-	histograms := map[string]recording.Recorder{
-		"all":        histogram,
-		"CreateRole": crHistogram,
-	}
-
-	recordingClient := recording.NewClient(client, histograms)
+	recordingClient := recording.NewClient(client, histogram)
 
 	probeOptions := []monitor.Option{
 		monitor.WithTimeout(parserOpts.Probe.Timeout),
@@ -168,9 +157,6 @@ func main() {
 	for range time.NewTicker(parserOpts.Probe.Frequency).C {
 		probe.Run()
 		for metric, duration := range histogram.Collect() {
-			statsDClient.Gauge(metric, duration, 1)
-		}
-		for metric, duration := range crHistogram.Collect() {
 			statsDClient.Gauge(metric, duration, 1)
 		}
 	}
