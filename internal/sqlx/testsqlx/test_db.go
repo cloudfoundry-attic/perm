@@ -46,9 +46,10 @@ func DBPassword(password string) TestDBOption {
 }
 
 type options struct {
-	host     string
-	port     string
-	database string
-	user     string
-	password string
+	host        string
+	port        string
+	bootstrapDB string
+	database    string
+	user        string
+	password    string
 }

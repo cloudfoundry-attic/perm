@@ -7,11 +7,22 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 )
 
-var createPermissionsTable = `
+var createPermissionsTableMySQL = `
 CREATE TABLE IF NOT EXISTS permission
 (
 	id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   	uuid BINARY(16) NOT NULL UNIQUE,
+	role_id BIGINT NOT NULL,
+	permission_definition_id BIGINT NOT NULL,
+	resource_pattern VARCHAR(255) NOT NULL
+)
+`
+
+var createPermissionsTablePostgres = `
+CREATE TABLE IF NOT EXISTS permission
+(
+	id BIGSERIAL NOT NULL PRIMARY KEY,
+  uuid BYTEA NOT NULL UNIQUE,
 	role_id BIGINT NOT NULL,
 	permission_definition_id BIGINT NOT NULL,
 	resource_pattern VARCHAR(255) NOT NULL
@@ -43,7 +54,13 @@ func createPermissionsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx, createPermissionsTable)
+	var err error
+
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, createPermissionsTableMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, createPermissionsTablePostgres)
+	}
 	if err != nil {
 		return err
 	}

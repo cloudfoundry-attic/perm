@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 )
 
-var createRolesTable = `
+var createRolesTableMySQL = `
 CREATE TABLE IF NOT EXISTS role
 (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -16,6 +16,14 @@ CREATE TABLE IF NOT EXISTS role
 )
 `
 
+var createRolesTablePostgres = `
+CREATE TABLE IF NOT EXISTS role
+(
+	id BIGSERIAL NOT NULL PRIMARY KEY,
+	uuid BYTEA NOT NULL UNIQUE,
+	name VARCHAR(255) NOT NULL UNIQUE
+)`
+
 var deleteRolesTable = `DROP TABLE role`
 
 func createRolesTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) error {
@@ -23,9 +31,13 @@ func createRolesTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) er
 	logger.Debug(starting)
 	defer logger.Debug(finished)
 
-	_, err := tx.ExecContext(ctx,
-		createRolesTable)
+	var err error
 
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, createRolesTableMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, createRolesTablePostgres)
+	}
 	return err
 }
 

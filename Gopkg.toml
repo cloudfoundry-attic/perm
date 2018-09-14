@@ -91,3 +91,7 @@
 [[constraint]]
   branch = "master"
   name = "code.cloudfoundry.org/clock"
+
+[[constraint]]
+  name = "github.com/lib/pq"
+  version = "1.0.0"

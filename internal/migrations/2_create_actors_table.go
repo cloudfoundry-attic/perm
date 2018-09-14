@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 )
 
-var createActorsTable = `
+var createActorsTableMySQL = `
 CREATE TABLE IF NOT EXISTS actor
 (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -17,6 +17,15 @@ CREATE TABLE IF NOT EXISTS actor
   domain_id_issuer_hash VARCHAR(64) AS (SHA2(CONCAT(domain_id, issuer), 256)) STORED
 )
 `
+
+var createActorsTablePostgres = `
+CREATE TABLE IF NOT EXISTS actor
+(
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  uuid BYTEA NOT NULL UNIQUE,
+  domain_id VARCHAR(511) NOT NULL,
+  issuer VARCHAR(2047) NOT NULL
+)`
 
 var uniqueActorsConstraint = `
 ALTER TABLE
@@ -35,12 +44,15 @@ func createActorsTableUp(ctx context.Context, logger logx.Logger, tx *sqlx.Tx) e
 
 	var err error
 
-	_, err = tx.ExecContext(ctx, createActorsTable)
-	if err != nil {
-		return err
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, createActorsTableMySQL)
+		if err != nil {
+			return err
+		}
+		_, err = tx.ExecContext(ctx, uniqueActorsConstraint)
+	} else {
+		_, err = tx.ExecContext(ctx, createActorsTablePostgres)
 	}
-
-	_, err = tx.ExecContext(ctx, uniqueActorsConstraint)
 
 	return err
 }

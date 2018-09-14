@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	testMySQLDB *testsqlx.TestMySQLDB
+	testMySQLDB    *testsqlx.TestMySQLDB
+	testPostgresDB *testsqlx.TestPostgresDB
 )
 
 func TestPerm(t *testing.T) {
@@ -25,9 +26,17 @@ var _ = BeforeSuite(func() {
 
 	err = testMySQLDB.Create(migrations.Migrations...)
 	Expect(err).NotTo(HaveOccurred())
+
+	testPostgresDB = testsqlx.NewTestPostgresDB()
+
+	err = testPostgresDB.Create(migrations.Migrations...)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	err := testMySQLDB.Drop()
+	Expect(err).NotTo(HaveOccurred())
+
+	err = testPostgresDB.Drop()
 	Expect(err).NotTo(HaveOccurred())
 })

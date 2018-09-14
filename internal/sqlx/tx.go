@@ -34,3 +34,7 @@ func (tx *Tx) Commit() error {
 func (tx *Tx) Rollback() error {
 	return tx.tx.Rollback()
 }
+
+func (tx *Tx) Driver() DBDriver {
+	return tx.driver
+}

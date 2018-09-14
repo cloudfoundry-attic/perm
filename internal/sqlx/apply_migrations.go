@@ -74,8 +74,13 @@ func createMigrationsTable(
 		err = Commit(logger, tx, err)
 	}()
 
-	_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS `"+tableName+
-		"` (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, version INTEGER, name VARCHAR(255), applied_at DATETIME)")
+	if tx.Driver() == DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS "+tableName+
+			" (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, version INTEGER, name VARCHAR(255), applied_at DATETIME)")
+	} else {
+		_, err = tx.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS "+tableName+
+			" (id BIGSERIAL NOT NULL PRIMARY KEY, version INTEGER, name VARCHAR(255), applied_at TIMESTAMP)")
+	}
 
 	return
 }
@@ -108,9 +113,15 @@ func applyMigration(
 		return
 	}
 
-	_, err = squirrel.Insert(tableName).
+	sb := squirrel.Insert(tableName).
 		Columns("version", "name", "applied_at").
-		Values(version, migration.Name, time.Now()).
+		Values(version, migration.Name, time.Now())
+
+	if conn.driver == DBDriverPostgres {
+		sb = sb.PlaceholderFormat(squirrel.Dollar)
+	}
+
+	_, err = sb.
 		RunWith(tx).
 		ExecContext(ctx)
 

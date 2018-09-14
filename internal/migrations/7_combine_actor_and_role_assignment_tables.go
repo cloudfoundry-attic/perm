@@ -9,7 +9,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var createAssignmentTable = `
+var createAssignmentTableMySQL = `
 CREATE TABLE IF NOT EXISTS assignment
 (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -18,6 +18,17 @@ CREATE TABLE IF NOT EXISTS assignment
 	actor_id VARCHAR(511) NOT NULL,
 	actor_namespace VARCHAR(2047) NOT NULL,
   role_id_actor_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, actor_id, actor_namespace), 256)) VIRTUAL UNIQUE
+)
+`
+
+var createAssignmentTablePostgres = `
+CREATE TABLE IF NOT EXISTS assignment
+(
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  uuid BYTEA NOT NULL UNIQUE,
+	role_id BIGINT NOT NULL,
+	actor_id VARCHAR(511) NOT NULL,
+	actor_namespace VARCHAR(2047) NOT NULL
 )
 `
 
@@ -41,7 +52,11 @@ func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger logx.Logg
 	defer logger.Debug(finished)
 	var err error
 
-	_, err = tx.ExecContext(ctx, createAssignmentTable)
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, createAssignmentTableMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, createAssignmentTablePostgres)
+	}
 	if err != nil {
 		return err
 	}
@@ -79,7 +94,7 @@ func combineActorAndRoleAssignmentTablesUp(ctx context.Context, logger logx.Logg
 	}
 	for _, ra := range roleAssignments {
 		u := uuid.NewV4().Bytes()
-		_, err = squirrel.Insert("assignment").
+		_, err := squirrel.Insert("assignment").
 			Columns("uuid", "role_id", "actor_id", "actor_namespace").
 			Values(u, ra.RoleID, ra.ActorID, ra.ActorNamespace).
 			RunWith(tx).

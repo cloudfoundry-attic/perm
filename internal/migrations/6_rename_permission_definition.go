@@ -14,18 +14,30 @@ RENAME TO
 	action
 `
 
-var dropPermissionPermissionDefinitionIDForeignKey = `
+var dropPermissionPermissionDefinitionIDForeignKeyMySQL = `
 ALTER TABLE
 	permission
 DROP FOREIGN KEY
 	permission_permission_definition_id_fkey
 `
 
-var renamePermissionPermissionDefinitionID = `
+var dropPermissionPermissionDefinitionIDForeignKeyPostgres = `
+ALTER TABLE
+	permission
+DROP CONSTRAINT
+	permission_permission_definition_id_fkey
+`
+
+var renamePermissionPermissionDefinitionIDMySQL = `
 ALTER TABLE
 	permission
 CHANGE COLUMN
 	permission_definition_id action_id BIGINT NOT NULL
+`
+
+var renamePermissionPermissionDefinitionIDPostgres = `
+ALTER TABLE	permission ALTER COLUMN permission_definition_id TYPE BIGINT;
+ALTER TABLE permission RENAME COLUMN permission_definition_id TO action_id;
 `
 
 var addActionPermissionDefinitionIDForeignKey = `
@@ -56,12 +68,20 @@ func renamePermissionDefinitionToActionUp(ctx context.Context, logger logx.Logge
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, dropPermissionPermissionDefinitionIDForeignKey)
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, dropPermissionPermissionDefinitionIDForeignKeyMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, dropPermissionPermissionDefinitionIDForeignKeyPostgres)
+	}
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, renamePermissionPermissionDefinitionID)
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, renamePermissionPermissionDefinitionIDMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, renamePermissionPermissionDefinitionIDPostgres)
+	}
 	if err != nil {
 		return err
 	}

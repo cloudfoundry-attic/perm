@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 )
 
-var createGroupAssignmentTable = `
+var createGroupAssignmentTableMySQL = `
 CREATE TABLE IF NOT EXISTS group_assignment
 (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -15,6 +15,16 @@ CREATE TABLE IF NOT EXISTS group_assignment
 	role_id BIGINT NOT NULL,
 	group_id VARCHAR(511) NOT NULL,
   role_id_group_hash VARCHAR(64) AS (SHA2(CONCAT(role_id, group_id), 256)) VIRTUAL UNIQUE
+)
+`
+
+var createGroupAssignmentTablePostgres = `
+CREATE TABLE IF NOT EXISTS group_assignment
+(
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  uuid BYTEA NOT NULL UNIQUE,
+	role_id BIGINT NOT NULL,
+	group_id VARCHAR(511) NOT NULL
 )
 `
 
@@ -34,7 +44,11 @@ func createGroupAssignmentTableUp(ctx context.Context, logger logx.Logger, tx *s
 	defer logger.Debug(finished)
 	var err error
 
-	_, err = tx.ExecContext(ctx, createGroupAssignmentTable)
+	if tx.Driver() == sqlx.DBDriverMySQL {
+		_, err = tx.ExecContext(ctx, createGroupAssignmentTableMySQL)
+	} else {
+		_, err = tx.ExecContext(ctx, createGroupAssignmentTablePostgres)
+	}
 	if err != nil {
 		return err
 	}

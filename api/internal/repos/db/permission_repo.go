@@ -12,7 +12,7 @@ func (s *Store) HasPermission(
 	logger logx.Logger,
 	query repos.HasPermissionQuery,
 ) (bool, error) {
-	return hasPermission(ctx, logger.WithName("data-service"), s.conn, query)
+	return hasPermission(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, query)
 }
 
 func (s *Store) ListResourcePatterns(
@@ -20,5 +20,5 @@ func (s *Store) ListResourcePatterns(
 	logger logx.Logger,
 	query repos.ListResourcePatternsQuery,
 ) ([]string, error) {
-	return listResourcePatterns(ctx, logger.WithName("data-service"), s.conn, query)
+	return listResourcePatterns(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, query)
 }

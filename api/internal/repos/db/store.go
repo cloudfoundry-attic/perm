@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/perm/logx"
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 	"github.com/satori/go.uuid"
 )
 
@@ -25,32 +26,31 @@ func NewStore(conn *sqlx.DB) *Store {
 
 func createRoleAndAssignPermissions(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 	permissions ...perm.Permission,
 ) (role, error) {
-	r, err := createRole(ctx, logger, conn, roleName)
+	r, err := createRole(ctx, dbDriver, logger, conn, roleName)
 	if err != nil {
 		return role{}, err
 	}
 
 	for _, permission := range permissions {
-		_, err = createAction(ctx, logger, conn, permission.Action)
+		_, err = createAction(ctx, dbDriver, logger, conn, permission.Action)
 		if err != nil && err != errActionAlreadyExistsInDB {
 			return role{}, err
 		}
-
-		a, err := findAction(ctx, logger, conn, permission.Action)
+		a, err := findAction(ctx, dbDriver, logger, conn, permission.Action)
 		if err != nil {
 			return role{}, err
 		}
 
-		_, err = createPermission(ctx, logger, conn, a.ID, r.ID, permission.ResourcePattern, permission.Action)
+		_, err = createPermission(ctx, dbDriver, logger, conn, a.ID, r.ID, permission.ResourcePattern, permission.Action)
 		if err != nil {
 			return role{}, err
 		}
-
 	}
 
 	return r, nil
@@ -58,29 +58,44 @@ func createRoleAndAssignPermissions(
 
 func createRole(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	name string,
 ) (role, error) {
 	logger = logger.WithName("create-role")
-	u := uuid.NewV4().Bytes()
 
-	result, err := squirrel.Insert("role").
+	u := uuid.NewV4().Bytes()
+	query := squirrel.Insert("role").
 		Columns("uuid", "name").
 		Values(u, name).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	var id int64
+	var result sql.Result
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		err = query.Suffix("RETURNING \"id\"").
+			PlaceholderFormat(squirrel.Dollar).
+			QueryRowContext(ctx).
+			Scan(&id)
+	}
 
 	switch e := err.(type) {
 	case nil:
-		roleID, err2 := result.LastInsertId()
-		if err2 != nil {
-			logger.Error(failedToRetrieveID, err2)
-			return role{}, err2
+		if dbDriver == sqlx.DBDriverMySQL {
+			var err2 error
+			id, err2 = result.LastInsertId()
+			if err2 != nil {
+				logger.Error(failedToRetrieveID, err2)
+				return role{}, err2
+			}
 		}
 
 		return role{
-			ID: roleID,
+			ID: id,
 			Role: perm.Role{
 				Name: name,
 			},
@@ -90,17 +105,20 @@ func createRole(
 			logger.Debug(errRoleAlreadyExists)
 			return role{}, perm.ErrRoleAlreadyExists
 		}
-
-		logger.Error(failedToCreateRole, err)
-		return role{}, err
-	default:
-		logger.Error(failedToCreateRole, err)
-		return role{}, err
+	case *pq.Error:
+		if e.Code == pq.ErrorCode("23505") {
+			logger.Debug(errRoleAlreadyExists)
+			return role{}, perm.ErrRoleAlreadyExists
+		}
 	}
+
+	logger.Error(failedToCreateRole, err)
+	return role{}, err
 }
 
 func findRole(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	requestedRoleName string,
@@ -112,13 +130,20 @@ func findRole(
 		roleName string
 	)
 
-	err := squirrel.Select("id", "name").
+	query := squirrel.Select("id", "name").
 		From("role").
 		Where(squirrel.Eq{
 			"name": requestedRoleName,
 		}).
-		RunWith(conn).
-		ScanContext(ctx, &roleID, &roleName)
+		RunWith(conn)
+
+	var err error
+	if dbDriver == sqlx.DBDriverMySQL {
+		err = query.ScanContext(ctx, &roleID, &roleName)
+	} else {
+		err = query.PlaceholderFormat(squirrel.Dollar).
+			ScanContext(ctx, &roleID, &roleName)
+	}
 
 	switch err {
 	case nil:
@@ -139,17 +164,29 @@ func findRole(
 
 func deleteRole(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
 ) error {
 	logger = logger.WithName("delete-role")
-	result, err := squirrel.Delete("role").
+	var (
+		result sql.Result
+		err    error
+	)
+	query := squirrel.Delete("role").
 		Where(squirrel.Eq{
 			"name": roleName,
 		}).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		result, err = query.
+			PlaceholderFormat(squirrel.Dollar).
+			ExecContext(ctx)
+	}
 
 	switch err {
 	case nil:
@@ -176,6 +213,7 @@ func deleteRole(
 
 func assignRole(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
@@ -184,16 +222,17 @@ func assignRole(
 ) error {
 	logger = logger.WithName("assign-role")
 
-	foundRole, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return createRoleAssignment(ctx, logger, conn, foundRole.ID, actorID, actorNamespace)
+	return createRoleAssignment(ctx, dbDriver, logger, conn, foundRole.ID, actorID, actorNamespace)
 }
 
 func createRoleAssignmentForGroup(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -205,11 +244,18 @@ func createRoleAssignmentForGroup(
 	)
 
 	u := uuid.NewV4().Bytes()
-	_, err := squirrel.Insert("group_assignment").
+	query := squirrel.Insert("group_assignment").
 		Columns("uuid", "role_id", "group_id").
 		Values(u, roleID, groupID).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	if dbDriver == sqlx.DBDriverMySQL {
+		_, err = query.ExecContext(ctx)
+	} else {
+		_, err = query.PlaceholderFormat(squirrel.Dollar).
+			ExecContext(ctx)
+	}
 
 	switch e := err.(type) {
 	case nil:
@@ -219,17 +265,21 @@ func createRoleAssignmentForGroup(
 			logger.Debug(errRoleAssignmentAlreadyExists)
 			return perm.ErrAssignmentAlreadyExists
 		}
-
-		logger.Error(failedToCreateRoleAssignment, err)
-		return err
-	default:
-		logger.Error(failedToCreateRoleAssignment, err)
-		return err
+	// TODO: dead code, find another way
+	case *pq.Error:
+		if e.Code == pq.ErrorCode("23505") {
+			logger.Debug(errRoleAssignmentAlreadyExists)
+			return perm.ErrAssignmentAlreadyExists
+		}
 	}
+
+	logger.Error(failedToCreateRoleAssignment, err)
+	return err
 }
 
 func assignRoleToGroup(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
@@ -237,15 +287,16 @@ func assignRoleToGroup(
 ) error {
 	logger = logger.WithName("assign-role-to-group")
 
-	foundRole, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
-	return createRoleAssignmentForGroup(ctx, logger, conn, foundRole.ID, groupID)
+	return createRoleAssignmentForGroup(ctx, dbDriver, logger, conn, foundRole.ID, groupID)
 }
 
 func createRoleAssignment(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -259,11 +310,18 @@ func createRoleAssignment(
 	)
 
 	u := uuid.NewV4().Bytes()
-	_, err := squirrel.Insert("assignment").
+	query := squirrel.Insert("assignment").
 		Columns("uuid", "role_id", "actor_id", "actor_namespace").
 		Values(u, roleID, actorID, actorNamespace).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	if dbDriver == sqlx.DBDriverMySQL {
+		_, err = query.ExecContext(ctx)
+	} else {
+		_, err = query.PlaceholderFormat(squirrel.Dollar).
+			ExecContext(ctx)
+	}
 
 	switch e := err.(type) {
 	case nil:
@@ -273,16 +331,21 @@ func createRoleAssignment(
 			logger.Debug(errRoleAssignmentAlreadyExists)
 			return perm.ErrAssignmentAlreadyExists
 		}
-
-		logger.Error(failedToCreateRoleAssignment, err)
-		return err
-	default:
-		logger.Error(failedToCreateRoleAssignment, err)
-		return err
+	// TODO: dead code, find another way
+	case *pq.Error:
+		if e.Code == pq.ErrorCode("23505") {
+			logger.Debug(errRoleAssignmentAlreadyExists)
+			return perm.ErrAssignmentAlreadyExists
+		}
 	}
+
+	logger.Error(failedToCreateRoleAssignment, err)
+	return err
 }
 
-func unassignRole(ctx context.Context,
+func unassignRole(
+	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
@@ -291,16 +354,17 @@ func unassignRole(ctx context.Context,
 ) error {
 	logger = logger.WithName("unassign-role")
 
-	foundRole, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return deleteRoleAssignment(ctx, logger, conn, foundRole.ID, actorID, actorNamespace)
+	return deleteRoleAssignment(ctx, dbDriver, logger, conn, foundRole.ID, actorID, actorNamespace)
 }
 
 func deleteRoleAssignment(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -313,14 +377,22 @@ func deleteRoleAssignment(
 		logx.Data{Key: "assignment.actor_namespace", Value: actorNamespace},
 	)
 
-	result, err := squirrel.Delete("assignment").
+	query := squirrel.Delete("assignment").
 		Where(squirrel.Eq{
 			"role_id":         roleID,
 			"actor_id":        actorID,
 			"actor_namespace": actorNamespace,
 		}).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	var result sql.Result
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		result, err = query.PlaceholderFormat(squirrel.Dollar).
+			ExecContext(ctx)
+	}
 
 	switch err {
 	case nil:
@@ -345,7 +417,9 @@ func deleteRoleAssignment(
 	}
 }
 
-func unassignRoleFromGroup(ctx context.Context,
+func unassignRoleFromGroup(
+	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleName string,
@@ -353,16 +427,17 @@ func unassignRoleFromGroup(ctx context.Context,
 ) error {
 	logger = logger.WithName("unassign-role-from-group")
 
-	foundRole, err := findRole(ctx, logger, conn, roleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, roleName)
 	if err != nil {
 		return err
 	}
 
-	return deleteGroupRoleAssignment(ctx, logger, conn, foundRole.ID, groupID)
+	return deleteGroupRoleAssignment(ctx, dbDriver, logger, conn, foundRole.ID, groupID)
 }
 
 func deleteGroupRoleAssignment(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -373,13 +448,21 @@ func deleteGroupRoleAssignment(
 		logx.Data{Key: "group_assignment.group_id", Value: groupID},
 	)
 
-	result, err := squirrel.Delete("group_assignment").
+	query := squirrel.Delete("group_assignment").
 		Where(squirrel.Eq{
 			"role_id":  roleID,
 			"group_id": groupID,
 		}).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	var result sql.Result
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		result, err = query.PlaceholderFormat(squirrel.Dollar).
+			ExecContext(ctx)
+	}
 
 	switch err {
 	case nil:
@@ -406,36 +489,39 @@ func deleteGroupRoleAssignment(
 
 func hasRole(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasRoleQuery,
 ) (bool, error) {
 	logger = logger.WithName("has-role")
-	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
 	}
 
-	return findRoleAssignment(ctx, logger, conn, foundRole.ID, query.Actor.ID, query.Actor.Namespace)
+	return findRoleAssignment(ctx, dbDriver, logger, conn, foundRole.ID, query.Actor.ID, query.Actor.Namespace)
 }
 
 func hasRoleForGroup(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
 	logger = logger.WithName("has-role-for-group")
-	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, query.RoleName)
 	if err != nil {
 		return false, err
 	}
 
-	return findRoleAssignmentForGroup(ctx, logger, conn, foundRole.ID, query.Group.ID)
+	return findRoleAssignmentForGroup(ctx, dbDriver, logger, conn, foundRole.ID, query.Group.ID)
 }
 
 func findRoleAssignment(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -469,6 +555,7 @@ func findRoleAssignment(
 
 func findRoleAssignmentForGroup(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -499,22 +586,24 @@ func findRoleAssignmentForGroup(
 
 func listRolePermissions(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListRolePermissionsQuery,
 ) ([]permission, error) {
 	logger = logger.WithName("list-role-permissions")
 
-	foundRole, err := findRole(ctx, logger, conn, query.RoleName)
+	foundRole, err := findRole(ctx, dbDriver, logger, conn, query.RoleName)
 	if err != nil {
 		return nil, err
 	}
 
-	return findRolePermissions(ctx, logger, conn, foundRole.ID)
+	return findRolePermissions(ctx, dbDriver, logger, conn, foundRole.ID)
 }
 
 func createAction(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	name string,
@@ -522,22 +611,36 @@ func createAction(
 	logger = logger.WithName("create-permission-definition")
 	u := uuid.NewV4().Bytes()
 
-	result, err := squirrel.Insert("action").
+	query := squirrel.Insert("action").
 		Columns("uuid", "name").
 		Values(u, name).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	var err error
+	var result sql.Result
+	var id int64
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		err = query.Suffix("RETURNING \"id\"").
+			PlaceholderFormat(squirrel.Dollar).
+			QueryRowContext(ctx).
+			Scan(&id)
+	}
 
 	switch e := err.(type) {
 	case nil:
-		actionID, err2 := result.LastInsertId()
-		if err2 != nil {
-			logger.Error(failedToRetrieveID, err2)
-			return action{}, err2
+		if dbDriver == sqlx.DBDriverMySQL {
+			var err2 error
+			id, err2 = result.LastInsertId()
+			if err2 != nil {
+				logger.Error(failedToRetrieveID, err2)
+				return action{}, err2
+			}
 		}
 
 		return action{
-			ID: actionID,
+			ID: id,
 			Action: perm.Action{
 				Name: name,
 			},
@@ -547,17 +650,20 @@ func createAction(
 			logger.Debug(errActionAlreadyExists)
 			return action{}, errActionAlreadyExistsInDB
 		}
-
-		logger.Error(failedToCreateAction, err)
-		return action{}, err
-	default:
-		logger.Error(failedToCreateAction, err)
-		return action{}, err
+	case *pq.Error:
+		if e.Code == pq.ErrorCode("23505") {
+			logger.Debug(errActionAlreadyExists)
+			return action{}, errActionAlreadyExistsInDB
+		}
 	}
+
+	logger.Error(failedToCreateAction, err)
+	return action{}, err
 }
 
 func findAction(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	actionName string,
@@ -567,15 +673,28 @@ func findAction(
 	var (
 		actionID int64
 		name     string
+		err      error
 	)
 
-	err := squirrel.Select("id", "name").
+	query := squirrel.Select("id", "name").
 		From("action").
 		Where(squirrel.Eq{
 			"name": actionName,
 		}).
-		RunWith(conn).
-		ScanContext(ctx, &actionID, &name)
+		RunWith(conn)
+
+	if dbDriver == sqlx.DBDriverMySQL {
+		err = query.ScanContext(ctx, &actionID, &name)
+	} else {
+		// query = query.Suffix("RETURNING \"id\", \"name\"").
+		// 	PlaceholderFormat(squirrel.Dollar)
+		// fmt.Println(query.ToSql())
+		// err = query.QueryRowContext(ctx).
+		// 	Scan(&actionID, &name)
+		err = query.PlaceholderFormat(squirrel.Dollar).
+			QueryRowContext(ctx).
+			Scan(&actionID, &name)
+	}
 
 	switch err {
 	case nil:
@@ -596,6 +715,7 @@ func findAction(
 
 func findRolePermissions(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	roleID int64,
@@ -649,6 +769,7 @@ func findRolePermissions(
 
 func hasPermission(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.HasPermissionQuery,
@@ -664,7 +785,7 @@ func hasPermission(
 	var count int
 
 	// Actor-based access grant.
-	err := squirrel.Select("count(assignment.role_id)").
+	q := squirrel.Select("count(assignment.role_id)").
 		From("assignment").
 		JoinClause("INNER JOIN permission permission ON assignment.role_id = permission.role_id").
 		JoinClause("INNER JOIN action ON permission.action_id = action.id").
@@ -674,8 +795,15 @@ func hasPermission(
 			"action.name":                 query.Action,
 			"permission.resource_pattern": query.ResourcePattern,
 		}).
-		RunWith(conn).
-		ScanContext(ctx, &count)
+		RunWith(conn)
+
+	var err error
+	if dbDriver == sqlx.DBDriverMySQL {
+		err = q.ScanContext(ctx, &count)
+	} else {
+		q = q.PlaceholderFormat(squirrel.Dollar)
+		err = q.ScanContext(ctx, &count)
+	}
 
 	if err != nil {
 		logger.Error(failedToFindPermissions, err)
@@ -685,9 +813,10 @@ func hasPermission(
 	if count > 0 {
 		return true, nil
 	}
+
 	// Group-based access grant.
 	for _, group := range query.Groups {
-		err := squirrel.Select("count(group_assignment.role_id)").
+		q2 := squirrel.Select("count(group_assignment.role_id)").
 			From("group_assignment").
 			JoinClause("INNER JOIN permission permission ON group_assignment.role_id = permission.role_id").
 			JoinClause("INNER JOIN action ON permission.action_id = action.id").
@@ -696,23 +825,32 @@ func hasPermission(
 				"action.name":                 query.Action,
 				"permission.resource_pattern": query.ResourcePattern,
 			}).
-			RunWith(conn).
-			ScanContext(ctx, &count)
+			RunWith(conn)
 
-		if err != nil {
-			logger.Error(failedToFindPermissions, err)
-			return false, err
+		var err2 error
+		if dbDriver == sqlx.DBDriverMySQL {
+			err2 = q2.ScanContext(ctx, &count)
+		} else {
+			err2 = q2.PlaceholderFormat(squirrel.Dollar).
+				ScanContext(ctx, &count)
+		}
+
+		if err2 != nil {
+			logger.Error(failedToFindPermissions, err2)
+			return false, err2
 		}
 
 		if count > 0 {
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
 func createPermission(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	actionID int64,
@@ -722,23 +860,37 @@ func createPermission(
 ) (permission, error) {
 	logger = logger.WithName("create-permission-definition")
 	u := uuid.NewV4().Bytes()
+	var result sql.Result
+	var err error
+	var id int64
 
-	result, err := squirrel.Insert("permission").
+	query := squirrel.Insert("permission").
 		Columns("uuid", "action_id", "role_id", "resource_pattern").
 		Values(u, actionID, roleID, resourcePattern).
-		RunWith(conn).
-		ExecContext(ctx)
+		RunWith(conn)
+
+	if dbDriver == sqlx.DBDriverMySQL {
+		result, err = query.ExecContext(ctx)
+	} else {
+		err = query.Suffix("RETURNING \"id\"").
+			PlaceholderFormat(squirrel.Dollar).
+			QueryRowContext(ctx).
+			Scan(&id)
+	}
 
 	switch e := err.(type) {
 	case nil:
-		permissionID, err2 := result.LastInsertId()
-		if err2 != nil {
-			logger.Error(failedToRetrieveID, err2)
-			return permission{}, err2
+		if dbDriver == sqlx.DBDriverMySQL {
+			var err2 error
+			id, err2 = result.LastInsertId()
+			if err2 != nil {
+				logger.Error(failedToRetrieveID, err2)
+				return permission{}, err2
+			}
 		}
 
 		return permission{
-			ID: permissionID,
+			ID: id,
 			Permission: perm.Permission{
 				Action:          action,
 				ResourcePattern: resourcePattern,
@@ -749,17 +901,19 @@ func createPermission(
 			logger.Debug(errPermissionAlreadyExists)
 			return permission{}, errPermissionAlreadyExistsDB
 		}
-
-		logger.Error(failedToCreatePermission, err)
-		return permission{}, err
-	default:
-		logger.Error(failedToCreatePermission, err)
-		return permission{}, err
+	case *pq.Error:
+		if e.Code == pq.ErrorCode("23505") {
+			logger.Debug(errActionAlreadyExists)
+			return permission{}, errPermissionAlreadyExistsDB
+		}
 	}
+	logger.Error(failedToCreatePermission, err)
+	return permission{}, err
 }
 
 func listResourcePatterns(
 	ctx context.Context,
+	dbDriver sqlx.DBDriver,
 	logger logx.Logger,
 	conn squirrel.BaseRunner,
 	query repos.ListResourcePatternsQuery,

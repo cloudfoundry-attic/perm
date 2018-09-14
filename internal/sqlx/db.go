@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -12,12 +13,15 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
 	uuid "github.com/satori/go.uuid"
+
+	_ "github.com/lib/pq"
 )
 
 type DBDriver string
 
 const (
-	DBDriverMySQL DBDriver = "mysql"
+	DBDriverMySQL    DBDriver = "mysql"
+	DBDriverPostgres DBDriver = "postgres"
 )
 
 type DBOption interface {
@@ -61,6 +65,10 @@ type DB struct {
 	Conn *sql.DB
 
 	driver DBDriver
+}
+
+func (db *DB) Driver() DBDriver {
+	return db.driver
 }
 
 func Connect(driver DBDriver, options ...DBOption) (*DB, error) {
@@ -154,6 +162,21 @@ func open(driver DBDriver, cfg *dbConfig) (*DB, error) {
 			Conn:   db,
 			driver: driver,
 		}, nil
+	case DBDriverPostgres:
+		dataSourceName, err := cfg.dataSourceNamePostgres()
+		if err != nil {
+			return nil, err
+		}
+
+		db, err := sql.Open(string(driver), dataSourceName)
+		if err != nil {
+			return nil, err
+		}
+
+		return &DB{
+			Conn:   db,
+			driver: driver,
+		}, nil
 	default:
 		return nil, ErrUnsupportedSQLDriver
 	}
@@ -198,6 +221,11 @@ func (c *dbConfig) dataSourceNameMySQL() (string, error) {
 	}
 
 	return cfg.FormatDSN(), nil
+}
+
+func (c *dbConfig) dataSourceNamePostgres() (string, error) {
+	// TODO: support tls
+	return fmt.Sprintf("dbname=%s host=%s port=%d sslmode=disable", c.dbName, c.host, c.port), nil
 }
 
 type dbUsernameOption struct {

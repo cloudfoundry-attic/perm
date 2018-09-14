@@ -30,7 +30,7 @@ func (s *Store) CreateRole(
 	}()
 
 	var r2 role
-	r2, err = createRoleAndAssignPermissions(ctx, logger, tx, name, permissions...)
+	r2, err = createRoleAndAssignPermissions(ctx, s.conn.Driver(), logger, tx, name, permissions...)
 	if err != nil {
 		return
 	}
@@ -44,7 +44,7 @@ func (s *Store) DeleteRole(
 	logger logx.Logger,
 	roleName string,
 ) error {
-	return deleteRole(ctx, logger.WithName("data-service"), s.conn, roleName)
+	return deleteRole(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, roleName)
 }
 
 func (s *Store) ListRolePermissions(
@@ -52,7 +52,7 @@ func (s *Store) ListRolePermissions(
 	logger logx.Logger,
 	query repos.ListRolePermissionsQuery,
 ) ([]perm.Permission, error) {
-	p, err := listRolePermissions(ctx, logger.WithName("data-service"), s.conn, query)
+	p, err := listRolePermissions(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, query)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *Store) AssignRole(
 		}
 	}()
 
-	err = assignRole(ctx, logger, tx, roleName, domainID, namespace)
+	err = assignRole(ctx, s.conn.Driver(), logger, tx, roleName, domainID, namespace)
 
 	return
 }
@@ -111,7 +111,7 @@ func (s *Store) AssignRoleToGroup(
 		}
 	}()
 
-	err = assignRoleToGroup(ctx, logger, tx, roleName, groupID)
+	err = assignRoleToGroup(ctx, s.conn.Driver(), logger, tx, roleName, groupID)
 
 	return err
 }
@@ -137,7 +137,7 @@ func (s *Store) UnassignRole(
 		}
 	}()
 
-	err = unassignRole(ctx, logger, tx, roleName, domainID, namespace)
+	err = unassignRole(ctx, s.conn.Driver(), logger, tx, roleName, domainID, namespace)
 
 	return
 }
@@ -162,7 +162,7 @@ func (s *Store) UnassignRoleFromGroup(
 		}
 	}()
 
-	err = unassignRoleFromGroup(ctx, logger, tx, roleName, groupID)
+	err = unassignRoleFromGroup(ctx, s.conn.Driver(), logger, tx, roleName, groupID)
 	return
 }
 
@@ -171,7 +171,7 @@ func (s *Store) HasRole(
 	logger logx.Logger,
 	query repos.HasRoleQuery,
 ) (bool, error) {
-	return hasRole(ctx, logger.WithName("data-service"), s.conn, query)
+	return hasRole(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, query)
 }
 
 func (s *Store) HasRoleForGroup(
@@ -179,5 +179,5 @@ func (s *Store) HasRoleForGroup(
 	logger logx.Logger,
 	query repos.HasRoleForGroupQuery,
 ) (bool, error) {
-	return hasRoleForGroup(ctx, logger.WithName("data-service"), s.conn, query)
+	return hasRoleForGroup(ctx, s.conn.Driver(), logger.WithName("data-service"), s.conn, query)
 }
