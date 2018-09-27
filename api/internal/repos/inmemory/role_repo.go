@@ -73,12 +73,12 @@ func (s *Store) AssignRole(
 	if _, exists := s.roles[roleName]; !exists {
 		return perm.ErrRoleNotFound
 	}
-	actor := perm.Actor{
+	a := actor{
 		ID:        id,
 		Namespace: namespace,
 	}
 
-	assignments, ok := s.assignments[actor]
+	assignments, ok := s.assignments[a]
 	if !ok {
 		assignments = []string{}
 	}
@@ -93,7 +93,7 @@ func (s *Store) AssignRole(
 
 	assignments = append(assignments, roleName)
 
-	s.assignments[actor] = assignments
+	s.assignments[a] = assignments
 	return nil
 }
 
@@ -140,12 +140,12 @@ func (s *Store) UnassignRole(
 		return perm.ErrRoleNotFound
 	}
 
-	actor := perm.Actor{
+	a := actor{
 		ID:        id,
 		Namespace: namespace,
 	}
 
-	assignments, ok := s.assignments[actor]
+	assignments, ok := s.assignments[a]
 	if !ok {
 		err := perm.ErrAssignmentNotFound
 		logger.Error(errRoleAssignmentNotFound, err)
@@ -154,7 +154,7 @@ func (s *Store) UnassignRole(
 
 	for i, assignment := range assignments {
 		if assignment == roleName {
-			s.assignments[actor] = append(assignments[:i], assignments[i+1:]...)
+			s.assignments[a] = append(assignments[:i], assignments[i+1:]...)
 			logger.Debug(success)
 			return nil
 		}
@@ -213,7 +213,10 @@ func (s *Store) HasRole(
 		return false, perm.ErrRoleNotFound
 	}
 
-	assignments, ok := s.assignments[query.Actor]
+	assignments, ok := s.assignments[actor{
+		ID:        query.Actor.ID,
+		Namespace: query.Actor.Namespace,
+	}]
 	if !ok {
 		return false, nil
 	}

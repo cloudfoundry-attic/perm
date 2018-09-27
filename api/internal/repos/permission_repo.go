@@ -11,22 +11,10 @@ type HasPermissionQuery struct {
 	Actor           perm.Actor
 	Action          string
 	ResourcePattern string
-	Groups          []perm.Group
-}
-
-type Groups []perm.Group
-
-func (g *Groups) GetIDs() []string {
-	ids := []string{}
-	for _, group := range *g {
-		ids = append(ids, group.ID)
-	}
-	return ids
 }
 
 type ListResourcePatternsQuery struct {
 	Actor  perm.Actor
-	Groups Groups
 	Action string
 }
 

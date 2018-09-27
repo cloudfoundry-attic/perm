@@ -14,7 +14,10 @@ func (s *Store) HasPermission(
 	query repos.HasPermissionQuery,
 ) (bool, error) {
 	// Actor-based check
-	assignments, _ := s.assignments[query.Actor]
+	assignments, _ := s.assignments[actor{
+		ID:        query.Actor.ID,
+		Namespace: query.Actor.Namespace,
+	}]
 
 	var permissions []perm.Permission
 	action := query.Action
@@ -37,7 +40,7 @@ func (s *Store) HasPermission(
 	}
 
 	// Group-based check
-	for _, group := range query.Groups {
+	for _, group := range query.Actor.Groups {
 		assignments, _ := s.groupAssignments[group]
 
 		var permissions []perm.Permission
@@ -70,9 +73,12 @@ func (s *Store) ListResourcePatterns(
 ) ([]string, error) {
 	var resourcePatterns []string
 
-	assignments, _ := s.assignments[query.Actor]
+	assignments, _ := s.assignments[actor{
+		ID:        query.Actor.ID,
+		Namespace: query.Actor.Namespace,
+	}]
 
-	for _, group := range query.Groups {
+	for _, group := range query.Actor.Groups {
 		gAssignment, ok := s.groupAssignments[group]
 		if ok {
 			assignments = append(assignments, gAssignment...)

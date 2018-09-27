@@ -658,7 +658,7 @@ func hasPermission(
 		logx.Data{Key: "assignment.actor_id", Value: query.Actor.ID},
 		logx.Data{Key: "permission.action", Value: query.Action},
 		logx.Data{Key: "permission.resourcePattern", Value: query.ResourcePattern},
-		logx.Data{Key: "group_assignment.groups", Value: query.Groups},
+		logx.Data{Key: "group_assignment.groups", Value: query.Actor.Groups},
 	)
 
 	var count int
@@ -686,7 +686,7 @@ func hasPermission(
 		return true, nil
 	}
 	// Group-based access grant.
-	for _, group := range query.Groups {
+	for _, group := range query.Actor.Groups {
 		err := squirrel.Select("count(group_assignment.role_id)").
 			From("group_assignment").
 			JoinClause("INNER JOIN permission permission ON group_assignment.role_id = permission.role_id").
@@ -812,6 +812,11 @@ func listResourcePatterns(
 		return nil, err
 	}
 
+	var groupIDs []string
+	for _, group := range query.Actor.Groups {
+		groupIDs = append(groupIDs, group.ID)
+	}
+
 	gRows, err := squirrel.Select("permission.resource_pattern").
 		Distinct().
 		From("role").
@@ -820,7 +825,7 @@ func listResourcePatterns(
 		Join("action ON permission.action_id = action.id").
 		Where(squirrel.Eq{
 			"action.name":               action,
-			"group_assignment.group_id": query.Groups.GetIDs(),
+			"group_assignment.group_id": groupIDs,
 		}).
 		RunWith(conn).
 		QueryContext(ctx)

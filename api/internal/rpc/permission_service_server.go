@@ -43,12 +43,13 @@ func (s *PermissionServiceServer) HasPermission(
 		Namespace: pActor.GetNamespace(),
 	}
 	action := req.GetAction()
-	groups := make([]perm.Group, 0)
-	for _, group := range req.GetGroups() {
-		groups = append(groups, perm.Group{
+
+	for _, group := range pActor.GetGroups() {
+		actor.Groups = append(actor.Groups, perm.Group{
 			ID: group.GetID(),
 		})
 	}
+
 	resourcePattern := req.GetResource()
 	extensions := []logx.SecurityData{
 		{Key: "actorID", Value: pActor.GetID()},
@@ -71,7 +72,6 @@ func (s *PermissionServiceServer) HasPermission(
 		Actor:           actor,
 		Action:          action,
 		ResourcePattern: resourcePattern,
-		Groups:          groups,
 	}
 
 	found, err := s.permissionRepo.HasPermission(ctx, logger, query)
@@ -101,16 +101,14 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 		Namespace: pActor.GetNamespace(),
 	}
 
-	pGroups := req.GetGroups()
-	groups := []perm.Group{}
-	for _, pGroup := range pGroups {
-		groups = append(groups, perm.Group{ID: pGroup.GetID()})
+	for _, group := range pActor.GetGroups() {
+		actor.Groups = append(actor.Groups, perm.Group{ID: group.GetID()})
 	}
 
 	action := req.GetAction()
 
 	groupsStr := ""
-	for _, g := range groups {
+	for _, g := range actor.Groups {
 		groupsStr = groupsStr + ", " + g.ID
 	}
 
@@ -134,7 +132,6 @@ func (s *PermissionServiceServer) ListResourcePatterns(
 	query := repos.ListResourcePatternsQuery{
 		Actor:  actor,
 		Action: action,
-		Groups: groups,
 	}
 
 	resourcePatterns, err := s.permissionRepo.ListResourcePatterns(ctx, logger, query)

@@ -3,6 +3,7 @@ syntax = 'proto3';
 package cloud_foundry.perm.protos;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "group.proto";
 
 option go_package = "protos";
 option (gogoproto.marshaler_all) = true;
@@ -14,4 +15,5 @@ message Actor {
 
   string id = 2 [(gogoproto.customname) = "ID"];
   string namespace = 3;
+  repeated Group groups = 4;
 }

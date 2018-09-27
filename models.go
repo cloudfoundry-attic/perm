@@ -3,6 +3,7 @@ package perm
 type Actor struct {
 	ID        string
 	Namespace string
+	Groups    []Group
 }
 
 type Group struct {

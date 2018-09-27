@@ -62,7 +62,6 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 		logger logx.Logger
 
 		roleName                                             string
-		groups                                               []perm.Group
 		sameAction                                           string
 		resourcePattern1, resourcePattern2, resourcePattern3 string
 
@@ -88,10 +87,10 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 		actor = perm.Actor{
 			ID:        uuid.NewV4().String(),
 			Namespace: uuid.NewV4().String(),
-		}
-		groups = []perm.Group{
-			{ID: uuid.NewV4().String()},
-			{ID: uuid.NewV4().String()},
+			Groups: []perm.Group{
+				{ID: uuid.NewV4().String()},
+				{ID: uuid.NewV4().String()},
+			},
 		}
 	})
 
@@ -150,14 +149,13 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 				_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
+				err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, actor.Groups[0].ID)
 				Expect(err).NotTo(HaveOccurred())
 
 				query := HasPermissionQuery{
 					Actor:           actor,
 					Action:          permission1.Action,
 					ResourcePattern: permission1.ResourcePattern,
-					Groups:          groups,
 				}
 
 				yes, err := subject.HasPermission(context.Background(), logger, query)
@@ -174,7 +172,6 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 					Actor:           actor,
 					Action:          permission1.Action,
 					ResourcePattern: permission1.ResourcePattern,
-					Groups:          groups,
 				}
 				yes, err := subject.HasPermission(context.Background(), logger, query)
 
@@ -288,18 +285,17 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 
 					_, err = roleRepo.CreateRole(context.Background(), logger, otherRoleName, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, actor.Groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = roleRepo.CreateRole(context.Background(), logger, "some-other-role-name", permission3)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(context.Background(), logger, "some-other-role-name", groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, "some-other-role-name", actor.Groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := ListResourcePatternsQuery{
 						Actor:  actor,
 						Action: sameAction,
-						Groups: groups,
 					}
 
 					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
@@ -315,18 +311,17 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 				It("does not list out the permissions for those different actions", func() {
 					_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, actor.Groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = roleRepo.CreateRole(context.Background(), logger, otherRoleName, otherPermission)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, groups[1].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, otherRoleName, actor.Groups[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := ListResourcePatternsQuery{
 						Actor:  actor,
 						Action: sameAction,
-						Groups: groups,
 					}
 
 					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)
@@ -342,13 +337,12 @@ func testPermissionRepo(subjectCreator func() PermissionRepo, roleRepoCreator fu
 				It("still returns the group's roles", func() {
 					_, err := roleRepo.CreateRole(context.Background(), logger, roleName, permission1, permission2)
 					Expect(err).NotTo(HaveOccurred())
-					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, groups[0].ID)
+					err = roleRepo.AssignRoleToGroup(context.Background(), logger, roleName, actor.Groups[0].ID)
 					Expect(err).NotTo(HaveOccurred())
 
 					query := ListResourcePatternsQuery{
 						Actor:  actor,
 						Action: sameAction,
-						Groups: groups,
 					}
 
 					resourcePatterns, err := subject.ListResourcePatterns(context.Background(), logger, query)

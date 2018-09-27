@@ -190,8 +190,6 @@ var _ = Describe("PermissionServiceServer", func() {
 		})
 
 		Context("when there are groups provided to the request", func() {
-			var groups []*protos.Group
-
 			Context("when the actor does not permission", func() {
 				It("returns true when the group has a matching permission action and resource", func() {
 					_, err := roleServiceServer.CreateRole(ctx, &protos.CreateRoleRequest{
@@ -204,7 +202,7 @@ var _ = Describe("PermissionServiceServer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					group := protos.Group{ID: "some-group-id"}
-					groups = append(groups, &group)
+					actor.Groups = append(actor.Groups, &group)
 					_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
 						Group:    &group,
 						RoleName: roleName,
@@ -215,7 +213,6 @@ var _ = Describe("PermissionServiceServer", func() {
 						Actor:    actor,
 						Action:   "some-other-action",
 						Resource: "some-other-resource",
-						Groups:   groups,
 					})
 					Expect(err).NotTo(HaveOccurred())
 					Expect(res.GetHasPermission()).To(BeTrue())
@@ -231,7 +228,7 @@ var _ = Describe("PermissionServiceServer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					group := protos.Group{ID: "some-group-id"}
-					groups = append(groups, &group)
+					actor.Groups = append(actor.Groups, &group)
 					_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
 						Group:    &group,
 						RoleName: roleName,
@@ -242,7 +239,6 @@ var _ = Describe("PermissionServiceServer", func() {
 						Actor:    actor,
 						Action:   "some-other-action",
 						Resource: "some-other-resource",
-						Groups:   groups,
 					})
 					Expect(err).NotTo(HaveOccurred())
 					Expect(res.GetHasPermission()).To(BeFalse())
@@ -369,7 +365,6 @@ var _ = Describe("PermissionServiceServer", func() {
 		Context("when there are groups provided to the request", func() {
 			var (
 				actor                                 *protos.Actor
-				groups                                []*protos.Group
 				role1Name, role2Name                  string
 				action1, action2                      string
 				resource1, resource2, resource3       string
@@ -427,7 +422,7 @@ var _ = Describe("PermissionServiceServer", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				group := protos.Group{ID: "some-group-id"}
-				groups = append(groups, &group)
+				actor.Groups = append(actor.Groups, &group)
 				_, err = roleServiceServer.AssignRoleToGroup(ctx, &protos.AssignRoleToGroupRequest{
 					Group:    &group,
 					RoleName: role2Name,
@@ -437,7 +432,6 @@ var _ = Describe("PermissionServiceServer", func() {
 				res, err := subject.ListResourcePatterns(ctx, &protos.ListResourcePatternsRequest{
 					Actor:  actor,
 					Action: action2,
-					Groups: groups,
 				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res.ResourcePatterns).To(HaveLen(2))
