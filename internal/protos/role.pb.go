@@ -15,14 +15,51 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type Role struct {
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Role) Reset()                    { *m = Role{} }
-func (m *Role) String() string            { return proto.CompactTextString(m) }
-func (*Role) ProtoMessage()               {}
-func (*Role) Descriptor() ([]byte, []int) { return fileDescriptorRole, []int{0} }
+func (m *Role) Reset()         { *m = Role{} }
+func (m *Role) String() string { return proto.CompactTextString(m) }
+func (*Role) ProtoMessage()    {}
+func (*Role) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_0767cb2f45a9cb7d, []int{0}
+}
+func (m *Role) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Role) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Role.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Role) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Role.Merge(dst, src)
+}
+func (m *Role) XXX_Size() int {
+	return m.Size()
+}
+func (m *Role) XXX_DiscardUnknown() {
+	xxx_messageInfo_Role.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Role proto.InternalMessageInfo
 
 func (m *Role) GetName() string {
 	if m != nil {
@@ -55,6 +92,9 @@ func (m *Role) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRole(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -73,6 +113,9 @@ func (m *Role) Size() (n int) {
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovRole(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -160,6 +203,7 @@ func (m *Role) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -274,9 +318,9 @@ var (
 	ErrIntOverflowRole   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("role.proto", fileDescriptorRole) }
+func init() { proto.RegisterFile("role.proto", fileDescriptor_role_0767cb2f45a9cb7d) }
 
-var fileDescriptorRole = []byte{
+var fileDescriptor_role_0767cb2f45a9cb7d = []byte{
 	// 147 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0xca, 0xcf, 0x49,
 	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4c, 0xce, 0xc9, 0x2f, 0x4d, 0x89, 0x4f, 0xcb,

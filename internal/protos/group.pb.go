@@ -15,14 +15,51 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type Group struct {
-	ID string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	ID                   string   `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Group) Reset()                    { *m = Group{} }
-func (m *Group) String() string            { return proto.CompactTextString(m) }
-func (*Group) ProtoMessage()               {}
-func (*Group) Descriptor() ([]byte, []int) { return fileDescriptorGroup, []int{0} }
+func (m *Group) Reset()         { *m = Group{} }
+func (m *Group) String() string { return proto.CompactTextString(m) }
+func (*Group) ProtoMessage()    {}
+func (*Group) Descriptor() ([]byte, []int) {
+	return fileDescriptor_group_5321833fe7c125de, []int{0}
+}
+func (m *Group) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Group) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Group.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Group) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Group.Merge(dst, src)
+}
+func (m *Group) XXX_Size() int {
+	return m.Size()
+}
+func (m *Group) XXX_DiscardUnknown() {
+	xxx_messageInfo_Group.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Group proto.InternalMessageInfo
 
 func (m *Group) GetID() string {
 	if m != nil {
@@ -55,6 +92,9 @@ func (m *Group) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintGroup(dAtA, i, uint64(len(m.ID)))
 		i += copy(dAtA[i:], m.ID)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -73,6 +113,9 @@ func (m *Group) Size() (n int) {
 	l = len(m.ID)
 	if l > 0 {
 		n += 1 + l + sovGroup(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -160,6 +203,7 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -274,9 +318,9 @@ var (
 	ErrIntOverflowGroup   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("group.proto", fileDescriptorGroup) }
+func init() { proto.RegisterFile("group.proto", fileDescriptor_group_5321833fe7c125de) }
 
-var fileDescriptorGroup = []byte{
+var fileDescriptor_group_5321833fe7c125de = []byte{
 	// 154 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0x2f, 0xca, 0x2f,
 	0x2d, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4c, 0xce, 0xc9, 0x2f, 0x4d, 0x89, 0x4f,

@@ -18,19 +18,54 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type HasPermissionRequest struct {
-	Actor    *Actor   `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Action   string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
-	Resource string   `protobuf:"bytes,3,opt,name=resource,proto3" json:"resource,omitempty"`
-	Groups   []*Group `protobuf:"bytes,4,rep,name=groups" json:"groups,omitempty"`
+	Actor                *Actor   `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	Action               string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	Resource             string   `protobuf:"bytes,3,opt,name=resource,proto3" json:"resource,omitempty"`
+	Groups               []*Group `protobuf:"bytes,4,rep,name=groups" json:"groups,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *HasPermissionRequest) Reset()         { *m = HasPermissionRequest{} }
 func (m *HasPermissionRequest) String() string { return proto.CompactTextString(m) }
 func (*HasPermissionRequest) ProtoMessage()    {}
 func (*HasPermissionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorPermissionService, []int{0}
+	return fileDescriptor_permission_service_3977899bfc0f5f33, []int{0}
 }
+func (m *HasPermissionRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasPermissionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasPermissionRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasPermissionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasPermissionRequest.Merge(dst, src)
+}
+func (m *HasPermissionRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasPermissionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasPermissionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasPermissionRequest proto.InternalMessageInfo
 
 func (m *HasPermissionRequest) GetActor() *Actor {
 	if m != nil {
@@ -61,15 +96,44 @@ func (m *HasPermissionRequest) GetGroups() []*Group {
 }
 
 type HasPermissionResponse struct {
-	HasPermission bool `protobuf:"varint,1,opt,name=has_permission,json=hasPermission,proto3" json:"has_permission,omitempty"`
+	HasPermission        bool     `protobuf:"varint,1,opt,name=has_permission,json=hasPermission,proto3" json:"has_permission,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *HasPermissionResponse) Reset()         { *m = HasPermissionResponse{} }
 func (m *HasPermissionResponse) String() string { return proto.CompactTextString(m) }
 func (*HasPermissionResponse) ProtoMessage()    {}
 func (*HasPermissionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorPermissionService, []int{1}
+	return fileDescriptor_permission_service_3977899bfc0f5f33, []int{1}
 }
+func (m *HasPermissionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasPermissionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasPermissionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasPermissionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasPermissionResponse.Merge(dst, src)
+}
+func (m *HasPermissionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasPermissionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasPermissionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasPermissionResponse proto.InternalMessageInfo
 
 func (m *HasPermissionResponse) GetHasPermission() bool {
 	if m != nil {
@@ -79,17 +143,46 @@ func (m *HasPermissionResponse) GetHasPermission() bool {
 }
 
 type ListResourcePatternsRequest struct {
-	Actor  *Actor   `protobuf:"bytes,2,opt,name=actor" json:"actor,omitempty"`
-	Action string   `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
-	Groups []*Group `protobuf:"bytes,4,rep,name=groups" json:"groups,omitempty"`
+	Actor                *Actor   `protobuf:"bytes,2,opt,name=actor" json:"actor,omitempty"`
+	Action               string   `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
+	Groups               []*Group `protobuf:"bytes,4,rep,name=groups" json:"groups,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *ListResourcePatternsRequest) Reset()         { *m = ListResourcePatternsRequest{} }
 func (m *ListResourcePatternsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListResourcePatternsRequest) ProtoMessage()    {}
 func (*ListResourcePatternsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorPermissionService, []int{2}
+	return fileDescriptor_permission_service_3977899bfc0f5f33, []int{2}
 }
+func (m *ListResourcePatternsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListResourcePatternsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListResourcePatternsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ListResourcePatternsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListResourcePatternsRequest.Merge(dst, src)
+}
+func (m *ListResourcePatternsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListResourcePatternsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListResourcePatternsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListResourcePatternsRequest proto.InternalMessageInfo
 
 func (m *ListResourcePatternsRequest) GetActor() *Actor {
 	if m != nil {
@@ -113,15 +206,44 @@ func (m *ListResourcePatternsRequest) GetGroups() []*Group {
 }
 
 type ListResourcePatternsResponse struct {
-	ResourcePatterns []string `protobuf:"bytes,2,rep,name=resource_patterns,json=resourcePatterns" json:"resource_patterns,omitempty"`
+	ResourcePatterns     []string `protobuf:"bytes,2,rep,name=resource_patterns,json=resourcePatterns" json:"resource_patterns,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *ListResourcePatternsResponse) Reset()         { *m = ListResourcePatternsResponse{} }
 func (m *ListResourcePatternsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListResourcePatternsResponse) ProtoMessage()    {}
 func (*ListResourcePatternsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorPermissionService, []int{3}
+	return fileDescriptor_permission_service_3977899bfc0f5f33, []int{3}
 }
+func (m *ListResourcePatternsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListResourcePatternsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListResourcePatternsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ListResourcePatternsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListResourcePatternsResponse.Merge(dst, src)
+}
+func (m *ListResourcePatternsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListResourcePatternsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListResourcePatternsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListResourcePatternsResponse proto.InternalMessageInfo
 
 func (m *ListResourcePatternsResponse) GetResourcePatterns() []string {
 	if m != nil {
@@ -162,7 +284,7 @@ func NewPermissionServiceClient(cc *grpc.ClientConn) PermissionServiceClient {
 
 func (c *permissionServiceClient) HasPermission(ctx context.Context, in *HasPermissionRequest, opts ...grpc.CallOption) (*HasPermissionResponse, error) {
 	out := new(HasPermissionResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.PermissionService/HasPermission", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.PermissionService/HasPermission", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +293,7 @@ func (c *permissionServiceClient) HasPermission(ctx context.Context, in *HasPerm
 
 func (c *permissionServiceClient) ListResourcePatterns(ctx context.Context, in *ListResourcePatternsRequest, opts ...grpc.CallOption) (*ListResourcePatternsResponse, error) {
 	out := new(ListResourcePatternsResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.PermissionService/ListResourcePatterns", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.PermissionService/ListResourcePatterns", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -291,6 +413,9 @@ func (m *HasPermissionRequest) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -318,6 +443,9 @@ func (m *HasPermissionResponse) MarshalTo(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i++
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -365,6 +493,9 @@ func (m *ListResourcePatternsRequest) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -397,6 +528,9 @@ func (m *ListResourcePatternsResponse) MarshalTo(dAtA []byte) (int, error) {
 			i++
 			i += copy(dAtA[i:], s)
 		}
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -431,6 +565,9 @@ func (m *HasPermissionRequest) Size() (n int) {
 			n += 1 + l + sovPermissionService(uint64(l))
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -439,6 +576,9 @@ func (m *HasPermissionResponse) Size() (n int) {
 	_ = l
 	if m.HasPermission {
 		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -460,6 +600,9 @@ func (m *ListResourcePatternsRequest) Size() (n int) {
 			n += 1 + l + sovPermissionService(uint64(l))
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -471,6 +614,9 @@ func (m *ListResourcePatternsResponse) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovPermissionService(uint64(l))
 		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -651,6 +797,7 @@ func (m *HasPermissionRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -721,6 +868,7 @@ func (m *HasPermissionResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -864,6 +1012,7 @@ func (m *ListResourcePatternsRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -943,6 +1092,7 @@ func (m *ListResourcePatternsResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1057,9 +1207,11 @@ var (
 	ErrIntOverflowPermissionService   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("permission_service.proto", fileDescriptorPermissionService) }
+func init() {
+	proto.RegisterFile("permission_service.proto", fileDescriptor_permission_service_3977899bfc0f5f33)
+}
 
-var fileDescriptorPermissionService = []byte{
+var fileDescriptor_permission_service_3977899bfc0f5f33 = []byte{
 	// 394 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcf, 0x4e, 0xea, 0x40,
 	0x18, 0xc5, 0xef, 0xb4, 0x5c, 0x02, 0x43, 0xb8, 0x81, 0x09, 0xf7, 0xa6, 0xb7, 0x9a, 0xa6, 0x69,

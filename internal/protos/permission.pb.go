@@ -15,15 +15,52 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type Permission struct {
-	Action          string `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
-	ResourcePattern string `protobuf:"bytes,3,opt,name=resource_pattern,json=resourcePattern,proto3" json:"resource_pattern,omitempty"`
+	Action               string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	ResourcePattern      string   `protobuf:"bytes,3,opt,name=resource_pattern,json=resourcePattern,proto3" json:"resource_pattern,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Permission) Reset()                    { *m = Permission{} }
-func (m *Permission) String() string            { return proto.CompactTextString(m) }
-func (*Permission) ProtoMessage()               {}
-func (*Permission) Descriptor() ([]byte, []int) { return fileDescriptorPermission, []int{0} }
+func (m *Permission) Reset()         { *m = Permission{} }
+func (m *Permission) String() string { return proto.CompactTextString(m) }
+func (*Permission) ProtoMessage()    {}
+func (*Permission) Descriptor() ([]byte, []int) {
+	return fileDescriptor_permission_03bffe0b863e210a, []int{0}
+}
+func (m *Permission) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Permission) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Permission.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Permission) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Permission.Merge(dst, src)
+}
+func (m *Permission) XXX_Size() int {
+	return m.Size()
+}
+func (m *Permission) XXX_DiscardUnknown() {
+	xxx_messageInfo_Permission.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Permission proto.InternalMessageInfo
 
 func (m *Permission) GetAction() string {
 	if m != nil {
@@ -69,6 +106,9 @@ func (m *Permission) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintPermission(dAtA, i, uint64(len(m.ResourcePattern)))
 		i += copy(dAtA[i:], m.ResourcePattern)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -91,6 +131,9 @@ func (m *Permission) Size() (n int) {
 	l = len(m.ResourcePattern)
 	if l > 0 {
 		n += 1 + l + sovPermission(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -207,6 +250,7 @@ func (m *Permission) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -321,9 +365,9 @@ var (
 	ErrIntOverflowPermission   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("permission.proto", fileDescriptorPermission) }
+func init() { proto.RegisterFile("permission.proto", fileDescriptor_permission_03bffe0b863e210a) }
 
-var fileDescriptorPermission = []byte{
+var fileDescriptor_permission_03bffe0b863e210a = []byte{
 	// 181 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x28, 0x48, 0x2d, 0xca,
 	0xcd, 0x2c, 0x2e, 0xce, 0xcc, 0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4c, 0xce,

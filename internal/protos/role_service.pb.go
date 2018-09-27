@@ -18,15 +18,52 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type CreateRoleRequest struct {
-	Name        string        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Permissions []*Permission `protobuf:"bytes,2,rep,name=permissions" json:"permissions,omitempty"`
+	Name                 string        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Permissions          []*Permission `protobuf:"bytes,2,rep,name=permissions" json:"permissions,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
-func (m *CreateRoleRequest) Reset()                    { *m = CreateRoleRequest{} }
-func (m *CreateRoleRequest) String() string            { return proto.CompactTextString(m) }
-func (*CreateRoleRequest) ProtoMessage()               {}
-func (*CreateRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{0} }
+func (m *CreateRoleRequest) Reset()         { *m = CreateRoleRequest{} }
+func (m *CreateRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateRoleRequest) ProtoMessage()    {}
+func (*CreateRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{0}
+}
+func (m *CreateRoleRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateRoleRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *CreateRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateRoleRequest.Merge(dst, src)
+}
+func (m *CreateRoleRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateRoleRequest proto.InternalMessageInfo
 
 func (m *CreateRoleRequest) GetName() string {
 	if m != nil {
@@ -43,13 +80,44 @@ func (m *CreateRoleRequest) GetPermissions() []*Permission {
 }
 
 type CreateRoleResponse struct {
-	Role *Role `protobuf:"bytes,1,opt,name=role" json:"role,omitempty"`
+	Role                 *Role    `protobuf:"bytes,1,opt,name=role" json:"role,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CreateRoleResponse) Reset()                    { *m = CreateRoleResponse{} }
-func (m *CreateRoleResponse) String() string            { return proto.CompactTextString(m) }
-func (*CreateRoleResponse) ProtoMessage()               {}
-func (*CreateRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{1} }
+func (m *CreateRoleResponse) Reset()         { *m = CreateRoleResponse{} }
+func (m *CreateRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateRoleResponse) ProtoMessage()    {}
+func (*CreateRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{1}
+}
+func (m *CreateRoleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateRoleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *CreateRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateRoleResponse.Merge(dst, src)
+}
+func (m *CreateRoleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateRoleResponse proto.InternalMessageInfo
 
 func (m *CreateRoleResponse) GetRole() *Role {
 	if m != nil {
@@ -59,13 +127,44 @@ func (m *CreateRoleResponse) GetRole() *Role {
 }
 
 type DeleteRoleRequest struct {
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DeleteRoleRequest) Reset()                    { *m = DeleteRoleRequest{} }
-func (m *DeleteRoleRequest) String() string            { return proto.CompactTextString(m) }
-func (*DeleteRoleRequest) ProtoMessage()               {}
-func (*DeleteRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{2} }
+func (m *DeleteRoleRequest) Reset()         { *m = DeleteRoleRequest{} }
+func (m *DeleteRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteRoleRequest) ProtoMessage()    {}
+func (*DeleteRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{2}
+}
+func (m *DeleteRoleRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteRoleRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DeleteRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteRoleRequest.Merge(dst, src)
+}
+func (m *DeleteRoleRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteRoleRequest proto.InternalMessageInfo
 
 func (m *DeleteRoleRequest) GetName() string {
 	if m != nil {
@@ -75,22 +174,84 @@ func (m *DeleteRoleRequest) GetName() string {
 }
 
 type DeleteRoleResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DeleteRoleResponse) Reset()                    { *m = DeleteRoleResponse{} }
-func (m *DeleteRoleResponse) String() string            { return proto.CompactTextString(m) }
-func (*DeleteRoleResponse) ProtoMessage()               {}
-func (*DeleteRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{3} }
+func (m *DeleteRoleResponse) Reset()         { *m = DeleteRoleResponse{} }
+func (m *DeleteRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteRoleResponse) ProtoMessage()    {}
+func (*DeleteRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{3}
+}
+func (m *DeleteRoleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteRoleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *DeleteRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteRoleResponse.Merge(dst, src)
+}
+func (m *DeleteRoleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteRoleResponse proto.InternalMessageInfo
 
 type AssignRoleRequest struct {
-	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Actor                *Actor   `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AssignRoleRequest) Reset()                    { *m = AssignRoleRequest{} }
-func (m *AssignRoleRequest) String() string            { return proto.CompactTextString(m) }
-func (*AssignRoleRequest) ProtoMessage()               {}
-func (*AssignRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{4} }
+func (m *AssignRoleRequest) Reset()         { *m = AssignRoleRequest{} }
+func (m *AssignRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*AssignRoleRequest) ProtoMessage()    {}
+func (*AssignRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{4}
+}
+func (m *AssignRoleRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssignRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssignRoleRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AssignRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssignRoleRequest.Merge(dst, src)
+}
+func (m *AssignRoleRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssignRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssignRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AssignRoleRequest proto.InternalMessageInfo
 
 func (m *AssignRoleRequest) GetActor() *Actor {
 	if m != nil {
@@ -107,24 +268,84 @@ func (m *AssignRoleRequest) GetRoleName() string {
 }
 
 type AssignRoleResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AssignRoleResponse) Reset()                    { *m = AssignRoleResponse{} }
-func (m *AssignRoleResponse) String() string            { return proto.CompactTextString(m) }
-func (*AssignRoleResponse) ProtoMessage()               {}
-func (*AssignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{5} }
+func (m *AssignRoleResponse) Reset()         { *m = AssignRoleResponse{} }
+func (m *AssignRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*AssignRoleResponse) ProtoMessage()    {}
+func (*AssignRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{5}
+}
+func (m *AssignRoleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssignRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssignRoleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AssignRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssignRoleResponse.Merge(dst, src)
+}
+func (m *AssignRoleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssignRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssignRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AssignRoleResponse proto.InternalMessageInfo
 
 type AssignRoleToGroupRequest struct {
-	Group    *Group `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Group                *Group   `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *AssignRoleToGroupRequest) Reset()         { *m = AssignRoleToGroupRequest{} }
 func (m *AssignRoleToGroupRequest) String() string { return proto.CompactTextString(m) }
 func (*AssignRoleToGroupRequest) ProtoMessage()    {}
 func (*AssignRoleToGroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{6}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{6}
 }
+func (m *AssignRoleToGroupRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssignRoleToGroupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssignRoleToGroupRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AssignRoleToGroupRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssignRoleToGroupRequest.Merge(dst, src)
+}
+func (m *AssignRoleToGroupRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssignRoleToGroupRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssignRoleToGroupRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AssignRoleToGroupRequest proto.InternalMessageInfo
 
 func (m *AssignRoleToGroupRequest) GetGroup() *Group {
 	if m != nil {
@@ -141,26 +362,84 @@ func (m *AssignRoleToGroupRequest) GetRoleName() string {
 }
 
 type AssignRoleToGroupResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *AssignRoleToGroupResponse) Reset()         { *m = AssignRoleToGroupResponse{} }
 func (m *AssignRoleToGroupResponse) String() string { return proto.CompactTextString(m) }
 func (*AssignRoleToGroupResponse) ProtoMessage()    {}
 func (*AssignRoleToGroupResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{7}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{7}
+}
+func (m *AssignRoleToGroupResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AssignRoleToGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AssignRoleToGroupResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *AssignRoleToGroupResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AssignRoleToGroupResponse.Merge(dst, src)
+}
+func (m *AssignRoleToGroupResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AssignRoleToGroupResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AssignRoleToGroupResponse.DiscardUnknown(m)
 }
 
+var xxx_messageInfo_AssignRoleToGroupResponse proto.InternalMessageInfo
+
 type UnassignRoleFromGroupRequest struct {
-	Group    *Group `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Group                *Group   `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *UnassignRoleFromGroupRequest) Reset()         { *m = UnassignRoleFromGroupRequest{} }
 func (m *UnassignRoleFromGroupRequest) String() string { return proto.CompactTextString(m) }
 func (*UnassignRoleFromGroupRequest) ProtoMessage()    {}
 func (*UnassignRoleFromGroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{8}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{8}
 }
+func (m *UnassignRoleFromGroupRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UnassignRoleFromGroupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UnassignRoleFromGroupRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *UnassignRoleFromGroupRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnassignRoleFromGroupRequest.Merge(dst, src)
+}
+func (m *UnassignRoleFromGroupRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *UnassignRoleFromGroupRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnassignRoleFromGroupRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnassignRoleFromGroupRequest proto.InternalMessageInfo
 
 func (m *UnassignRoleFromGroupRequest) GetGroup() *Group {
 	if m != nil {
@@ -177,24 +456,84 @@ func (m *UnassignRoleFromGroupRequest) GetRoleName() string {
 }
 
 type UnassignRoleFromGroupResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *UnassignRoleFromGroupResponse) Reset()         { *m = UnassignRoleFromGroupResponse{} }
 func (m *UnassignRoleFromGroupResponse) String() string { return proto.CompactTextString(m) }
 func (*UnassignRoleFromGroupResponse) ProtoMessage()    {}
 func (*UnassignRoleFromGroupResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{9}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{9}
 }
+func (m *UnassignRoleFromGroupResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UnassignRoleFromGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UnassignRoleFromGroupResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *UnassignRoleFromGroupResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnassignRoleFromGroupResponse.Merge(dst, src)
+}
+func (m *UnassignRoleFromGroupResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *UnassignRoleFromGroupResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnassignRoleFromGroupResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnassignRoleFromGroupResponse proto.InternalMessageInfo
 
 type UnassignRoleRequest struct {
-	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Actor                *Actor   `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UnassignRoleRequest) Reset()                    { *m = UnassignRoleRequest{} }
-func (m *UnassignRoleRequest) String() string            { return proto.CompactTextString(m) }
-func (*UnassignRoleRequest) ProtoMessage()               {}
-func (*UnassignRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{10} }
+func (m *UnassignRoleRequest) Reset()         { *m = UnassignRoleRequest{} }
+func (m *UnassignRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*UnassignRoleRequest) ProtoMessage()    {}
+func (*UnassignRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{10}
+}
+func (m *UnassignRoleRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UnassignRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UnassignRoleRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *UnassignRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnassignRoleRequest.Merge(dst, src)
+}
+func (m *UnassignRoleRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *UnassignRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnassignRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnassignRoleRequest proto.InternalMessageInfo
 
 func (m *UnassignRoleRequest) GetActor() *Actor {
 	if m != nil {
@@ -211,22 +550,84 @@ func (m *UnassignRoleRequest) GetRoleName() string {
 }
 
 type UnassignRoleResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UnassignRoleResponse) Reset()                    { *m = UnassignRoleResponse{} }
-func (m *UnassignRoleResponse) String() string            { return proto.CompactTextString(m) }
-func (*UnassignRoleResponse) ProtoMessage()               {}
-func (*UnassignRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{11} }
+func (m *UnassignRoleResponse) Reset()         { *m = UnassignRoleResponse{} }
+func (m *UnassignRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*UnassignRoleResponse) ProtoMessage()    {}
+func (*UnassignRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{11}
+}
+func (m *UnassignRoleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UnassignRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UnassignRoleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *UnassignRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnassignRoleResponse.Merge(dst, src)
+}
+func (m *UnassignRoleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *UnassignRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnassignRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnassignRoleResponse proto.InternalMessageInfo
 
 type HasRoleRequest struct {
-	Actor    *Actor `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Actor                *Actor   `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *HasRoleRequest) Reset()                    { *m = HasRoleRequest{} }
-func (m *HasRoleRequest) String() string            { return proto.CompactTextString(m) }
-func (*HasRoleRequest) ProtoMessage()               {}
-func (*HasRoleRequest) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{12} }
+func (m *HasRoleRequest) Reset()         { *m = HasRoleRequest{} }
+func (m *HasRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*HasRoleRequest) ProtoMessage()    {}
+func (*HasRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{12}
+}
+func (m *HasRoleRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasRoleRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasRoleRequest.Merge(dst, src)
+}
+func (m *HasRoleRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasRoleRequest proto.InternalMessageInfo
 
 func (m *HasRoleRequest) GetActor() *Actor {
 	if m != nil {
@@ -243,13 +644,44 @@ func (m *HasRoleRequest) GetRoleName() string {
 }
 
 type HasRoleResponse struct {
-	HasRole bool `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
+	HasRole              bool     `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *HasRoleResponse) Reset()                    { *m = HasRoleResponse{} }
-func (m *HasRoleResponse) String() string            { return proto.CompactTextString(m) }
-func (*HasRoleResponse) ProtoMessage()               {}
-func (*HasRoleResponse) Descriptor() ([]byte, []int) { return fileDescriptorRoleService, []int{13} }
+func (m *HasRoleResponse) Reset()         { *m = HasRoleResponse{} }
+func (m *HasRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*HasRoleResponse) ProtoMessage()    {}
+func (*HasRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_role_service_411fefa570a60f70, []int{13}
+}
+func (m *HasRoleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasRoleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasRoleResponse.Merge(dst, src)
+}
+func (m *HasRoleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasRoleResponse proto.InternalMessageInfo
 
 func (m *HasRoleResponse) GetHasRole() bool {
 	if m != nil {
@@ -259,16 +691,45 @@ func (m *HasRoleResponse) GetHasRole() bool {
 }
 
 type HasRoleForGroupRequest struct {
-	Group    *Group `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	Group                *Group   `protobuf:"bytes,1,opt,name=group" json:"group,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *HasRoleForGroupRequest) Reset()         { *m = HasRoleForGroupRequest{} }
 func (m *HasRoleForGroupRequest) String() string { return proto.CompactTextString(m) }
 func (*HasRoleForGroupRequest) ProtoMessage()    {}
 func (*HasRoleForGroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{14}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{14}
 }
+func (m *HasRoleForGroupRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasRoleForGroupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasRoleForGroupRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasRoleForGroupRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasRoleForGroupRequest.Merge(dst, src)
+}
+func (m *HasRoleForGroupRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasRoleForGroupRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasRoleForGroupRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasRoleForGroupRequest proto.InternalMessageInfo
 
 func (m *HasRoleForGroupRequest) GetGroup() *Group {
 	if m != nil {
@@ -285,15 +746,44 @@ func (m *HasRoleForGroupRequest) GetRoleName() string {
 }
 
 type HasRoleForGroupResponse struct {
-	HasRole bool `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
+	HasRole              bool     `protobuf:"varint,1,opt,name=has_role,json=hasRole,proto3" json:"has_role,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *HasRoleForGroupResponse) Reset()         { *m = HasRoleForGroupResponse{} }
 func (m *HasRoleForGroupResponse) String() string { return proto.CompactTextString(m) }
 func (*HasRoleForGroupResponse) ProtoMessage()    {}
 func (*HasRoleForGroupResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{15}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{15}
 }
+func (m *HasRoleForGroupResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *HasRoleForGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_HasRoleForGroupResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *HasRoleForGroupResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HasRoleForGroupResponse.Merge(dst, src)
+}
+func (m *HasRoleForGroupResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *HasRoleForGroupResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_HasRoleForGroupResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_HasRoleForGroupResponse proto.InternalMessageInfo
 
 func (m *HasRoleForGroupResponse) GetHasRole() bool {
 	if m != nil {
@@ -303,15 +793,44 @@ func (m *HasRoleForGroupResponse) GetHasRole() bool {
 }
 
 type ListRolePermissionsRequest struct {
-	RoleName string `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	RoleName             string   `protobuf:"bytes,2,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *ListRolePermissionsRequest) Reset()         { *m = ListRolePermissionsRequest{} }
 func (m *ListRolePermissionsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListRolePermissionsRequest) ProtoMessage()    {}
 func (*ListRolePermissionsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{16}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{16}
 }
+func (m *ListRolePermissionsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListRolePermissionsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListRolePermissionsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ListRolePermissionsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListRolePermissionsRequest.Merge(dst, src)
+}
+func (m *ListRolePermissionsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListRolePermissionsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListRolePermissionsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListRolePermissionsRequest proto.InternalMessageInfo
 
 func (m *ListRolePermissionsRequest) GetRoleName() string {
 	if m != nil {
@@ -321,15 +840,44 @@ func (m *ListRolePermissionsRequest) GetRoleName() string {
 }
 
 type ListRolePermissionsResponse struct {
-	Permissions []*Permission `protobuf:"bytes,2,rep,name=permissions" json:"permissions,omitempty"`
+	Permissions          []*Permission `protobuf:"bytes,2,rep,name=permissions" json:"permissions,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
 func (m *ListRolePermissionsResponse) Reset()         { *m = ListRolePermissionsResponse{} }
 func (m *ListRolePermissionsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListRolePermissionsResponse) ProtoMessage()    {}
 func (*ListRolePermissionsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorRoleService, []int{17}
+	return fileDescriptor_role_service_411fefa570a60f70, []int{17}
 }
+func (m *ListRolePermissionsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListRolePermissionsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListRolePermissionsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ListRolePermissionsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListRolePermissionsResponse.Merge(dst, src)
+}
+func (m *ListRolePermissionsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListRolePermissionsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListRolePermissionsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListRolePermissionsResponse proto.InternalMessageInfo
 
 func (m *ListRolePermissionsResponse) GetPermissions() []*Permission {
 	if m != nil {
@@ -391,7 +939,7 @@ func NewRoleServiceClient(cc *grpc.ClientConn) RoleServiceClient {
 
 func (c *roleServiceClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*CreateRoleResponse, error) {
 	out := new(CreateRoleResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/CreateRole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/CreateRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +948,7 @@ func (c *roleServiceClient) CreateRole(ctx context.Context, in *CreateRoleReques
 
 func (c *roleServiceClient) DeleteRole(ctx context.Context, in *DeleteRoleRequest, opts ...grpc.CallOption) (*DeleteRoleResponse, error) {
 	out := new(DeleteRoleResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/DeleteRole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/DeleteRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +957,7 @@ func (c *roleServiceClient) DeleteRole(ctx context.Context, in *DeleteRoleReques
 
 func (c *roleServiceClient) AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*AssignRoleResponse, error) {
 	out := new(AssignRoleResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/AssignRole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/AssignRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -418,7 +966,7 @@ func (c *roleServiceClient) AssignRole(ctx context.Context, in *AssignRoleReques
 
 func (c *roleServiceClient) AssignRoleToGroup(ctx context.Context, in *AssignRoleToGroupRequest, opts ...grpc.CallOption) (*AssignRoleToGroupResponse, error) {
 	out := new(AssignRoleToGroupResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/AssignRoleToGroup", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/AssignRoleToGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +975,7 @@ func (c *roleServiceClient) AssignRoleToGroup(ctx context.Context, in *AssignRol
 
 func (c *roleServiceClient) UnassignRole(ctx context.Context, in *UnassignRoleRequest, opts ...grpc.CallOption) (*UnassignRoleResponse, error) {
 	out := new(UnassignRoleResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/UnassignRole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/UnassignRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +984,7 @@ func (c *roleServiceClient) UnassignRole(ctx context.Context, in *UnassignRoleRe
 
 func (c *roleServiceClient) UnassignRoleFromGroup(ctx context.Context, in *UnassignRoleFromGroupRequest, opts ...grpc.CallOption) (*UnassignRoleFromGroupResponse, error) {
 	out := new(UnassignRoleFromGroupResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/UnassignRoleFromGroup", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/UnassignRoleFromGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +993,7 @@ func (c *roleServiceClient) UnassignRoleFromGroup(ctx context.Context, in *Unass
 
 func (c *roleServiceClient) HasRole(ctx context.Context, in *HasRoleRequest, opts ...grpc.CallOption) (*HasRoleResponse, error) {
 	out := new(HasRoleResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/HasRole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/HasRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +1002,7 @@ func (c *roleServiceClient) HasRole(ctx context.Context, in *HasRoleRequest, opt
 
 func (c *roleServiceClient) HasRoleForGroup(ctx context.Context, in *HasRoleForGroupRequest, opts ...grpc.CallOption) (*HasRoleForGroupResponse, error) {
 	out := new(HasRoleForGroupResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/HasRoleForGroup", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/HasRoleForGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +1011,7 @@ func (c *roleServiceClient) HasRoleForGroup(ctx context.Context, in *HasRoleForG
 
 func (c *roleServiceClient) ListRolePermissions(ctx context.Context, in *ListRolePermissionsRequest, opts ...grpc.CallOption) (*ListRolePermissionsResponse, error) {
 	out := new(ListRolePermissionsResponse)
-	err := grpc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/ListRolePermissions", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/cloud_foundry.perm.protos.RoleService/ListRolePermissions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -728,6 +1276,9 @@ func (m *CreateRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -756,6 +1307,9 @@ func (m *CreateRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n1
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -780,6 +1334,9 @@ func (m *DeleteRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -798,6 +1355,9 @@ func (m *DeleteRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -832,6 +1392,9 @@ func (m *AssignRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -850,6 +1413,9 @@ func (m *AssignRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -884,6 +1450,9 @@ func (m *AssignRoleToGroupRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -902,6 +1471,9 @@ func (m *AssignRoleToGroupResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -936,6 +1508,9 @@ func (m *UnassignRoleFromGroupRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -954,6 +1529,9 @@ func (m *UnassignRoleFromGroupResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -988,6 +1566,9 @@ func (m *UnassignRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1006,6 +1587,9 @@ func (m *UnassignRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1040,6 +1624,9 @@ func (m *HasRoleRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1067,6 +1654,9 @@ func (m *HasRoleResponse) MarshalTo(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i++
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -1102,6 +1692,9 @@ func (m *HasRoleForGroupRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1130,6 +1723,9 @@ func (m *HasRoleForGroupResponse) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i++
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1153,6 +1749,9 @@ func (m *ListRolePermissionsRequest) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintRoleService(dAtA, i, uint64(len(m.RoleName)))
 		i += copy(dAtA[i:], m.RoleName)
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -1184,6 +1783,9 @@ func (m *ListRolePermissionsResponse) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return i, nil
 }
 
@@ -1209,6 +1811,9 @@ func (m *CreateRoleRequest) Size() (n int) {
 			n += 1 + l + sovRoleService(uint64(l))
 		}
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1218,6 +1823,9 @@ func (m *CreateRoleResponse) Size() (n int) {
 	if m.Role != nil {
 		l = m.Role.Size()
 		n += 1 + l + sovRoleService(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -1229,12 +1837,18 @@ func (m *DeleteRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func (m *DeleteRoleResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1249,12 +1863,18 @@ func (m *AssignRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func (m *AssignRoleResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1269,12 +1889,18 @@ func (m *AssignRoleToGroupRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func (m *AssignRoleToGroupResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1289,12 +1915,18 @@ func (m *UnassignRoleFromGroupRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func (m *UnassignRoleFromGroupResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1309,12 +1941,18 @@ func (m *UnassignRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func (m *UnassignRoleResponse) Size() (n int) {
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1329,6 +1967,9 @@ func (m *HasRoleRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1337,6 +1978,9 @@ func (m *HasRoleResponse) Size() (n int) {
 	_ = l
 	if m.HasRole {
 		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -1352,6 +1996,9 @@ func (m *HasRoleForGroupRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -1360,6 +2007,9 @@ func (m *HasRoleForGroupResponse) Size() (n int) {
 	_ = l
 	if m.HasRole {
 		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -1370,6 +2020,9 @@ func (m *ListRolePermissionsRequest) Size() (n int) {
 	l = len(m.RoleName)
 	if l > 0 {
 		n += 1 + l + sovRoleService(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -1382,6 +2035,9 @@ func (m *ListRolePermissionsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovRoleService(uint64(l))
 		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -1500,6 +2156,7 @@ func (m *CreateRoleRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1583,6 +2240,7 @@ func (m *CreateRoleResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1662,6 +2320,7 @@ func (m *DeleteRoleRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1712,6 +2371,7 @@ func (m *DeleteRoleResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1824,6 +2484,7 @@ func (m *AssignRoleRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1874,6 +2535,7 @@ func (m *AssignRoleResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1986,6 +2648,7 @@ func (m *AssignRoleToGroupRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2036,6 +2699,7 @@ func (m *AssignRoleToGroupResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2148,6 +2812,7 @@ func (m *UnassignRoleFromGroupRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2198,6 +2863,7 @@ func (m *UnassignRoleFromGroupResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2310,6 +2976,7 @@ func (m *UnassignRoleRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2360,6 +3027,7 @@ func (m *UnassignRoleResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2472,6 +3140,7 @@ func (m *HasRoleRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2542,6 +3211,7 @@ func (m *HasRoleResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2654,6 +3324,7 @@ func (m *HasRoleForGroupRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2724,6 +3395,7 @@ func (m *HasRoleForGroupResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2803,6 +3475,7 @@ func (m *ListRolePermissionsRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2884,6 +3557,7 @@ func (m *ListRolePermissionsResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -2998,9 +3672,9 @@ var (
 	ErrIntOverflowRoleService   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("role_service.proto", fileDescriptorRoleService) }
+func init() { proto.RegisterFile("role_service.proto", fileDescriptor_role_service_411fefa570a60f70) }
 
-var fileDescriptorRoleService = []byte{
+var fileDescriptor_role_service_411fefa570a60f70 = []byte{
 	// 625 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x94, 0xc1, 0x6e, 0xd3, 0x30,
 	0x18, 0xc7, 0xc9, 0x28, 0xac, 0xfb, 0x8a, 0x60, 0xf5, 0xc6, 0x68, 0x5d, 0xe8, 0xaa, 0x48, 0x88,
